@@ -227,6 +227,7 @@ nav {
     .desktop-only { display: none !important; }
     .menu-toggle { display: flex; } /* Show hamburger */
     nav { padding: 1.5rem; }
+    .logo-home-header { display: none; }
 }
 
 .btn-login:hover {

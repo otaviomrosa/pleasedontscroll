@@ -6,8 +6,8 @@
     --btn-hover:     #333333;
 
     /* --- TYPOGRAPHY --- */
-    --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-    --font-serif:    'Playfair Display', serif;
+    --font-ui:       system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --font-serif:    system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 }
 
 * {

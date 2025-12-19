@@ -1,18 +1,15 @@
 :root {
     /* --- MONOCHROME PALETTE --- */
     --bg-white:      #ffffff;
-    --text-black:    #111111; /* Sharp, premium black */
-    --text-gray:     #6e6e73; /* Apple-style secondary text */
+    --text-black:    #111111; 
+    --text-gray:     #6e6e73; 
     --btn-hover:     #333333;
 
     /* --- TYPOGRAPHY --- */
-    /* Native System Font Stack (Apple vibe) */
     --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-    /* Dreamy Serif for Headlines */
     --font-serif:    'Playfair Display', serif;
 }
 
-/* RESET */
 * {
     margin: 0;
     padding: 0;
@@ -24,88 +21,245 @@ body {
     color: var(--text-black);
     font-family: var(--font-ui);
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased; /* Critical for premium text rendering */
+    -webkit-font-smoothing: antialiased;
 }
 
 /* --- HERO SECTION --- */
 .hero {
-    min-height: 100vh;
+    /* Use 'dvh' (Dynamic Viewport Height) for better mobile support 
+       (fixes the issue where mobile URL bars cover content) */
+    min-height: 100dvh; 
     display: flex;
     flex-direction: column;
     position: relative;
+    
     background-image: url('assets/images/hero-painting.png');
     background-size: cover;
-    background-position: center;
+    background-position: center; /* Or 'center top' if you want to see more sky */
     background-repeat: no-repeat;
+    
+    /* Remove 'justify-content' if you had it. We will use margins instead. */
+    padding: 0; /* Let children handle padding */
 }
-
-/* THE SEAMLESS FADE MASK */
-/* This creates the "Cloudy" fade into the white page below */
 .hero::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 40%; /* Controls how "long" the fade is */
+    height: 40%;
     background: linear-gradient(to bottom, transparent, var(--bg-white));
     pointer-events: none;
 }
 
-/* --- NAVIGATION --- */
+/* --- NAVIGATION (The Duna/Apple Layout) --- */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2rem 3rem;
-    z-index: 10; /* Sits above the fade mask */
+    padding: 1.5rem 3rem;
+    z-index: 100;
+    width: 100%;
+    position: fixed; /* follow the screen as it scrolls */
+    top: 0;
+    left: 0;
+    right: 0;
+    /* start transparent; JS will adjust backdrop-filter and background alpha */
+    background-color: rgba(255,255,255,0);
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    transition: background-color 220ms linear, -webkit-backdrop-filter 220ms linear, backdrop-filter 220ms linear, transform 220ms ease;
 }
 
-
-.logo-home-link {
-    display: flex;
-    align-items: center;
-    transition: opacity 0.2s ease;
-}
-.logo-home-link:hover { opacity: 0.7; }
-
+.nav-left { flex: 1; display: flex; justify-content: flex-start; }
+.nav-center { flex: 2; display: flex; justify-content: center; gap: 0.5rem; }
+.nav-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
 
 .logo-img {
-    height: 32px;
+    height: 28px;
     width: auto;
-    /* Forces the logo to be Pure Black instantly (no need to edit the PNG) */
-    filter: brightness(0); 
-    opacity: 0.9;
+    filter: brightness(0);
+    opacity: 0.8;
+    position: relative;
+    z-index: 102;
+    /* logo image already has a transition so we can animate transforms on it */
+    transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease;
+}
+.logo-home-link {
+    display: inline-flex;
+    align-items: center;
+    transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.logo-home-link:hover { opacity: 0.8; }
+.logo-home-link:hover .logo-img { transform: translateY(-2px); }
+.nav-link { 
+    font-family: var(--font-ui); font-size: 1.05rem; font-weight: 500; 
+    color: var(--text-gray); text-decoration: none; padding: 0.5rem 1rem; 
+    border-radius: 30px; transition: all 0.2s ease; 
+}
+.nav-link:hover { color: var(--text-black); background-color: rgba(0,0,0,0.06); }
+
+.btn-login {
+    white-space: nowrap; font-family: var(--font-ui); font-size: 1rem; 
+    font-weight: 600; color: var(--bg-white); background-color: var(--text-black); 
+    padding: 0.4rem 1rem; border-radius: 50px; text-decoration: none; 
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    opacity:0.9;
+    
 }
 
-/* --- HERO CONTENT (CENTERED) --- */
-.hero-content {
-    flex-grow: 1;
+.menu-toggle {
+    display: none; /* Default hidden */
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 102; /* Must be above the overlay */
+    padding: 0;
+}
+
+.menu-toggle .bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-black);
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hamburger Animation State (Turns into X) */
+.menu-toggle.is-active .bar:nth-child(1) { transform: translateY(8px) rotate(45deg); background-color: var(--bg-white); }
+.menu-toggle.is-active .bar:nth-child(2) { opacity: 0; }
+.menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-8px) rotate(-45deg); background-color: var(--bg-white); }
+
+/* --- MOBILE OVERLAY (Hidden by default) --- */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(20, 20, 20, 0.50); /* Dark transparent gray */
+    backdrop-filter: blur(5px); /* The "Cool" Blur Effect */
+    z-index: 101;
+    
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center; /* Centers items horizontally */
-    text-align: center;  /* Centers text */
+    align-items: center;
     
+    /* Animation Initial State */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Links Styling */
+.mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    text-align: left;
+    margin-bottom: 4rem;
+}
+
+.mobile-link {
+    font-family: var(--font-ui);
+    font-size: 2.5rem; /* Big text */
+    color: #ffffff; /* White text on dark overlay */
+    text-decoration: none;
+    font-weight: 300;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+/* Staggered Animation for Links */
+.mobile-menu-overlay.is-active .mobile-link {
+    opacity: 1;
+    transform: translateY(0);
+}
+.mobile-menu-overlay.is-active .mobile-link:nth-child(1) { transition-delay: 0.1s; }
+.mobile-menu-overlay.is-active .mobile-link:nth-child(2) { transition-delay: 0.2s; }
+.mobile-menu-overlay.is-active .mobile-link:nth-child(3) { transition-delay: 0.3s; }
+
+/* Mobile Footer (Sign In) */
+.mobile-footer {
+    position: absolute;
+    bottom: 3rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease 0.4s; /* Delays appearance */
+}
+.mobile-menu-overlay.is-active .mobile-footer { opacity: 1; }
+
+.mobile-btn {
+    background-color: #ffffff; /* Invert colors for dark menu */
+    color: #000000;
+    padding: 0.7rem 5rem;
+    font-size: 1rem;
+}
+
+/* --- MEDIA QUERIES --- */
+@media (max-width: 768px) {
+    .desktop-only { display: none !important; }
+    .menu-toggle { display: flex; } /* Show hamburger */
+    nav { padding: 1.5rem; }
+}
+
+.btn-login:hover {
+    background-color: var(--btn-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+
+/* --- HERO CONTENT --- */
+.hero-content {
+    /* This pushes the content to the bottom of the flex container */
+    margin-top: auto; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
     max-width: 800px;
-    margin: 0 auto;
-    padding: 0 2rem;
+    margin-left: auto; /* Centers the block horizontally */
+    margin-right: auto;
+    z-index: 10;
     
-    z-index: 10; /* Ensures text sits on top of the painting */
-    padding-bottom: 10vh; /* Slight lift to balance the fade */
+    /* 3. The "Certain Amount" from the bottom
+       Using 'clamp' makes it responsive:
+       - Minimum: 3rem (so it's never touching the edge on tiny phones)
+       - Ideal: 10vh (10% of screen height - keeps it proportional)
+       - Maximum: 6rem (stops it from floating too high on giant screens) */
+    padding-bottom: clamp(3rem, 7vh, 6rem);
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
 h1 {
-    margin-top:30rem;
+    /* Remove margin-top: 35rem; <--- DELETE THIS */
+    margin-top: 0; 
+    opacity:0.9;
     font-family: var(--font-serif);
-    font-weight: 100; /* Light weight looks more "High Fashion" */
-    font-size: 5rem;
+    font-weight: 500;
+    font-size: clamp(3rem, 4.5vw, 5rem);
     line-height: 1.05;
     letter-spacing: -2px;
     margin-bottom: 1.5rem;
     color: var(--text-black);
-    
-    /* Clean, editorial serif settings */
     font-variation-settings: "SOFT" 50, "WONK" 0; 
 }
 
@@ -114,24 +268,24 @@ h1 {
     font-size: 1.35rem;
     font-weight: 400;
     color: var(--text-black);
-    opacity: 0.7; /* Gray-ish look using opacity */
+    opacity: 0.7;
     margin-bottom: 3rem;
     max-width: 520px;
 }
 
-/* --- BUTTONS (Apple Style) --- */
+/* --- PRIMARY CTA BUTTON --- */
 .btn-primary {
     display: inline-block;
     background-color: var(--text-black);
     color: var(--bg-white);
-    padding: 0.6rem 1.2rem;
+    padding: 0.4rem 1.2rem; /* Adjusted for better balance */
     border-radius: 50px;
     text-decoration: none;
-    font-weight: 400;
-    font-size: 1.2rem;
+    font-weight: 500;
+    font-size: 1.1rem;
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    /* Subtle separation from the background */
     box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+    opacity: 0.9;
 }
 
 .btn-primary:hover {
@@ -140,10 +294,10 @@ h1 {
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-/* --- MANIFESTO SECTION --- */
+/* --- MANIFESTO --- */
 .manifesto-section {
     background-color: var(--bg-white);
-    padding: 4rem 2rem 10rem 2rem; /* Top padding is smaller because the fade handles the transition */
+    padding: 4rem 2rem 10rem 2rem;
     display: flex;
     justify-content: center;
     text-align: center;
@@ -155,11 +309,10 @@ article {
     max-width: 680px;
 }
 
-/* The "Big Quote" Style */
 .highlight-quote {
     font-family: var(--font-serif);
     font-weight: 300;
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 4vw, 2.5rem);
     line-height: 1.3;
     color: var(--text-black);
     margin: 4rem 0;
@@ -175,7 +328,7 @@ article p {
 
 /* --- FOOTER --- */
 footer {
-    background-color: #fafafa; /* Subtle off-white */
+    background-color: #fafafa;
     color: var(--text-gray);
     padding: 5rem 2rem;
     text-align: center;
@@ -205,3 +358,8 @@ footer {
 .links a:hover { color: var(--text-black); }
 
 .copyright { font-size: 0.8rem; opacity: 0.5; }
+
+/* Lock scroll when menu is open */
+body.no-scroll {
+    overflow: hidden;
+}

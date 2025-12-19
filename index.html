@@ -15,14 +15,43 @@
 <body>
     <header class="hero">
         <nav>
-            <a href="index.html" class="logo-home-link">
-                <img src="assets/images/logo-no-bg.png" alt="Home" class="logo-img">
-            </a>
+            <div class="nav-left">
+                <a href="index.html" class="logo-home-link">
+                    <img src="assets/images/logo-no-bg.png" alt="Home" class="logo-img">
+                </a>
+            </div>
+
+            <div class="nav-center desktop-only">
+                <a href="#" class="nav-link">Extension</a>
+                <a href="#" class="nav-link">App</a>
+                <a href="#" class="nav-link">Store</a>
+            </div>
+
+            <div class="nav-right">
+                <a href="#" class="btn-login desktop-only">Sign In</a>
+                
+                <button class="menu-toggle" aria-label="Open Menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
         </nav>
         
+        <div class="mobile-menu-overlay">
+            <div class="mobile-links">
+                <a href="#" class="mobile-link">Extension</a>
+                <a href="#" class="mobile-link">App</a>
+                <a href="#" class="mobile-link">Store</a>
+            </div>
+            <div class="mobile-footer">
+                <a href="#" class="btn-login mobile-btn">Sign In</a>
+            </div>
+        </div>
+
         <div class="hero-content">
-            <h1>The exit sign <br>for your feed.</h1>
-            <p class="subtitle">Digital mindfulness for the dopamine depleted.</p>
+            <h1>Please Don't Scroll.</h1>
+            <p class="subtitle">Reclaim your mind.</p>
             <a href="#manifesto" class="btn-primary">Read the Manifesto</a>
         </div>
     </header>
@@ -32,15 +61,12 @@
             <p class="highlight-quote">
                 The feed is infinite. <br>Your time is not.
             </p>
-            
             <p>
                 We have traded boredom—the birthplace of creativity—for cheap dopamine. We scroll past our lives, five seconds at a time, lost in a curated ecosystem of bright lights and variable rewards.
             </p>
-            
             <p>
                 It is not a lack of willpower; it is a battle against engineering.
             </p>
-            
             <p class="highlight-quote">
                 Consider this your exit sign.
             </p>

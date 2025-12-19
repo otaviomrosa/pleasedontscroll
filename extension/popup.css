@@ -7,7 +7,7 @@
     --toggle-on:     #111111; /* Pure black for active state */
     
     --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "DM Sans", sans-serif;
-    --font-serif:    'Playfair Display', serif;
+    --font-serif:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "DM Sans", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -19,6 +19,10 @@ body {
     background-color: transparent; /* Invisible browser window */
     font-family: var(--font-ui);
     user-select: none;
+    background-image: url('assets/images/hero-painting.png');
+    background-size: 150%; /* Adjust as needed to cover more of the background */
+    background-position: center top; /* Or 'center top' if you want to see more sky */
+    background-repeat: no-repeat;
 }
 
 .container {

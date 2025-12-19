@@ -32,7 +32,6 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
-    
     background-image: url('assets/images/hero-painting.png');
     background-size: cover;
     background-position: center; /* Or 'center top' if you want to see more sky */
@@ -76,7 +75,7 @@ nav {
 .nav-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
 
 .logo-img {
-    height: 28px;
+    height: 26px;
     width: auto;
     filter: brightness(0);
     opacity: 0.8;
@@ -89,20 +88,33 @@ nav {
     display: inline-flex;
     align-items: center;
     transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+    text-decoration: none;
 }
+.logo-home-header {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-ui); font-size: 1.4rem; font-weight: 500; 
+    color: var(--text-black);
+    padding: 0.3rem 1rem;
+    letter-spacing: -0.05rem;
+    white-space: nowrap;
+}
+
 .logo-home-link:hover { opacity: 0.8; }
-.logo-home-link:hover .logo-img { transform: translateY(-2px); }
+.logo-home-link:hover { transform: translateY(-2px); }
 .nav-link { 
     font-family: var(--font-ui); font-size: 1.05rem; font-weight: 500; 
-    color: var(--text-white); text-decoration: none; padding: 0.5rem 1rem; 
-    border-radius: 30px; transition: all 0.2s ease; 
+    color: var(--text-white); text-decoration: none; padding: 0.3rem 1rem; 
+    border-radius: 30px; transition: all 0.2s ease;
+    opacity:0.7; 
 }
-.nav-link:hover { color: var(--text-black); background-color: rgba(0,0,0,0.06); }
+
+.nav-link:hover { font-weight:400; color: var(--bg-white); opacity: 1; background-color: rgba(0,0,0,0.55); }
 
 .btn-login {
     white-space: nowrap; font-family: var(--font-ui); font-size: 1rem; 
-    font-weight: 600; color: var(--bg-white); background-color: var(--text-black); 
-    padding: 0.4rem 1rem; border-radius: 50px; text-decoration: none; 
+    font-weight: 400; color: var(--bg-white); background-color: var(--text-black); 
+    padding: 0.3rem 1rem; border-radius: 50px; text-decoration: none; 
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     opacity:0.9;

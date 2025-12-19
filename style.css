@@ -58,7 +58,7 @@ nav {
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 3rem;
-    z-index: 100;
+    z-index: 200;
     width: 100%;
     position: fixed; /* follow the screen as it scrolls */
     top: 0;
@@ -94,7 +94,7 @@ nav {
 .logo-home-link:hover .logo-img { transform: translateY(-2px); }
 .nav-link { 
     font-family: var(--font-ui); font-size: 1.05rem; font-weight: 500; 
-    color: var(--text-gray); text-decoration: none; padding: 0.5rem 1rem; 
+    color: var(--text-white); text-decoration: none; padding: 0.5rem 1rem; 
     border-radius: 30px; transition: all 0.2s ease; 
 }
 .nav-link:hover { color: var(--text-black); background-color: rgba(0,0,0,0.06); }

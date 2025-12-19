@@ -1,0 +1,182 @@
+:root {
+    /* DARK ACADEMIA PALETTE */
+    --brand-cream: #f53e22;/* cc7c5e. ; /* Deep Wine */
+    /*--brand-cream: #f1ecd7; /* Soft Rose/Cream */
+    --brand-green: #0a1e18; /* Forest Green */
+    --brand-orange: #1a0b0b;
+
+    --red-accent: #f1ecd7;
+    --green-accent: #c9e4da;
+
+    --text-dark:   #2A2A2A;
+
+    --font-ui:    'DM Sans', sans-serif;
+    --font-serif: 'Fraunces', serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--brand-cream);
+    color: var(--text-dark);
+    font-family: var(--font-ui);
+    line-height: 1.6;
+}
+
+/* --- HERO SECTION --- */
+.hero {
+    background-color: var(--brand-orange);
+    color: var(--brand-cream);
+    min-height: 100vh; /* Changed to min-height for safety on mobile */
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 4rem;
+}
+
+/* Logo Link Reset */
+.logo-home-link {
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+}
+.logo-home-link:hover { opacity: 0.8; }
+
+.logo-img {
+    height: 40px;
+    width: auto;
+}
+
+.hero-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1 {
+    /* Using Fraunces for the Headline makes it look premium */
+    font-family: var(--font-serif); 
+    font-size: clamp(3.5rem, 9vw, 6.5rem); /* Made slightly bigger */
+    line-height: 1;
+    letter-spacing: -2px; /* Tight spacing like the Madhappy hat */
+    margin-bottom: 2rem;
+    font-variation-settings: "SOFT" 100, "WONK" 1; /* Magic setting for Fraunces */
+    color: var(--red-accent);
+    font-weight: 300; /* Light/Thin weight */
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    margin-bottom: 3rem;
+    font-family: var(--font-ui); /* Keep subtitle clean sans-serif for contrast */
+    font-weight: 400;
+}
+
+/* --- BUTTONS --- */
+.btn-primary {
+    background-color: var(--brand-cream);
+    color: var(--brand-orange);
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform 0.2s;
+    display: inline-block; /* Fixes padding issues on links */
+    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.3); /* Soft orange glow */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+/* --- MANIFESTO --- */
+.manifesto-section {
+    background-color: var(--brand-cream);
+    color: var(--text-dark);
+    padding: 8rem 2rem;
+    display: flex;           /* Centers the article */
+    justify-content: center;
+}
+
+article {
+    max-width: 650px;
+    font-family: var(--font-serif);
+    font-size: 1.4rem; /* Larger text for better reading */
+}
+
+article h2 {
+    font-family: var(--font-ui); /* Contrast header */
+    font-size: 2rem;
+    letter-spacing: -1px;
+    margin-bottom: 2rem;
+    color: var(--brand-orange);
+    font-weight: 700;
+}
+
+article p {
+    margin-bottom: 2rem;
+}
+
+.highlight-text {
+    color: var(--brand-orange); /* Your Rust Color */
+    font-weight: 700;        /* Make it bold */
+    font-style: italic;      /* Matches the Fraunces italic style */
+}
+
+/* Adjust the main highlight block to match the new vibe */
+.highlight {
+    font-family: var(--font-serif);
+    font-weight: 300; /* Lighter weight looks more elegant for large text */
+    font-size: 2.2rem; /* Make it HUGE */
+    margin: 4rem 0;
+    border-left: none; /* Remove the bar */
+    padding-left: 0;
+    text-align: center; /* Center it like a quote */
+    color: var(--brand-orange);
+    line-height: 1.2;
+}
+
+/* --- FOOTER --- */
+footer {
+    background-color: var(--brand-green);
+    color: var(--green-accent);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.links {
+    margin: 2rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap; /* Safe for mobile */
+}
+
+.links a {
+    color: var(--brand-cream);
+    opacity: 0.6;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.links a:hover { opacity: 1; }
+
+.copyright { font-size: 0.8rem; opacity: 0.4; }

@@ -1,0 +1,173 @@
+/* popup.css */
+:root {
+  --brand-orange: #1a0b0b;
+  --brand-cream: #f84d33;
+  --brand-mint: #7fc7b4;
+
+  --font-ui:    'DM Sans', sans-serif;
+  --font-serif: 'Fraunces', serif; /* The "Editorial" Look */
+}
+
+* {
+  padding: 3px;
+}
+
+.brand-header {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  height: 56px;
+  margin-bottom: 12px;
+}
+
+.mode-header {
+  color: var(--brand-cream);
+  font-family: var(--font-ui);
+  font-size: 1.3rem;
+  font-weight: 100;
+  margin: 0;
+  justify-self: center;
+  text-align: center;
+}
+
+/* Session toggle styles (checkbox + label) */
+.session-control {
+  display: inline-block;
+  align-self: center;
+}
+
+.session-toggle {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.session-toggle-label {
+  display: inline-block;
+  width: 52px;
+  height: 30px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  position: relative;
+  transition: background 180ms ease;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+.session-toggle-label::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: left 180ms ease, background 180ms ease, transform 180ms ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+
+.session-toggle:checked + .session-toggle-label {
+  background: var(--brand-mint);
+}
+
+.session-toggle:checked + .session-toggle-label::before {
+  left: calc(100% - 4px - 22px);
+  background: var(--brand-orange);
+}
+
+body {
+    width: 320px;
+    height: auto;
+    margin: 0;
+    padding: 12px; /* This creates the "gap" that shows the rounding */
+    background-color: var(--brand-orange); /* Your Rust Orange */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.toggle-group {
+  margin-bottom: 12px;
+}
+
+/* Platform switch (custom checkbox) */
+.platform-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--brand-cream);
+  font-family: var(--font-ui);
+  font-size: 1.12rem;
+  gap: 10px;
+}
+
+.platform-label {
+  display: inline-block;
+}
+
+.platform-toggle {
+  position: absolute;
+  width: 0.6px;
+  height: 0.6px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.platform-box {
+  width: 44px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  display: inline-block;
+  position: relative;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.platform-box::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+  transition: left 180ms ease, background 180ms ease;
+}
+
+.platform-toggle:checked + .platform-box {
+  background: var(--brand-mint);
+  border-color: var(--brand-mint);
+}
+
+.platform-toggle:checked + .platform-box::before {
+  left: calc(100% - 4px - 20px);
+  background: var(--brand-orange);
+}
+
+button {
+  background-color: var(--brand-cream);
+  color: var(--brand-orange);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.logo-img {
+  height: 30px;
+  width: auto;
+  margin-left: 6px;
+}

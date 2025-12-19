@@ -1,0 +1,36 @@
+/* blocked.css */
+:root{
+  --brand-orange: #1a0b0b;
+  --brand-cream: #f53e22;
+  --red-accent: #f1ecd7;
+  --font-ui:    'DM Sans', sans-serif;
+  --font-serif: 'Fraunces', serif;
+}
+html,body{height:100%;margin:0}
+body{
+  background: var(--brand-orange);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.blocked-wrap{
+  text-align:center;
+  color: var(--brand-cream);
+}
+.blocked-title{
+  /* Match the site hero Fraunces settings exactly so glyph shapes match */
+    font-family: var(--font-serif); 
+    font-size: clamp(3.5rem, 9vw, 6.5rem); /* Made slightly bigger */
+    line-height: 1;
+    letter-spacing: -2px; /* Tight spacing like the Madhappy hat */
+    margin-bottom: 2rem;
+    font-variation-settings: "SOFT" 100, "WONK" 1; /* Magic setting for Fraunces */
+    color: var(--red-accent);
+    font-weight: 300; /* Light/Thin weight */
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+}
+.blocked-logo{
+  height: 48px;
+  width: auto;
+  opacity: 0.95;
+}

@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Please Don't Scroll",
+  "version": "1.0",
+  "description": "Your digital exit sign.",
+  "permissions": ["storage", "declarativeNetRequest", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

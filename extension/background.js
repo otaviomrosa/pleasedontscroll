@@ -2,8 +2,7 @@
 
 let settings = {
   instagramBlocked: false,
-  tiktokBlocked: false,
-  sessionActive: false
+  tiktokBlocked: false
 };
 
 function isHostMatch(url, host) {
@@ -19,8 +18,9 @@ async function checkAndBlockTab(tabId, url) {
   if (!url) return;
   if (url.startsWith('chrome-extension://') || url.startsWith('about:') || url.startsWith('file:')) return;
 
-  const shouldBlockInstagram = settings.sessionActive && settings.instagramBlocked && isHostMatch(url, 'instagram.com');
-  const shouldBlockTiktok = settings.sessionActive && settings.tiktokBlocked && (isHostMatch(url, 'tiktok.com') || isHostMatch(url, 'www.tiktok.com'));
+  // Logic simplified: Check strictly if the platform is blocked in settings
+  const shouldBlockInstagram = settings.instagramBlocked && isHostMatch(url, 'instagram.com');
+  const shouldBlockTiktok = settings.tiktokBlocked && (isHostMatch(url, 'tiktok.com') || isHostMatch(url, 'www.tiktok.com'));
 
   if (shouldBlockInstagram || shouldBlockTiktok) {
     const blockedUrl = chrome.runtime.getURL('blocked.html');
@@ -33,7 +33,7 @@ async function checkAndBlockTab(tabId, url) {
   }
 }
 
-// Listen for tab updates
+// Listen for tab updates (navigation)
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.url) {
     checkAndBlockTab(tabId, changeInfo.url);
@@ -42,7 +42,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Also check when tabs are activated
+// Also check when tabs are switched/activated
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
     const tab = await chrome.tabs.get(activeInfo.tabId);
@@ -52,7 +52,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   }
 });
 
-// React to storage changes
+// React to settings changes in real-time
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   let dirty = false;
@@ -64,7 +64,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 
   if (dirty) {
-    // Re-check all tabs to immediately block any open pages
+    // If settings changed, re-check all open tabs immediately
     chrome.tabs.query({}, (tabs) => {
       for (const t of tabs) {
         checkAndBlockTab(t.id, t.url);
@@ -74,12 +74,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // Load initial settings on startup
-chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked', 'sessionActive'], (result) => {
+chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked'], (result) => {
   settings.instagramBlocked = result.instagramBlocked || false;
   settings.tiktokBlocked = result.tiktokBlocked || false;
-  settings.sessionActive = result.sessionActive || false;
 
-  // Check all open tabs once when the extension starts
+  // Check existing tabs on browser launch
   chrome.tabs.query({}, (tabs) => {
     for (const t of tabs) {
       checkAndBlockTab(t.id, t.url);

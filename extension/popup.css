@@ -1,173 +1,170 @@
 /* popup.css */
 :root {
-  --brand-orange: #1a0b0b;
-  --brand-cream: #f84d33;
-  --brand-mint: #7fc7b4;
-
-  --font-ui:    'DM Sans', sans-serif;
-  --font-serif: 'Fraunces', serif; /* The "Editorial" Look */
+    --bg-white:      #ffffff;
+    --text-black:    #111111;
+    --text-gray:     #8e8e93; /* Apple system gray */
+    --toggle-off:    #e5e5ea; /* iOS switch off color */
+    --toggle-on:     #111111; /* Pure black for active state */
+    
+    --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "DM Sans", sans-serif;
+    --font-serif:    'Playfair Display', serif;
 }
 
-* {
-  padding: 3px;
-}
-
-.brand-header {
-  display: grid;
-  grid-template-columns: auto auto;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: center;
-  height: 56px;
-  margin-bottom: 12px;
-}
-
-.mode-header {
-  color: var(--brand-cream);
-  font-family: var(--font-ui);
-  font-size: 1.3rem;
-  font-weight: 100;
-  margin: 0;
-  justify-self: center;
-  text-align: center;
-}
-
-/* Session toggle styles (checkbox + label) */
-.session-control {
-  display: inline-block;
-  align-self: center;
-}
-
-.session-toggle {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.session-toggle-label {
-  display: inline-block;
-  width: 52px;
-  height: 30px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-  position: relative;
-  transition: background 180ms ease;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
-}
-
-.session-toggle-label::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  background: #ffffff;
-  border-radius: 50%;
-  transition: left 180ms ease, background 180ms ease, transform 180ms ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
-}
-
-.session-toggle:checked + .session-toggle-label {
-  background: var(--brand-mint);
-}
-
-.session-toggle:checked + .session-toggle-label::before {
-  left: calc(100% - 4px - 22px);
-  background: var(--brand-orange);
-}
+* { box-sizing: border-box; }
 
 body {
     width: 320px;
-    height: auto;
     margin: 0;
-    padding: 12px; /* This creates the "gap" that shows the rounding */
-    background-color: var(--brand-orange); /* Your Rust Orange */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    padding: 12px; /* Creates the "floating" gap */
+    background-color: transparent; /* Invisible browser window */
+    font-family: var(--font-ui);
+    user-select: none;
 }
 
-.toggle-group {
-  margin-bottom: 12px;
+.container {
+    background-color: var(--bg-white);
+    padding: 20px;
+    border-radius: 22px; /* Smooth Apple-like rounding */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12); /* Soft, premium shadow */
+    border: 1px solid rgba(0,0,0,0.04);
 }
 
-/* Platform switch (custom checkbox) */
-.platform-switch {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 700;
-  color: var(--brand-cream);
-  font-family: var(--font-ui);
-  font-size: 1.12rem;
-  gap: 10px;
+/* --- HEADER --- */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
 }
 
-.platform-label {
-  display: inline-block;
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.platform-toggle {
-  position: absolute;
-  width: 0.6px;
-  height: 0.6px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
+.mini-logo {
+    height: 20px;
+    width: auto;
+    filter: brightness(0); /* Forces logo to black */
+    opacity: 0.8;
 }
 
-.platform-box {
-  width: 44px;
-  height: 28px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(0,0,0,0.06);
-  display: inline-block;
-  position: relative;
-  transition: background 180ms ease, border-color 180ms ease;
+.brand-name {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--text-black);
 }
 
-.platform-box::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background: #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
-  transition: left 180ms ease, background 180ms ease;
+/* --- DIVIDER --- */
+.divider {
+    height: 1px;
+    background-color: rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+    width: 100%;
 }
 
-.platform-toggle:checked + .platform-box {
-  background: var(--brand-mint);
-  border-color: var(--brand-mint);
+/* --- APP ROWS --- */
+.app-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
 }
 
-.platform-toggle:checked + .platform-box::before {
-  left: calc(100% - 4px - 20px);
-  background: var(--brand-orange);
+.app-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-black);
 }
 
-button {
-  background-color: var(--brand-cream);
-  color: var(--brand-orange);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
+/* --- TOGGLES (Minimalist iOS Style) --- */
+/* The Master Switch (Larger) */
+.switch-master {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 26px;
 }
 
-.logo-img {
-  height: 30px;
-  width: auto;
-  margin-left: 6px;
+.switch-master input { opacity: 0; width: 0; height: 0; }
+
+.slider-master {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--toggle-off);
+    transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    border-radius: 34px;
+}
+
+.slider-master:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+input:checked + .slider-master {
+    background-color: var(--toggle-on);
+}
+
+input:checked + .slider-master:before {
+    transform: translateX(18px);
+}
+
+/* The App Switch (Smaller) */
+.switch-app {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 22px;
+}
+
+.switch-app input { opacity: 0; width: 0; height: 0; }
+
+.slider-app {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--toggle-off);
+    transition: .3s;
+    border-radius: 34px;
+}
+
+.slider-app:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+input:checked + .slider-app {
+    background-color: var(--toggle-on); /* Black */
+}
+
+input:checked + .slider-app:before {
+    transform: translateX(14px);
+}
+
+/* --- FOOTER STATUS --- */
+.status-text {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 0;
 }

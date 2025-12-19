@@ -1,19 +1,18 @@
 :root {
-    /* DARK ACADEMIA PALETTE */
-    --brand-cream: #f53e22;/* cc7c5e. ; /* Deep Wine */
-    /*--brand-cream: #f1ecd7; /* Soft Rose/Cream */
-    --brand-green: #0a1e18; /* Forest Green */
-    --brand-orange: #1a0b0b;
+    /* --- MONOCHROME PALETTE --- */
+    --bg-white:      #ffffff;
+    --text-black:    #111111; /* Sharp, premium black */
+    --text-gray:     #6e6e73; /* Apple-style secondary text */
+    --btn-hover:     #333333;
 
-    --red-accent: #f1ecd7;
-    --green-accent: #c9e4da;
-
-    --text-dark:   #2A2A2A;
-
-    --font-ui:    'DM Sans', sans-serif;
-    --font-serif: 'Fraunces', serif;
+    /* --- TYPOGRAPHY --- */
+    /* Native System Font Stack (Apple vibe) */
+    --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    /* Dreamy Serif for Headlines */
+    --font-serif:    'Playfair Display', serif;
 }
 
+/* RESET */
 * {
     margin: 0;
     padding: 0;
@@ -21,145 +20,173 @@
 }
 
 body {
-    background-color: var(--brand-cream);
-    color: var(--text-dark);
+    background-color: var(--bg-white);
+    color: var(--text-black);
     font-family: var(--font-ui);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased; /* Critical for premium text rendering */
 }
 
 /* --- HERO SECTION --- */
 .hero {
-    background-color: var(--brand-orange);
-    color: var(--brand-cream);
-    min-height: 100vh; /* Changed to min-height for safety on mobile */
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 2rem;
+    position: relative;
+    background-image: url('assets/images/hero-painting.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
+/* THE SEAMLESS FADE MASK */
+/* This creates the "Cloudy" fade into the white page below */
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%; /* Controls how "long" the fade is */
+    background: linear-gradient(to bottom, transparent, var(--bg-white));
+    pointer-events: none;
+}
+
+/* --- NAVIGATION --- */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 4rem;
+    padding: 2rem 3rem;
+    z-index: 10; /* Sits above the fade mask */
 }
 
-/* Logo Link Reset */
+
 .logo-home-link {
     display: flex;
     align-items: center;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease;
 }
-.logo-home-link:hover { opacity: 0.8; }
+.logo-home-link:hover { opacity: 0.7; }
+
 
 .logo-img {
-    height: 40px;
+    height: 32px;
     width: auto;
+    /* Forces the logo to be Pure Black instantly (no need to edit the PNG) */
+    filter: brightness(0); 
+    opacity: 0.9;
 }
 
+/* --- HERO CONTENT (CENTERED) --- */
 .hero-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center; /* Centers items horizontally */
+    text-align: center;  /* Centers text */
+    
     max-width: 800px;
     margin: 0 auto;
+    padding: 0 2rem;
+    
+    z-index: 10; /* Ensures text sits on top of the painting */
+    padding-bottom: 10vh; /* Slight lift to balance the fade */
 }
 
 h1 {
-    /* Using Fraunces for the Headline makes it look premium */
-    font-family: var(--font-serif); 
-    font-size: clamp(3.5rem, 9vw, 6.5rem); /* Made slightly bigger */
-    line-height: 1;
-    letter-spacing: -2px; /* Tight spacing like the Madhappy hat */
-    margin-bottom: 2rem;
-    font-variation-settings: "SOFT" 100, "WONK" 1; /* Magic setting for Fraunces */
-    color: var(--red-accent);
-    font-weight: 300; /* Light/Thin weight */
-    font-variation-settings: "SOFT" 0, "WONK" 1;
+    margin-top:30rem;
+    font-family: var(--font-serif);
+    font-weight: 100; /* Light weight looks more "High Fashion" */
+    font-size: 5rem;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 1.5rem;
+    color: var(--text-black);
+    
+    /* Clean, editorial serif settings */
+    font-variation-settings: "SOFT" 50, "WONK" 0; 
 }
 
 .subtitle {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    margin-bottom: 3rem;
-    font-family: var(--font-ui); /* Keep subtitle clean sans-serif for contrast */
+    font-family: var(--font-ui);
+    font-size: 1.35rem;
     font-weight: 400;
+    color: var(--text-black);
+    opacity: 0.7; /* Gray-ish look using opacity */
+    margin-bottom: 3rem;
+    max-width: 520px;
 }
 
-/* --- BUTTONS --- */
+/* --- BUTTONS (Apple Style) --- */
 .btn-primary {
-    background-color: var(--brand-cream);
-    color: var(--brand-orange);
-    padding: 1rem 2.5rem;
+    display: inline-block;
+    background-color: var(--text-black);
+    color: var(--bg-white);
+    padding: 0.6rem 1.2rem;
     border-radius: 50px;
     text-decoration: none;
-    font-weight: 700;
-    transition: transform 0.2s;
-    display: inline-block; /* Fixes padding issues on links */
-    box-shadow: 0 4px 20px rgba(255, 69, 0, 0.3); /* Soft orange glow */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
+    font-weight: 400;
+    font-size: 1.2rem;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Subtle separation from the background */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
 }
 
 .btn-primary:hover {
-    transform: scale(1.05);
+    background-color: var(--btn-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-/* --- MANIFESTO --- */
+/* --- MANIFESTO SECTION --- */
 .manifesto-section {
-    background-color: var(--brand-cream);
-    color: var(--text-dark);
-    padding: 8rem 2rem;
-    display: flex;           /* Centers the article */
+    background-color: var(--bg-white);
+    padding: 4rem 2rem 10rem 2rem; /* Top padding is smaller because the fade handles the transition */
+    display: flex;
     justify-content: center;
+    text-align: center;
+    position: relative;
+    z-index: 5;
 }
 
 article {
-    max-width: 650px;
-    font-family: var(--font-serif);
-    font-size: 1.4rem; /* Larger text for better reading */
+    max-width: 680px;
 }
 
-article h2 {
-    font-family: var(--font-ui); /* Contrast header */
-    font-size: 2rem;
-    letter-spacing: -1px;
-    margin-bottom: 2rem;
-    color: var(--brand-orange);
-    font-weight: 700;
+/* The "Big Quote" Style */
+.highlight-quote {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: 2.5rem;
+    line-height: 1.3;
+    color: var(--text-black);
+    margin: 4rem 0;
+    font-variation-settings: "SOFT" 50, "WONK" 0;
 }
 
 article p {
+    font-size: 1.25rem;
+    color: var(--text-gray);
     margin-bottom: 2rem;
-}
-
-.highlight-text {
-    color: var(--brand-orange); /* Your Rust Color */
-    font-weight: 700;        /* Make it bold */
-    font-style: italic;      /* Matches the Fraunces italic style */
-}
-
-/* Adjust the main highlight block to match the new vibe */
-.highlight {
-    font-family: var(--font-serif);
-    font-weight: 300; /* Lighter weight looks more elegant for large text */
-    font-size: 2.2rem; /* Make it HUGE */
-    margin: 4rem 0;
-    border-left: none; /* Remove the bar */
-    padding-left: 0;
-    text-align: center; /* Center it like a quote */
-    color: var(--brand-orange);
-    line-height: 1.2;
+    font-weight: 400;
 }
 
 /* --- FOOTER --- */
 footer {
-    background-color: var(--brand-green);
-    color: var(--green-accent);
-    padding: 4rem 2rem;
+    background-color: #fafafa; /* Subtle off-white */
+    color: var(--text-gray);
+    padding: 5rem 2rem;
     text-align: center;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.footer-content h3 {
+    color: var(--text-black);
+    font-family: var(--font-serif);
+    font-weight: 400;
+    margin-bottom: 0.5rem;
 }
 
 .links {
@@ -167,16 +194,14 @@ footer {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    flex-wrap: wrap; /* Safe for mobile */
 }
 
 .links a {
-    color: var(--brand-cream);
-    opacity: 0.6;
+    color: var(--text-gray);
     text-decoration: none;
-    transition: opacity 0.2s;
+    transition: color 0.2s;
 }
 
-.links a:hover { opacity: 1; }
+.links a:hover { color: var(--text-black); }
 
-.copyright { font-size: 0.8rem; opacity: 0.4; }
+.copyright { font-size: 0.8rem; opacity: 0.5; }

@@ -3,44 +3,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     const instagramToggle = document.getElementById('instagram-toggle');
     const tiktokToggle = document.getElementById('tiktok-toggle');
-    const sessionToggle = document.getElementById('session-toggle');
 
     // 1. LOAD SAVED SETTINGS
-    chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked', 'sessionActive'], (result) => {
+    // We only care about specific platforms now, no master session
+    chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked'], (result) => {
         instagramToggle.checked = result.instagramBlocked || false;
         tiktokToggle.checked = result.tiktokBlocked || false;
-        sessionToggle.checked = result.sessionActive || false;
     });
 
-    // 2. SAVE SETTINGS when session toggle changes
-    sessionToggle.addEventListener('change', () => {
-        const isInstagramBlocked = instagramToggle.checked;
-        const isTiktokBlocked = tiktokToggle.checked;
-        const isSessionActive = sessionToggle.checked;
-
-        chrome.storage.sync.set({
-            instagramBlocked: isInstagramBlocked,
-            tiktokBlocked: isTiktokBlocked,
-            sessionActive: isSessionActive
-        }, () => {
-            console.log('Session toggled. Active:', isSessionActive);
-        });
-    });
-
-    // Save settings when platform toggles change
+    // 2. SAVE SETTINGS
     function savePlatformSettings() {
         const isInstagramBlocked = instagramToggle.checked;
         const isTiktokBlocked = tiktokToggle.checked;
-        const isSessionActive = sessionToggle.checked;
+
         chrome.storage.sync.set({
             instagramBlocked: isInstagramBlocked,
-            tiktokBlocked: isTiktokBlocked,
-            sessionActive: isSessionActive
+            tiktokBlocked: isTiktokBlocked
         }, () => {
-            console.log('Platform settings saved');
+            console.log('Settings saved:', { isInstagramBlocked, isTiktokBlocked });
         });
     }
 
+    // Add listeners to individual toggles
     instagramToggle.addEventListener('change', savePlatformSettings);
     tiktokToggle.addEventListener('change', savePlatformSettings);
 });

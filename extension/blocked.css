@@ -1,36 +1,79 @@
 /* blocked.css */
-:root{
-  --brand-orange: #1a0b0b;
-  --brand-cream: #f53e22;
-  --red-accent: #f1ecd7;
-  --font-ui:    'DM Sans', sans-serif;
-  --font-serif: 'Fraunces', serif;
+:root {
+  --bg-white:      #ffffff;
+  --text-black:    #111111;
+  --text-gray:     #6e6e73;
+  
+  --font-ui:       -apple-system, BlinkMacSystemFont, "SF Pro Text", "DM Sans", sans-serif;
+  --font-serif:    'Playfair Display', serif;
 }
-html,body{height:100%;margin:0}
-body{
-  background: var(--brand-orange);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
-.blocked-wrap{
-  text-align:center;
-  color: var(--brand-cream);
+
+body {
+  background-color: var(--bg-white);
+  color: var(--text-black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  position: relative;
+  
+  /* THE DREAMY PAINTING BACKGROUND */
+  /* Ensure you put the painting in extension/assets/images/ too! */
+  background-image: url('assets/images/hero-painting.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
-.blocked-title{
-  /* Match the site hero Fraunces settings exactly so glyph shapes match */
-    font-family: var(--font-serif); 
-    font-size: clamp(3.5rem, 9vw, 6.5rem); /* Made slightly bigger */
-    line-height: 1;
-    letter-spacing: -2px; /* Tight spacing like the Madhappy hat */
-    margin-bottom: 2rem;
-    font-variation-settings: "SOFT" 100, "WONK" 1; /* Magic setting for Fraunces */
-    color: var(--red-accent);
-    font-weight: 300; /* Light/Thin weight */
-    font-variation-settings: "SOFT" 0, "WONK" 1;
+
+/* THE WHITE FADE MASK (Same as website) */
+body::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to bottom, transparent, var(--bg-white));
+    pointer-events: none;
+    z-index: 1;
 }
-.blocked-logo{
-  height: 48px;
+
+.blocked-wrap {
+  text-align: center;
+  z-index: 10; /* Above the mask */
+  padding: 2rem;
+  max-width: 600px;
+  /* Push it down slightly into the fade for better readability */
+  margin-top: 10vh; 
+}
+
+.blocked-logo {
+  height: 40px;
   width: auto;
-  opacity: 0.95;
+  filter: brightness(0); /* Pure black */
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.blocked-title {
+    font-family: var(--font-serif); 
+    font-weight: 100;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--text-black);
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: var(--text-gray);
+    font-weight: 400;
 }

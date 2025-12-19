@@ -244,7 +244,7 @@ nav {
        - Minimum: 3rem (so it's never touching the edge on tiny phones)
        - Ideal: 10vh (10% of screen height - keeps it proportional)
        - Maximum: 6rem (stops it from floating too high on giant screens) */
-    padding-bottom: clamp(3rem, 7vh, 6rem);
+    padding-bottom: clamp(2rem, 6vh, 6rem);
     padding-left: 2rem;
     padding-right: 2rem;
 }
@@ -253,7 +253,7 @@ h1 {
     /* Remove margin-top: 35rem; <--- DELETE THIS */
     margin-top: 0; 
     opacity:0.9;
-    font-family: var(--font-serif);
+    font-family: var(--font-ui);
     font-weight: 500;
     font-size: clamp(3rem, 4.5vw, 5rem);
     line-height: 1.05;

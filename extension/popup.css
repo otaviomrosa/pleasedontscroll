@@ -19,7 +19,7 @@ body {
     background-color: transparent; /* Invisible browser window */
     font-family: var(--font-ui);
     user-select: none;
-    background-image: url('assets/images/hero-painting.png');
+    background-image: url('assets/images/popup-painting.png');
     background-size: 150%; /* Adjust as needed to cover more of the background */
     background-position: center top; /* Or 'center top' if you want to see more sky */
     background-repeat: no-repeat;

@@ -23,6 +23,7 @@ body {
     background-size: 150%; /* Adjust as needed to cover more of the background */
     background-position: center top; /* Or 'center top' if you want to see more sky */
     background-repeat: no-repeat;
+    background-position-y: 80%;
 }
 
 .container {

@@ -57,7 +57,7 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 3rem;
+    padding: 1.25rem 2.5rem;
     z-index: 200;
     width: 100%;
     position: fixed; /* follow the screen as it scrolls */
@@ -76,7 +76,7 @@ nav {
 .nav-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
 
 .logo-img {
-    height: 26px;
+    height: 23px;
     width: auto;
     filter: brightness(0);
     opacity: 0.8;
@@ -94,9 +94,9 @@ nav {
 .logo-home-header {
     display: inline-flex;
     align-items: center;
-    font-family: var(--font-ui); font-size: 1.4rem; font-weight: 500; 
+    font-family: var(--font-ui); font-size: 1.3rem; font-weight: 500; 
     color: var(--text-black);
-    padding: 0.3rem 1rem;
+    padding: 0.2rem 1rem;
     letter-spacing: -0.05rem;
     white-space: nowrap;
 }
@@ -104,22 +104,21 @@ nav {
 .logo-home-link:hover { opacity: 0.8; }
 .logo-home-link:hover { transform: translateY(-2px); }
 .nav-link { 
-    font-family: var(--font-ui); font-size: 1.05rem; font-weight: 500; 
+    font-family: var(--font-ui); font-size: 0.98rem; font-weight: 500; 
     color: var(--text-white); text-decoration: none; padding: 0.3rem 1rem; 
     border-radius: 30px; transition: all 0.2s ease;
     opacity:0.7; 
 }
 
-.nav-link:hover { font-weight:500; color: var(--bg-white); opacity: 1; background-color: rgba(0,0,0,0.55); }
+.nav-link:hover {font-weight:500; color: var(--bg-white); opacity: 1; background-color: rgba(0,0,0,0.55);}
 
 .btn-login {
-    white-space: nowrap; font-family: var(--font-ui); font-size: 1rem; 
+    white-space: nowrap; font-family: var(--font-ui); font-size: 0.99rem; 
     font-weight: 400; color: var(--bg-white); background-color: var(--text-black); 
     padding: 0.3rem 1rem; border-radius: 50px; text-decoration: none; 
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     opacity:0.9;
-    
 }
 
 .menu-toggle {
@@ -266,25 +265,27 @@ nav {
 h1 {
     /* Remove margin-top: 35rem; <--- DELETE THIS */
     margin-top: 0; 
-    opacity:0.9;
+    opacity:0.95;
     font-family: var(--font-ui);
     font-weight: 500;
     font-size: clamp(3rem, 4.5vw, 5rem);
     line-height: 1.05;
     letter-spacing: -2px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;
     color: var(--text-black);
     font-variation-settings: "SOFT" 50, "WONK" 0; 
 }
 
 .subtitle {
     font-family: var(--font-ui);
-    font-size: 1.35rem;
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
     font-weight: 400;
     color: var(--text-black);
-    opacity: 0.7;
+    opacity: 1;
     margin-bottom: 3rem;
-    max-width: 520px;
+    max-width: 600px;
+    line-height: 1.3;
+    opacity: 0.95;
 }
 
 /* --- PRIMARY CTA BUTTON --- */

@@ -2,7 +2,8 @@
 
 let settings = {
   instagramBlocked: false,
-  tiktokBlocked: false
+  tiktokBlocked: false,
+  youtubeBlocked: false
 };
 
 function isHostMatch(url, host) {
@@ -19,10 +20,11 @@ async function checkAndBlockTab(tabId, url) {
   if (url.startsWith('chrome-extension://') || url.startsWith('about:') || url.startsWith('file:')) return;
 
   // Logic simplified: Check strictly if the platform is blocked in settings
-  const shouldBlockInstagram = settings.instagramBlocked && isHostMatch(url, 'instagram.com');
+  const shouldBlockInstagram = settings.instagramBlocked && (isHostMatch(url, 'instagram.com') || isHostMatch(url, 'www.instagram.com'));
   const shouldBlockTiktok = settings.tiktokBlocked && (isHostMatch(url, 'tiktok.com') || isHostMatch(url, 'www.tiktok.com'));
+  const shouldBlockYoutube = settings.youtubeBlocked && (isHostMatch(url, 'youtube.com') || isHostMatch(url, 'www.youtube.com') || isHostMatch(url, 'youtu.be'));
 
-  if (shouldBlockInstagram || shouldBlockTiktok) {
+  if (shouldBlockInstagram || shouldBlockTiktok || shouldBlockYoutube) {
     const blockedUrl = chrome.runtime.getURL('blocked.html');
     try {
       await chrome.tabs.update(tabId, { url: blockedUrl });
@@ -74,9 +76,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // Load initial settings on startup
-chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked'], (result) => {
+chrome.storage.sync.get(['instagramBlocked', 'tiktokBlocked', 'youtubeBlocked'], (result) => {
   settings.instagramBlocked = result.instagramBlocked || false;
   settings.tiktokBlocked = result.tiktokBlocked || false;
+  settings.youtubeBlocked = result.youtubeBlocked || false;
 
   // Check existing tabs on browser launch
   chrome.tabs.query({}, (tabs) => {

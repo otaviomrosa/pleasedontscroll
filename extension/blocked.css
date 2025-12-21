@@ -26,7 +26,7 @@ body {
   
   /* THE DREAMY PAINTING BACKGROUND */
   /* Ensure you put the painting in extension/assets/images/ too! */
-  background-image: url('assets/images/hero-painting.jpg');
+  background-image: url('assets/images/hero-painting.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -62,11 +62,15 @@ body::after {
   margin-bottom: 2rem;
 }
 
+strong {
+    font-weight: 500;
+}
+
 .blocked-title {
-    font-family: var(--font-serif); 
-    font-weight: 100;
+    font-family: var(--font-ui); /* change to ui-serif if brand consistency is desired*/
+    font-weight: 200;
     font-size: clamp(2.5rem, 5vw, 4rem);
-    line-height: 1.1;
+    line-height: 1.3;
     margin-bottom: 1.5rem;
     color: var(--text-black);
     font-variation-settings: "SOFT" 50, "WONK" 0;

@@ -36,7 +36,7 @@ body {
     background-size: cover;
     background-position: center; /* Or 'center top' if you want to see more sky */
     background-repeat: no-repeat;
-    background-position-y: 87%;
+    background-position-y: 100%;
     
     /* Remove 'justify-content' if you had it. We will use margins instead. */
     padding: 0; /* Let children handle padding */
@@ -257,7 +257,7 @@ nav {
        - Minimum: 3rem (so it's never touching the edge on tiny phones)
        - Ideal: 10vh (10% of screen height - keeps it proportional)
        - Maximum: 6rem (stops it from floating too high on giant screens) */
-    padding-bottom: clamp(2rem, 6vh, 6rem);
+    padding-bottom: clamp(3rem, 10vh, 6rem);
     padding-left: 2rem;
     padding-right: 2rem;
 }
@@ -338,7 +338,7 @@ article p {
     font-size: 1.25rem;
     color: var(--text-gray);
     margin-bottom: 2rem;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 /* --- FOOTER --- */

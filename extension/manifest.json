@@ -2,22 +2,24 @@
   "manifest_version": 3,
   "name": "Please Don't Scroll",
   "version": "1.0",
-  "description": "Your digital exit sign.",
-  "permissions": ["storage", "declarativeNetRequest", "tabs"],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "icons": {
-    "16": "assets/icons/favicon.ico",
-    "48": "assets/icons/favicon.ico",
-    "128": "assets/icons/favicon.ico"
-  },
+  "description": "Block Instagram and TikTok to stay productive.",
+  "permissions": ["storage", "tabs"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "assets/icons/favicon.ico",
-      "48": "assets/icons/favicon.ico",
-      "128": "assets/icons/favicon.ico"
+      "16": "assets/favicon/favicon-96x96.png",
+      "32": "assets/favicon/favicon-96x96.png",
+      "48": "assets/favicon/favicon-96x96.png",
+      "128": "assets/favicon/apple-touch-icon.png"
     }
+  },
+  "icons": {
+    "16": "assets/favicon/favicon-96x96.png",
+    "32": "assets/favicon/favicon-96x96.png",
+    "48": "assets/favicon/favicon-96x96.png",
+    "128": "assets/favicon/apple-touch-icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
   }
 }

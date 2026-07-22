@@ -24,20 +24,38 @@
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8'
 import Stripe from 'https://esm.sh/stripe@13.11.0?target=deno'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2023-10-16',
+  // Checked the fields this file reads (session.customer, metadata) against
+  // Stripe's changelog between 2023-10-16 and 2026-06-24.dahlia — the only
+  // breaking change in that range affecting objects used here removed
+  // Subscription's top-level current_period_start/end (2025-03-31.basil),
+  // which this file never reads. Safe to jump straight to current.
+  apiVersion: '2026-06-24.dahlia',
   httpClient: Stripe.createFetchHttpClient(),
 })
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
 serve(async (req: Request) => {
+  // Computed once per request and reused for both the CORS header below and
+  // the checkout success/cancel redirect URLs (§3) — one allowlist, not two.
+  const ALLOWED_ORIGINS = [
+    Deno.env.get('SITE_URL'),
+    'http://localhost:8000',
+    'http://localhost:3000',
+  ].filter(Boolean)
+
+  const requestOrigin = req.headers.get('Origin')
+  const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
+    ? requestOrigin
+    : (Deno.env.get('SITE_URL') ?? 'http://localhost:8000')
+
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -81,21 +99,11 @@ serve(async (req: Request) => {
       })
     }
 
-    // ─── 3. Determine the origin for redirect URLs ───────────────────────────────
-    // Do NOT trust the incoming Origin header blindly — it's attacker-settable
-    // for anyone calling this function directly (curl/Postman), and an
+    // ─── 3. Redirect URLs use the request-scoped `origin` validated above ───────
+    // (Do NOT trust the incoming Origin header blindly for this — it's
+    // attacker-settable for anyone calling this function directly, and an
     // unvalidated origin here becomes an open redirect after checkout
-    // completes. Only allow known origins; otherwise fall back to SITE_URL.
-    const ALLOWED_ORIGINS = [
-      Deno.env.get('SITE_URL'),
-      'http://localhost:8000',
-      'http://localhost:3000',
-    ].filter(Boolean)
-
-    const requestOrigin = req.headers.get('Origin')
-    const origin = requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)
-      ? requestOrigin
-      : (Deno.env.get('SITE_URL') ?? 'http://localhost:8000')
+    // completes. `origin` was already resolved against the allowlist.)
 
     // ─── 4. Create the Stripe Checkout Session ───────────────────────────────────
     const session = await stripe.checkout.sessions.create({
@@ -117,6 +125,13 @@ serve(async (req: Request) => {
       cancel_url: `${origin}/pricing.html`,
       // Allow promotion codes for future marketing flexibility
       allow_promotion_codes: true,
+    }, {
+      // Deterministic per (user, price) key so a client retry after a
+      // timeout reuses the in-flight/completed session instead of creating
+      // a duplicate one. Stripe expires idempotency keys after 24h, so this
+      // doesn't block a legitimate later resubscribe attempt — only same-day
+      // retries collapse.
+      idempotencyKey: `checkout_${user.id}_${priceId}`,
     })
 
     // ─── 5. Return the checkout URL ──────────────────────────────────────────────

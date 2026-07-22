@@ -13,7 +13,9 @@
  *   Endpoint URL: https://<project-ref>.supabase.co/functions/v1/stripe-webhook
  *   Events to listen for:
  *     - checkout.session.completed
- *     - customer.subscription.deleted  (for future cancellation handling)
+ *     - customer.subscription.updated  (renewal failures downgrade immediately
+ *       instead of waiting on Stripe's dunning retry schedule to exhaust)
+ *     - customer.subscription.deleted
  *
  * Security: The raw request body MUST be used for signature verification.
  * Do NOT parse the body before verifying — Stripe's constructEventAsync
@@ -22,11 +24,17 @@
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.110.8'
 import Stripe from 'https://esm.sh/stripe@13.11.0?target=deno'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2023-10-16',
+  // Checked the fields this file reads (session.customer, session.subscription,
+  // subscription.customer, subscription.status, metadata) against Stripe's
+  // changelog between 2023-10-16 and 2026-06-24.dahlia — the only breaking
+  // change in that range affecting objects used here removed Subscription's
+  // top-level current_period_start/end (2025-03-31.basil), which this file
+  // never reads. Safe to jump straight to current.
+  apiVersion: '2026-06-24.dahlia',
   httpClient: Stripe.createFetchHttpClient(),
 })
 
@@ -75,19 +83,22 @@ serve(async (req: Request) => {
 
         const userId = session.metadata?.user_id
         const stripeCustomerId = session.customer as string
+        const stripeSubscriptionId = session.subscription as string
 
         if (!userId) {
           console.error('[PDS] checkout.session.completed: missing metadata.user_id')
           break
         }
 
-        // Upgrade the user — set is_premium = true and store the Stripe customer ID.
-        // Uses service role to bypass RLS (this is intentional: webhooks are server-side).
+        // Upgrade the user — set is_premium = true and store the Stripe customer
+        // and subscription IDs. Uses service role to bypass RLS (this is
+        // intentional: webhooks are server-side).
         const { error } = await supabaseAdmin
           .from('user_settings')
           .update({
             is_premium: true,
             stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: stripeSubscriptionId,
           })
           .eq('id', userId)
 
@@ -97,12 +108,37 @@ serve(async (req: Request) => {
           return new Response('Database update failed', { status: 500 })
         }
 
-        console.log(`[PDS] User ${userId} upgraded to premium. Stripe customer: ${stripeCustomerId}`)
+        console.log(`[PDS] User ${userId} upgraded to premium. Stripe customer: ${stripeCustomerId}, subscription: ${stripeSubscriptionId}`)
+        break
+      }
+
+      case 'customer.subscription.updated': {
+        // Keeps is_premium in sync with the subscription's actual status on
+        // every change — most importantly a failed renewal. Without this,
+        // a lapsed card only downgrades the user once Stripe's dunning
+        // retry schedule fully exhausts and fires subscription.deleted,
+        // which can be days to weeks later. Resolved via stripe_customer_id,
+        // same lookup pattern as the deleted handler below.
+        const subscription = event.data.object as Stripe.Subscription
+        const stripeCustomerId = subscription.customer as string
+        const PREMIUM_STATUSES: Stripe.Subscription.Status[] = ['active', 'trialing']
+        const isPremium = PREMIUM_STATUSES.includes(subscription.status)
+
+        const { error } = await supabaseAdmin
+          .from('user_settings')
+          .update({ is_premium: isPremium })
+          .eq('stripe_customer_id', stripeCustomerId)
+
+        if (error) {
+          console.error('[PDS] Failed to sync subscription status:', error)
+          return new Response('Database update failed', { status: 500 })
+        }
+
+        console.log(`[PDS] Subscription status "${subscription.status}" for Stripe customer ${stripeCustomerId} — is_premium=${isPremium}`)
         break
       }
 
       case 'customer.subscription.deleted': {
-        // Future: downgrade user when they cancel.
         // The subscription object has customer ID; resolve to user_id via stripe_customer_id column.
         const subscription = event.data.object as Stripe.Subscription
         const stripeCustomerId = subscription.customer as string

@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/web/index.html" },
+    { "source": "/dashboard.html", "destination": "/web/dashboard.html" },
+    { "source": "/pricing.html", "destination": "/web/pricing.html" },
+    { "source": "/privacy.html", "destination": "/web/privacy.html" },
+    { "source": "/assets/:path*", "destination": "/web/assets/:path*" }
+  ]
+}

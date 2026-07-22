@@ -25,6 +25,7 @@
  * @property {string} id
  * @property {boolean} is_premium
  * @property {string | null} stripe_customer_id
+ * @property {string | null} stripe_subscription_id
  * @property {'friction' | 'strict'} blocking_mode - User-level, not per-profile.
  * @property {string} created_at
  */

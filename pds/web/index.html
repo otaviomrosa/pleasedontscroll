@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Please Don't Scroll</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="assets/icons/favicon/site.webmanifest" />
+
+  <style>
+    /* ─── Design Tokens (matches dashboard.html / pricing.html) ─────────── */
+    :root {
+      --black:        #000000;
+      --white:        #ffffff;
+      --text:         #111111;
+      --text-muted:   #6e6e73;
+      --text-faint:   #aeaeb2;
+      --bg:           #ffffff;
+      --border:       rgba(0, 0, 0, 0.09);
+      --border-mid:   rgba(0, 0, 0, 0.14);
+
+      /* The single accent — used sparingly, same as the Pro plan card */
+      --indigo:       #6366f1;
+      --indigo-dim:   rgba(99, 102, 241, 0.12);
+      --indigo-glow:  rgba(99, 102, 241, 0.22);
+
+      --radius-card:  24px;
+      --radius-btn:   50px;
+      --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.18);
+
+      --font-ui:      'DM Sans', -apple-system, sans-serif;
+      --font-serif:   'Lora', serif;
+    }
+
+    /* ─── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: var(--font-ui);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── Nav ────────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      height: 28px;
+      width: auto;
+      filter: invert(1);
+      opacity: 0.9;
+      position: relative;
+      top: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 24px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-cta {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--white);
+      background: var(--black);
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-btn);
+      transition: opacity 0.15s;
+    }
+
+    .nav-cta:hover { opacity: 0.78; }
+
+    /* ─── Page sections ───────────────────────────────────────────────── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ─── Hero ───────────────────────────────────────────────────────── */
+    .hero {
+      padding: 180px 0 100px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      background: var(--indigo-dim);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 5px 14px;
+      border-radius: var(--radius-btn);
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      margin: 0 0 24px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--text-muted);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+      font-weight: 400;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--white);
+      background: var(--black);
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: var(--radius-btn);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
+      transition: opacity 0.18s, transform 0.18s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .hero-secondary-link {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border-mid);
+      padding-bottom: 1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .hero-secondary-link:hover {
+      color: var(--text);
+      border-color: var(--text);
+    }
+
+    /* ─── Section shell ──────────────────────────────────────────────── */
+    section.block {
+      border-top: 1px solid var(--border);
+      padding: 88px 0;
+    }
+
+    .section-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .section-heading {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      text-align: center;
+      margin: 0 0 60px;
+    }
+
+    /* ─── How it works ───────────────────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .features-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+    }
+
+    .feature-card {
+      background: var(--white);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-card);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-index {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 20px;
+    }
+
+    .feature-index.pro { color: var(--indigo); }
+
+    .feature-title {
+      font-family: var(--font-ui);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 10px;
+    }
+
+    .feature-copy {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Strict Mode card — same black/glow treatment as the Pro plan card
+       on pricing.html, so the free/pro split is visible, not just labeled. */
+    .feature-card.pro {
+      background: var(--black);
+      border-color: rgba(99, 102, 241, 0.25);
+      box-shadow: var(--shadow-pro);
+      position: relative;
+      overflow: hidden;
+      transform: translateY(-8px);
+    }
+
+    .feature-card.pro::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    .feature-card.pro .feature-index {
+      position: relative;
+    }
+
+    .feature-card.pro .feature-title {
+      color: var(--white);
+      position: relative;
+    }
+
+    .feature-card.pro .feature-copy {
+      color: rgba(255, 255, 255, 0.6);
+      position: relative;
+    }
+
+    /* ─── Manifesto ──────────────────────────────────────────────────── */
+    .manifesto-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .manifesto-inner p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin: 0 0 24px;
+    }
+
+    .manifesto-inner p:last-of-type { margin-bottom: 0; }
+
+    .manifesto-inner strong { color: var(--text); font-weight: 600; font-size: 1.15rem}
+
+    .manifesto-exit {
+      display: inline-block;
+      margin-top: 40px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--indigo);
+    }
+
+    /* ─── Plans teaser ───────────────────────────────────────────────── */
+    .plans-teaser-inner { max-width: 680px; margin: 0 auto; text-align: center; }
+
+    .plans-teaser-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 0 0 36px;
+    }
+
+    @media (max-width: 540px) {
+      .plans-teaser-cards { grid-template-columns: 1fr; }
+    }
+
+    .teaser-card {
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-card);
+      padding: 28px 24px;
+      text-align: left;
+      background: var(--white);
+      box-shadow: var(--shadow-card);
+    }
+
+    .teaser-card-pro {
+      background: var(--black);
+      border-color: rgba(99, 102, 241, 0.25);
+      box-shadow: var(--shadow-pro);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .teaser-card-pro::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    .teaser-card-pro > * {
+      position: relative;
+    }
+
+    .teaser-card-plan {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .teaser-card-pro .teaser-card-plan { color: var(--indigo); }
+
+    .teaser-card-price {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 2.6rem;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--black);
+      margin-bottom: 20px;
+    }
+
+    .teaser-card-price span {
+      font-size: 1rem;
+      font-family: var(--font-ui);
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+
+    .teaser-card-pro .teaser-card-price { color: var(--white); }
+    .teaser-card-pro .teaser-card-price span { color: rgba(255, 255, 255, 0.4); }
+
+    .teaser-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .teaser-features li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding-left: 18px;
+      position: relative;
+    }
+
+    .teaser-features li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.4;
+    }
+
+    .teaser-card-pro .teaser-features li { color: rgba(255, 255, 255, 0.55); }
+
+    .plans-teaser-cta {
+      display: inline-block;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--border-mid);
+      transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+    }
+
+    .plans-teaser-cta:hover {
+      background: var(--black);
+      color: var(--white);
+      border-color: var(--black);
+      transform: translateY(-1px);
+    }
+
+    /* ─── Closing CTA band ───────────────────────────────────────────── */
+    .cta-band {
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 100px 0;
+    }
+
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 560px;
+      height: 560px;
+      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .cta-band-inner { position: relative; z-index: 1; }
+
+    .cta-band h2 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4.5vw, 3.25rem);
+      letter-spacing: -0.02em;
+      color: var(--white);
+      margin: 0 0 20px;
+    }
+
+    .cta-band p {
+      font-size: 1.02rem;
+      color: rgba(255, 255, 255, 0.55);
+      max-width: 460px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .btn-on-dark {
+      display: inline-block;
+      font-family: var(--font-ui);
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--black);
+      background: var(--white);
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: var(--radius-btn);
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
+      transition: opacity 0.18s, transform 0.18s;
+    }
+
+    .btn-on-dark:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    /* ─── Footer ─────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links { display: flex; gap: 24px; }
+
+    .footer-links a {
+      font-size: 0.82rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-copy { font-size: 0.78rem; color: var(--text-faint); }
+
+    /* ─── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav { padding: 16px 24px; }
+      .nav-link { display: none; }
+      .page { padding: 0 20px; }
+      .hero { padding: 130px 0 70px; }
+      section.block { padding: 64px 0; }
+      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
+  <nav class="nav">
+    <a href="index.html">
+      <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
+    </a>
+    <div class="nav-links">
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="dashboard.html" class="nav-cta">Sign in</a>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- ─── Hero ────────────────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero-eyebrow">One blocklist, everywhere you use it</div>
+      <h1>Please Don't Scroll.</h1>
+      <p class="hero-sub">
+        Scrolling isn't a willpower problem. It's a designed habit loop. Please Don't
+        Scroll enforces real boundaries around the apps built to waste your time, for
+        people who know exactly what an hour actually costs them.
+      </p>
+      <div class="hero-actions">
+        <a href="dashboard.html" class="btn-primary">Get started free</a>
+        <a href="#features" class="hero-secondary-link">See how it works ↓</a>
+      </div>
+    </section>
+
+    <!-- ─── How it works ────────────────────────────────────────────────── -->
+    <section class="block" id="features">
+      <p class="section-eyebrow">How it works</p>
+      <h2 class="section-heading">Two modes. Zero negotiation.</h2>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <p class="feature-index">Free</p>
+          <h3 class="feature-title">Friction Mode</h3>
+          <p class="feature-copy">
+            A 30-second breathing hold stands between you and the feed. A genuine
+            interruption, not a tap-through. Enough to break the reflex, every time.
+          </p>
+        </div>
+        <div class="feature-card pro">
+          <p class="feature-index pro">Pro</p>
+          <h3 class="feature-title">Strict Mode</h3>
+          <p class="feature-copy">
+            No countdown, no bypass. Once a site is locked for the session, it stays
+            locked, built for people who've decided negotiating with themselves isn't working.
+          </p>
+        </div>
+        <div class="feature-card">
+          <p class="feature-index">Free</p>
+          <h3 class="feature-title">Built around your day</h3>
+          <p class="feature-copy">
+            Every plan starts with a profile built around how you actually work. Add
+            Deep Work, Evening Unwind, and more on Focus Pro, each with its own
+            blocklist and mode.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Manifesto ───────────────────────────────────────────────────── -->
+    <section class="block" id="manifesto">
+      <div class="manifesto-inner">
+        <p><strong>Every feed you use runs on a variable reward loop, the same mechanism as a slot machine.</strong></p>
+        <p>
+          That's not a metaphor, it's the design brief. Teams of engineers are paid to
+          keep you scrolling past the point you meant to stop, and willpower alone
+          doesn't hold up against systems built by people whose only job is to beat it.
+          What works instead is structure: boundaries you don't get to renegotiate in
+          the moment you're most likely to give in.
+        </p>
+        <p><strong>That's the whole premise here.</strong></p>
+        <p>
+          Every scroll you don't take back is an hour you don't get back either: hours
+          that were going toward work that matters, people in your life, or just sleep.
+          Please Don't Scroll treats that time like the asset it is, and gives you two
+          ways to protect it: friction for everyday discipline, and a stricter mode for
+          when discipline needs to be enforced, not negotiated.
+        </p>
+        <span class="manifesto-exit">Decide once. Let the system hold the line.</span>
+      </div>
+    </section>
+
+    <!-- ─── Plans teaser ────────────────────────────────────────────────── -->
+    <section class="block">
+      <div class="plans-teaser-inner">
+        <p class="section-eyebrow">Pricing</p>
+        <h2 class="section-heading">Built to be free.<br>Grown to be powerful.</h2>
+
+        <div class="plans-teaser-cards">
+          <div class="teaser-card">
+            <p class="teaser-card-plan">Free</p>
+            <p class="teaser-card-price">$0<span>/mo</span></p>
+            <ul class="teaser-features">
+              <li>Site blocking</li>
+              <li>Breathing friction</li>
+              <li>1 profile</li>
+            </ul>
+          </div>
+          <div class="teaser-card teaser-card-pro">
+            <p class="teaser-card-plan">Focus Pro</p>
+            <p class="teaser-card-price">$4.99<span>/mo</span></p>
+            <ul class="teaser-features">
+              <li>Strict Mode</li>
+              <li>Unlimited profiles</li>
+              <li>Instant sync</li>
+            </ul>
+          </div>
+        </div>
+
+        <a href="pricing.html" class="plans-teaser-cta">View all plans &rarr;</a>
+      </div>
+    </section>
+
+  </div><!-- /.page -->
+
+  <!-- ─── Closing CTA ─────────────────────────────────────────────────── -->
+  <section class="cta-band">
+    <div class="cta-band-inner">
+      <h2>Stop negotiating with your own attention.</h2>
+      <p>Start free with Friction Mode. Upgrade to Strict Mode when you're ready to remove the option to give in.</p>
+      <a href="dashboard.html" class="btn-on-dark">Get started free</a>
+    </div>
+  </section>
+
+  <div class="page">
+    <!-- ─── Footer ──────────────────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-brand">Please Don't Scroll</span>
+      <div class="footer-links">
+        <a href="pricing.html">Plans</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://instagram.com/pleasedontscroll">Instagram</a>
+        <a href="https://tiktok.com/@pleasedontscroll.com">TikTok</a>
+      </div>
+      <span class="footer-copy">&copy; 2025 Please Don't Scroll. All rights reserved.</span>
+    </footer>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+/* blocked.css — Friction / Strict intercept screen */
+
+/* ─── Design tokens (matches web/index.html, pricing.html, dashboard.html) ────── */
+:root {
+  --black:        #000000;
+  --white:        #ffffff;
+  --text:         #111111;
+  --text-muted:   #8e8e93;
+
+  /* Strict Mode is the one saturated color on this page, deliberately —
+     Friction Mode stays neutral gray/black so Strict actually stands out.
+     Same red used for error states in popup.css / dashboard.html. */
+  --red:          #c0392b;
+  --red-dim:      rgba(192, 57, 43, 0.1);
+
+  --radius-btn:   50px;
+
+  /* Progress ring (Friction Mode countdown) — neutral, not accent-colored */
+  --ring-track:   rgba(0, 0, 0, 0.10);
+  --ring-fill:    rgba(0, 0, 0, 0.65);
+  --ring-size:    180px;
+  --ring-radius:  100;            /* must match SVG r attribute */
+  --ring-circum:  628.318;        /* 2π × 100  */
+
+  --font-ui:      'DM Sans', system-ui, sans-serif;
+  --font-serif:   'Lora', Georgia, serif;
+}
+
+/* ─── Reset / base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--text);
+  background: var(--white);
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────────── */
+.scene {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 340px;
+}
+
+/* ─── Logo ───────────────────────────────────────────────────────────────────── */
+.logo {
+  height: 26px;
+  width: auto;
+  filter: invert(1);
+  opacity: 0.9;
+  margin-bottom: 2rem;
+}
+
+/* ─── Mode pill ──────────────────────────────────────────────────────────────── */
+.mode-pill {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+}
+
+.mode-pill.strict {
+  color: var(--red);
+  background: var(--red-dim);
+  border-color: rgba(192, 57, 43, 0.3);
+}
+
+/* ─── Title ──────────────────────────────────────────────────────────────────── */
+.block-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+/* ─── Site label ─────────────────────────────────────────────────────────────── */
+.site-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-bottom: 2.25rem;
+}
+
+.site-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ─── Circle assembly (Friction Mode countdown ring) ─────────────────────────── */
+.circle-assembly {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin: 0 auto 1.5rem;
+}
+
+.progress-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);  /* start at 12-o'clock */
+}
+
+.progress-ring__track {
+  fill: none;
+  stroke: var(--ring-track);
+  stroke-width: 2;
+}
+
+.progress-ring__fill {
+  fill: none;
+  stroke: var(--ring-fill);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: var(--ring-circum);
+  stroke-dashoffset: 0;        /* JS sets this to drain */
+  transition: stroke-dashoffset 1s linear;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.countdown {
+  font-family: var(--font-ui);
+  font-size: 2.1rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--text);
+}
+
+.countdown-label {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Instruction / strict copy ──────────────────────────────────────────────── */
+.instruction,
+.strict-copy {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 260px;
+  margin: 0 auto 2.25rem;
+}
+
+/* ─── Leave button ───────────────────────────────────────────────────────────── */
+.btn-leave {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-btn);
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 14px 32px;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
+  transition: opacity 0.18s, transform 0.18s;
+  letter-spacing: -0.01em;
+}
+
+.btn-leave:hover  { opacity: 0.85; transform: translateY(-1px); }
+.btn-leave:active { opacity: 0.7; transform: translateY(0); }
+
+/* ─── Completion overlay ─────────────────────────────────────────────────────── */
+/*
+  Fades in when the 30s are up. JS adds .visible to trigger the transition.
+*/
+.completion-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.completion-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.completion-message {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 400;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.completion-sub {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-align: center;
+}

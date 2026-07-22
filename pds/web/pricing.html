@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plans | Please Don't Scroll</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+  <!-- ─── Stripe.js ─────────────────────────────────────────────────── -->
+  <!-- Stripe.js is loaded for potential future use (Elements, etc.).    -->
+  <!-- Checkout itself is Stripe-hosted via the edge function redirect.  -->
+  <script src="https://js.stripe.com/v3/" async></script>
+
+  <style>
+    /* ─── Design Tokens ──────────────────────────────────────────────── */
+    :root {
+      --black:        #000000;
+      --white:        #ffffff;
+      --text:         #111111;
+      --text-muted:   #6e6e73;
+      --text-faint:   #aeaeb2;
+      --bg:           #ffffff;
+      --border:       rgba(0, 0, 0, 0.09);
+      --border-mid:   rgba(0, 0, 0, 0.14);
+
+      /* The single accent — used sparingly on the Pro card only */
+      --indigo:       #6366f1;
+      --indigo-dim:   rgba(99, 102, 241, 0.12);
+      --indigo-glow:  rgba(99, 102, 241, 0.22);
+
+      --radius-card:  24px;
+      --radius-btn:   50px;
+      --radius-tag:   8px;
+      --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.18);
+
+      --font-ui:      'DM Sans', -apple-system, sans-serif;
+      --font-serif:   'Lora', serif;
+    }
+
+    /* ─── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: var(--font-ui);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── Nav ────────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      height: 28px;
+      width: auto;
+      filter: invert(1);
+      opacity: 0.9;
+      position: relative;
+      top: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 24px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-link.active {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .nav-cta {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--white);
+      background: var(--black);
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-btn);
+      transition: opacity 0.15s;
+    }
+
+    .nav-cta:hover { opacity: 0.78; }
+
+    /* ─── Page sections ───────────────────────────────────────────────── */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ─── Hero ───────────────────────────────────────────────────────── */
+    .hero {
+      padding: 160px 0 80px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      background: var(--indigo-dim);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 5px 14px;
+      border-radius: var(--radius-btn);
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      margin: 0 0 24px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--text-muted);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+      font-weight: 400;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.6;
+    }
+
+    /* ─── Pricing cards ───────────────────────────────────────────────── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 860px;
+      margin: 0 auto 80px;
+      align-items: start;
+    }
+
+    @media (max-width: 680px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+        max-width: 460px;
+      }
+    }
+
+    /* ── Free card ── */
+    .plan-card {
+      background: var(--white);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border-mid);
+      padding: 36px 32px;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* ── Pro card ── */
+    .plan-card.pro {
+      background: var(--black);
+      border-color: rgba(99, 102, 241, 0.25);
+      box-shadow: var(--shadow-pro);
+      position: relative;
+      overflow: hidden;
+      /* Slightly elevated visually */
+      transform: translateY(-8px);
+    }
+
+    /* Iridescent shimmer — a single faint indigo gradient sweep */
+    .plan-card.pro::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle at center, rgba(99, 102, 241, 0.18) 0%, transparent 65%);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    /* Subtle bottom shimmer */
+    .plan-card.pro::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: var(--radius-btn);
+      margin-bottom: 24px;
+    }
+
+    .plan-badge.free-badge {
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-mid);
+    }
+
+    .plan-badge.pro-badge {
+      color: var(--indigo);
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .plan-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
+    }
+
+    .plan-name {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+
+    .plan-card.pro .plan-name { color: var(--white); }
+
+    .plan-tagline {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin: 0 0 28px;
+      line-height: 1.5;
+    }
+
+    .plan-card.pro .plan-tagline { color: rgba(255, 255, 255, 0.5); }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 32px;
+    }
+
+    .plan-price-amount {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 3.5rem;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .plan-card.pro .plan-price-amount { color: var(--white); }
+
+    .plan-price-currency {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+
+    .plan-card.pro .plan-price-currency { color: rgba(255, 255, 255, 0.45); }
+
+    .plan-price-period {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .plan-card.pro .plan-price-period { color: rgba(255, 255, 255, 0.4); }
+
+    /* CTA button on each card */
+    .btn-plan {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      text-align: center;
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      font-weight: 500;
+      border-radius: var(--radius-btn);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.18s, transform 0.18s;
+      margin-bottom: 32px;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-plan:hover:not(:disabled) {
+      opacity: 0.82;
+      transform: translateY(-1px);
+    }
+
+    .btn-plan:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-plan.free-btn {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border-mid);
+    }
+
+    .btn-plan.pro-btn {
+      background: var(--white);
+      color: var(--black);
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Divider inside card */
+    .plan-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 24px;
+    }
+
+    .plan-card.pro .plan-divider { background: rgba(255, 255, 255, 0.08); }
+
+    /* Feature list */
+    .plan-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .plan-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+
+    .plan-card.pro .plan-feature { color: rgba(255, 255, 255, 0.6); }
+
+    .plan-feature-icon {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      margin-top: 1px;
+    }
+
+    .plan-feature-icon.check {
+      background: rgba(0, 0, 0, 0.07);
+      color: var(--text);
+    }
+
+    .plan-card.pro .plan-feature-icon.check {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--indigo);
+    }
+
+    /* ─── Comparison table ────────────────────────────────────────────── */
+    .section {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.03em;
+      color: var(--black);
+      margin: 0 0 56px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th {
+      text-align: left;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      padding: 0 0 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table th:not(:first-child) {
+      text-align: center;
+    }
+
+    .comparison-table td {
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .comparison-table tr:last-child td { border-bottom: none; }
+
+    .comparison-table td:first-child {
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 400;
+      max-width: 420px;
+    }
+
+    .comparison-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .comparison-table td small {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+
+    .check-yes {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--indigo);
+    }
+
+    .check-partial {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .check-no {
+      width: 14px;
+      height: 1px;
+      background: var(--border-mid);
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* ─── Quote / testimonial ─────────────────────────────────────────── */
+    .quote-section {
+      padding: 100px 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .quote-mark {
+      font-family: var(--font-serif);
+      font-size: 5rem;
+      line-height: 0.8;
+      color: var(--border-mid);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .quote-text {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-style: italic;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+      color: var(--black);
+      max-width: 720px;
+      margin: 0 auto 32px;
+    }
+
+    .quote-attribution {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .quote-attribution strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ─── FAQ ─────────────────────────────────────────────────────────── */
+    .faq-section {
+      padding: 80px 0;
+      max-width: 680px;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .faq-item:last-child { border-bottom: none; }
+
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .faq-q-text {
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .faq-toggle {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--border-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .faq-item.open .faq-toggle {
+      transform: rotate(45deg);
+      background: var(--black);
+      border-color: var(--black);
+      color: var(--white);
+    }
+
+    .faq-answer {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-top: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.25s ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+      margin-top: 16px;
+    }
+
+    /* ─── Bottom CTA ──────────────────────────────────────────────────── */
+    .bottom-cta {
+      padding: 100px 0 80px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-cta h2 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--black);
+      margin: 0 0 20px;
+    }
+
+    .bottom-cta h2 em {
+      font-style: normal;
+      color: var(--text-muted);
+    }
+
+    .bottom-cta p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin: 0 0 40px;
+    }
+
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 36px;
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: var(--radius-btn);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+      letter-spacing: 0.01em;
+    }
+
+    .btn-cta-primary:hover {
+      opacity: 0.82;
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-cta-note {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      margin-top: 16px;
+    }
+
+    /* ─── Footer ──────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 0.82rem;
+      color: var(--text-faint);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-copy {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+
+    /* ─── Toast ───────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--black);
+      color: var(--white);
+      font-size: 0.88rem;
+      font-weight: 400;
+      padding: 12px 24px;
+      border-radius: var(--radius-btn);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── Responsive ──────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav { padding: 16px 24px; }
+      .nav-links { gap: 4px; }
+      .nav-link { display: none; }
+      .page { padding: 0 20px; }
+      .hero { padding: 120px 0 60px; }
+      .comparison-table th:nth-child(2),
+      .comparison-table td:nth-child(2) { display: none; }
+      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
+  <nav class="nav">
+    <a href="index.html">
+      <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="pricing.html" class="nav-link active">Plans</a>
+      <a href="dashboard.html" class="nav-cta" id="nav-cta">Get started</a>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- ─── Hero ────────────────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero-eyebrow">Simple, transparent pricing</div>
+      <h1>Less distraction.<br><em>More free time.</em></h1>
+      <p class="hero-sub">
+        Start free. Upgrade when you're ready for the full experience.
+        No hidden fees, no tracking, no tricks.
+      </p>
+    </section>
+
+    <!-- ─── Plan cards ───────────────────────────────────────────────────── -->
+    <div class="plans-grid">
+
+      <!-- Free card -->
+      <div class="plan-card">
+        <div class="plan-badge free-badge">Free forever</div>
+        <h2 class="plan-name">Free</h2>
+        <p class="plan-tagline">The essentials to break the scroll habit and reclaim your focus.</p>
+
+        <div class="plan-price">
+          <span class="plan-price-currency">$</span>
+          <span class="plan-price-amount">0</span>
+          <span class="plan-price-period">&nbsp;/ month</span>
+        </div>
+
+        <a href="dashboard.html" class="btn-plan free-btn" id="free-cta">Start for free</a>
+
+        <div class="plan-divider"></div>
+
+        <ul class="plan-features">
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Block unlimited distracting websites
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            30-second breathing friction on blocked sites
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            1 blocking profile (e.g. "Default")
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Manual blocklist sync via dashboard
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Works across all your Chrome tabs
+          </li>
+        </ul>
+      </div>
+
+      <!-- Pro card -->
+      <div class="plan-card pro">
+        <div class="plan-badge pro-badge">
+          <span class="plan-badge-dot"></span>
+          Focus Pro
+        </div>
+        <h2 class="plan-name">Focus Pro</h2>
+        <p class="plan-tagline">The complete mindfulness stack for people serious about their attention.</p>
+
+        <div class="plan-price">
+          <span class="plan-price-currency">$</span>
+          <span class="plan-price-amount">4.99</span>
+          <span class="plan-price-period">&nbsp;/ month</span>
+        </div>
+
+        <button class="btn-plan pro-btn" id="pro-cta">Get Focus Pro</button>
+
+        <div class="plan-divider"></div>
+
+        <ul class="plan-features">
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Everything in Free
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Unlimited blocking profiles
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Instant blocklist sync
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Focus analytics
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Scheduled blocking
+          </li>
+          <li class="plan-feature">
+            <span class="plan-feature-icon check">&#10003;</span>
+            Priority support &amp; early access
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- ─── Comparison table ──────────────────────────────────────────────── -->
+    <section class="section">
+      <p class="section-label">Full comparison</p>
+      <h2 class="section-title">What you get</h2>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th>Focus Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Site blocking</td>
+            <td><span class="check-yes">&#10003;</span></td>
+            <td><span class="check-yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Breathing friction (30-second unlock)</td>
+            <td><span class="check-yes">&#10003;</span></td>
+            <td><span class="check-yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Blocking profiles</td>
+            <td><span class="check-partial">1 profile</span></td>
+            <td><span class="check-yes">&#10003;</span> <small>Unlimited</small></td>
+          </tr>
+          <tr>
+            <td>Blocklist sync speed</td>
+            <td><span class="check-partial">~5 min refresh</span></td>
+            <td><span class="check-yes">&#10003;</span> <small>Instant</small></td>
+          </tr>
+          <tr>
+            <td>Focus analytics</td>
+            <td><span class="check-no"></span></td>
+            <td><span class="check-yes">&#10003;</span> <small>Coming soon</small></td>
+          </tr>
+          <tr>
+            <td>Scheduled blocking</td>
+            <td><span class="check-no"></span></td>
+            <td><span class="check-yes">&#10003;</span> <small>Coming soon</small></td>
+          </tr>
+          <tr>
+            <td>iOS app access (when available)</td>
+            <td><span class="check-no"></span></td>
+            <td><span class="check-yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Priority support</td>
+            <td><span class="check-no"></span></td>
+            <td><span class="check-yes">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Price</td>
+            <td><span class="check-partial">Free</span></td>
+            <td><span class="check-partial">$4.99 / month</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── Quote ────────────────────────────────────────────────────────── -->
+    <section class="quote-section">
+      <span class="quote-mark">&ldquo;</span>
+      <p class="quote-text">
+        I didn't realize how much of my evening was disappearing until PDS showed me.
+        The breathing screen alone made me stop and think twice. That pause changed everything.
+      </p>
+      <p class="quote-attribution">
+        <strong>Mara L.</strong> &mdash; Designer, San Francisco
+      </p>
+    </section>
+
+    <!-- ─── FAQ ──────────────────────────────────────────────────────────── -->
+    <section class="faq-section">
+      <p class="section-label">Questions</p>
+      <h2 class="section-title">Frequently asked</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span class="faq-q-text">Can I cancel anytime?</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <p class="faq-answer">
+          Yes. Cancel from your billing portal at any time. You keep Pro access until the end of your current billing period, then your account moves to the Free tier. No penalties, no questions asked.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span class="faq-q-text">Is my data private? Do you sell it?</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <p class="faq-answer">
+          Never. Your blocklist and activity data stay in your personal Supabase account. We do not sell, share, or analyze your data for advertising purposes. The whole point of PDS is to protect your attention, and that principle extends to how we handle your information.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span class="faq-q-text">What happens to my profiles if I downgrade to Free?</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <p class="faq-answer">
+          Your profiles are preserved. The extension will fall back to your Default profile. If you re-subscribe later, all your custom profiles are exactly where you left them.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span class="faq-q-text">Does the extension work without a Pro subscription?</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <p class="faq-answer">
+          Absolutely. The core blocking and breathing friction experience is free forever. Focus Pro adds convenience and depth: multiple profiles, instant sync, and upcoming analytics. The fundamental tool for reclaiming your attention costs nothing.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ─── Bottom CTA ────────────────────────────────────────────────────── -->
+    <section class="bottom-cta">
+      <h2>Your attention is<br><span style="color: var(--text-muted)">worth defending.</span></h2>
+      <p>Join thousands of people taking back their time.</p>
+      <button class="btn-cta-primary" id="bottom-cta-btn">
+        Get Focus Pro &nbsp;&rarr;
+      </button>
+      <span class="btn-cta-note">Cancel anytime &middot; $4.99 / month</span>
+    </section>
+
+    <!-- ─── Footer ────────────────────────────────────────────────────────── -->
+    <footer class="footer">
+      <span class="footer-brand">Please Don't Scroll</span>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="mailto:hello@pleasedontscroll.com">Contact</a>
+      </div>
+      <span class="footer-copy">&copy; 2025 Please Don't Scroll. All rights reserved.</span>
+    </footer>
+
+  </div><!-- /.page -->
+
+  <!-- ─── Toast ────────────────────────────────────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { webStorageAdapter } from '../core/auth/storage.js'
+    import * as Auth from '../core/auth/session.js'
+    import { createCheckoutSession } from '../core/sync/billing.js'
+
+    // ─── CONFIGURE THIS ────────────────────────────────────────────────────────
+    // Fill in your Stripe publishable key and the price ID for the Focus Pro plan.
+    // Find the price ID in Stripe Dashboard → Products → Focus Pro → Price ID.
+    // The publishable key starts with pk_live_ (production) or pk_test_ (test mode).
+    const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'
+    const FOCUS_PRO_PRICE_ID     = 'price_REPLACE_WITH_YOUR_STRIPE_PRICE_ID'
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // ─── Toast helper ──────────────────────────────────────────────────────────
+    function showToast(msg, duration = 3500) {
+      const el = document.getElementById('toast')
+      el.textContent = msg
+      el.classList.add('visible')
+      setTimeout(() => el.classList.remove('visible'), duration)
+    }
+
+    // ─── Checkout flow ─────────────────────────────────────────────────────────
+
+    async function handleUpgrade() {
+      const btn = document.getElementById('pro-cta')
+
+      // Check if the user has an active session
+      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
+
+      if (!accessToken) {
+        // Not logged in — redirect to dashboard login with a redirect param
+        // so after login the user continues to the checkout flow.
+        window.location.href = 'dashboard.html?redirect=upgrade'
+        return
+      }
+
+      // Disable button while we create the session
+      btn.textContent = 'Preparing checkout…'
+      btn.disabled = true
+
+      const { url, error } = await createCheckoutSession(accessToken, FOCUS_PRO_PRICE_ID)
+
+      if (error || !url) {
+        console.error('[PDS] Checkout error:', error)
+        showToast('Something went wrong. Please try again.')
+        btn.textContent = 'Get Focus Pro'
+        btn.disabled = false
+        return
+      }
+
+      // Redirect to Stripe-hosted checkout
+      window.location.href = url
+    }
+
+    // ─── Wire up all CTA buttons ───────────────────────────────────────────────
+    document.getElementById('pro-cta').addEventListener('click', handleUpgrade)
+    document.getElementById('bottom-cta-btn').addEventListener('click', handleUpgrade)
+
+    // ─── FAQ accordion ─────────────────────────────────────────────────────────
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open')
+        // Close all
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'))
+        // Toggle clicked
+        if (!isOpen) item.classList.add('open')
+      })
+    })
+
+    // ─── Nav CTA — if logged in, point to dashboard; else to sign-in ──────────
+    async function updateNavCta() {
+      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
+      const navCta = document.getElementById('nav-cta')
+      if (accessToken) {
+        navCta.href   = 'dashboard.html'
+        navCta.textContent = 'Dashboard'
+      }
+    }
+
+    updateNavCta()
+  </script>
+
+</body>
+</html>

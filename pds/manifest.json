@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Please Don't Scroll",
+  "version": "2.0",
+  "description": "Block distracting sites with a mindful breathing pause, or lock them out completely in Strict Mode. Built for serious focus.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "https://fqnoxcycqnnflwdgczvi.supabase.co/*"
+  ],
+  "action": {
+    "default_popup": "extension/popup/popup.html",
+    "default_icon": {
+      "16":  "extension/assets/icons/favicon/favicon-96x96.png",
+      "32":  "extension/assets/icons/favicon/favicon-96x96.png",
+      "48":  "extension/assets/icons/favicon/favicon-96x96.png",
+      "128": "extension/assets/icons/favicon/apple-touch-icon.png"
+    }
+  },
+  "icons": {
+    "16":  "extension/assets/icons/favicon/favicon-96x96.png",
+    "32":  "extension/assets/icons/favicon/favicon-96x96.png",
+    "48":  "extension/assets/icons/favicon/favicon-96x96.png",
+    "128": "extension/assets/icons/favicon/apple-touch-icon.png"
+  },
+  "background": {
+    "service_worker": "extension/background/index.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fqnoxcycqnnflwdgczvi.supabase.co;"
+  }
+}

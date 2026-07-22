@@ -1,0 +1,528 @@
+/* popup.css — PDS Extension Popup */
+
+/* ─── Imports & tokens ──────────────────────────────────────────────────────── */
+:root {
+  --black:       #000000;
+  --white:       #ffffff;
+  --text:        #111111;
+  --text-muted:  #8e8e93;
+  --border:      rgba(0, 0, 0, 0.07);
+  --toggle-off:  #e5e5ea;
+  --toggle-on:   #111111;
+  --error:       #c0392b;
+
+  /* Status dot colours */
+  --dot-active:  #2d6a4f;
+  --dot-paused:  #c9a84c;
+  --dot-idle:    #8e8e93;
+
+  --radius-card: 22px;
+  --radius-btn:  12px;
+  --radius-field:10px;
+
+  --font-ui:     'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif:  'Lora', serif;
+
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  width: 320px;
+  margin: 0;
+  padding: 0;
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Card container ─────────────────────────────────────────────────────────── */
+.container {
+  background: var(--white);
+  padding: 20px;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────────── */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.brand-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-logo {
+  height: 20px;
+  width: auto;
+  filter: brightness(0);
+  opacity: 0.8;
+}
+
+.brand-name {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 1.05rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+
+/* ─── Status row ─────────────────────────────────────────────────────────────── */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--dot-idle);
+  transition: background 0.3s ease;
+}
+
+.status-dot.active  { background: var(--dot-active); }
+.status-dot.paused  { background: var(--dot-paused); }
+.status-dot.idle    { background: var(--dot-idle); }
+
+.status-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* ─── Stat row ───────────────────────────────────────────────────────────────── */
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.stat-value {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 2.4rem;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ─── Pause bar ──────────────────────────────────────────────────────────────── */
+.pause-bar {
+  background: #fdf6e3;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.pause-label {
+  font-size: 0.78rem;
+  color: #7d5a00;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 11px 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+  margin-top: 4px;
+}
+
+.btn-primary:hover  { opacity: 0.82; }
+.btn-primary:active { opacity: 0.68; }
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.btn-ghost:hover { color: var(--text); }
+
+/* ─── Strict → Friction confirmation (breathing hold) ─────────────────────────── */
+.confirm-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.confirm-ring {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 16px;
+}
+
+.confirm-ring-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* start at 12-o'clock */
+}
+
+.confirm-ring__track {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 3;
+}
+
+.confirm-ring__fill {
+  fill: none;
+  stroke: var(--error);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 628.318; /* 2π × r=100, matches the SVG viewBox/r */
+  stroke-dashoffset: 0;      /* JS drains this */
+  transition: stroke-dashoffset 1s linear;
+}
+
+.confirm-countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.confirm-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+#confirm-cancel-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+/* ─── Auth form ──────────────────────────────────────────────────────────────── */
+.auth-headline {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.25rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0 0 18px;
+  letter-spacing: -0.01em;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.field {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  color: var(--text);
+  background: #f5f5f7;
+  border: 1px solid transparent;
+  border-radius: var(--radius-field);
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.field::placeholder { color: var(--text-muted); }
+
+.field:focus {
+  background: var(--white);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Error message ──────────────────────────────────────────────────────────── */
+.auth-error {
+  font-size: 0.78rem;
+  color: var(--error);
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+/* ─── Footer hint ────────────────────────────────────────────────────────────── */
+.footer-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+.footer-hint a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-hint a:hover { text-decoration: underline; }
+
+/* ─── Mode toggle ────────────────────────────────────────────────────────────── */
+.mode-section {
+  margin-bottom: 0;
+}
+
+.mode-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #f5f5f7;
+  border-radius: var(--radius-btn);
+  margin-bottom: 8px;
+}
+
+.mode-option {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 7px 0;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mode-option:hover { color: var(--text); }
+
+.lock-icon {
+  flex-shrink: 0;
+  position: relative;
+  top: -0.5px;
+}
+
+/* Friction — plain black, deliberately unflashy so Strict's red stands out */
+.mode-option[data-mode="friction"].active {
+  background: var(--black);
+  color: var(--white);
+}
+
+/* Strict — red, deliberately more alarming than the regular accent */
+.mode-option[data-mode="strict"].active {
+  background: var(--error);
+  color: var(--white);
+  box-shadow: 0 2px 10px rgba(192, 57, 43, 0.35);
+}
+
+/* Locked (not Focus Pro): the lock icon (toggled separately, see popup.js)
+   is what communicates this — no color override needed here. Still
+   clickable; clicking opens the pricing page instead of switching. Never
+   combined with .active: background.js won't leave a non-premium account
+   in Strict Mode. */
+
+.mode-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ─── Profile switcher ───────────────────────────────────────────────────────── */
+.profiles-section {
+  margin-bottom: 0;
+}
+
+.profiles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.profiles-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The "+" button next to the label */
+.btn-add-profile {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-add-profile:hover {
+  color: var(--text);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Pill container — wraps so long lists don't break layout */
+.profile-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-height: 28px;
+}
+
+/* Individual profile pill */
+.profile-pill {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 400;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.profile-pill:hover {
+  border-color: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+}
+
+/* Active pill — filled black */
+.profile-pill.active {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+  font-weight: 500;
+}
+
+/* Loading skeleton pill */
+.profile-pill-skeleton {
+  display: inline-block;
+  width: 70px;
+  height: 28px;
+  border-radius: 20px;
+  background: #f0f0f0;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* Inline new-profile row */
+.new-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.field-sm {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+}
+
+/* Small confirm button */
+.btn-confirm {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-btn);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-confirm:hover    { opacity: 0.82; }
+.btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-cancel {
+  font-size: 0.75rem;
+  padding: 0;
+}
+
+/* ─── Utility ────────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }

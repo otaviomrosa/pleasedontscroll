@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="blocked.css">
+  <link rel="icon" type="image/png" href="../assets/icons/favicon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon/favicon.svg">
+  <link rel="shortcut icon" href="../assets/icons/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/favicon/apple-touch-icon.png">
+  <title>Focus Mode | Please Don't Scroll</title>
+</head>
+<body>
+
+  <div class="scene">
+    <main class="main">
+      <div class="content">
+
+        <img src="../assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="logo">
+
+        <!-- Text + color set by blocked.js based on the ?mode= param -->
+        <p class="mode-pill" id="modePill">Friction Mode</p>
+
+        <h1 class="block-title">This website was blocked.</h1>
+
+        <p class="site-label">
+          You were heading to <span class="site-name" id="siteName">that site</span>
+        </p>
+
+        <!-- ─── Friction Mode content (30s countdown bypass) ─────────────── -->
+        <div id="frictionUi">
+          <div class="circle-assembly" aria-label="Countdown">
+            <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+              <circle class="progress-ring__track" cx="110" cy="110" r="100" />
+              <circle class="progress-ring__fill" id="progressRing" cx="110" cy="110" r="100" />
+            </svg>
+            <div class="ring-center">
+              <span class="countdown" id="countdown">30</span>
+              <span class="countdown-label">seconds</span>
+            </div>
+          </div>
+          <p class="instruction">Breathe for 30 seconds to continue anyway.</p>
+        </div>
+
+        <!-- ─── Strict Mode content (no bypass) ───────────────────────────── -->
+        <p class="strict-copy" id="strictUi" hidden>
+          Close this tab and save your time.
+        </p>
+
+        <button class="btn-leave" id="leaveBtn">Close tab</button>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="blocked.js"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+  <title>Please Don't Scroll</title>
+</head>
+<body>
+
+  <!-- ─── Authenticated view ─────────────────────────────────────────── -->
+  <div class="container" id="view-app" style="display:none;">
+    <div class="header-row">
+      <div class="brand-box">
+        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+        <span class="brand-name">Please Don't Scroll</span>
+      </div>
+      <button class="btn-ghost" id="logout-btn">Sign out</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Status pill -->
+    <div class="status-row">
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-label" id="status-label">Loading…</span>
+    </div>
+
+    <!-- Blocked sites count -->
+    <div class="stat-row">
+      <span class="stat-value" id="blocked-count">—</span>
+      <span class="stat-desc">sites in this profile</span>
+    </div>
+
+    <!-- Pause indicator (shown only when paused) -->
+    <div class="pause-bar hidden" id="pause-bar">
+      <span class="pause-label">Unblocked until <strong id="pause-until-label">—</strong></span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
+    <!-- Friction/Strict is a per-user setting, not a profile property —
+         any profile can run in either mode. -->
+    <div class="mode-section">
+      <span class="mode-label">Mode</span>
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-option" data-mode="friction" id="mode-friction-btn">Friction</button>
+        <button class="mode-option" data-mode="strict" id="mode-strict-btn">
+          Strict
+          <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+          </svg>
+        </button>
+      </div>
+      <p class="mode-hint" id="mode-hint">30-second breathing pause before a blocked site.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ─── Profile switcher ────────────────────────────────────────── -->
+    <div class="profiles-section">
+      <div class="profiles-header">
+        <span class="profiles-label">Profile</span>
+        <button class="btn-add-profile" id="add-profile-btn" title="New profile">+</button>
+      </div>
+
+      <!-- Pills rendered by popup.js -->
+      <div class="profile-pills" id="profile-pills">
+        <span class="profile-pill-skeleton"></span>
+      </div>
+
+      <!-- Inline new-profile input (hidden by default) -->
+      <div class="new-profile-row hidden" id="new-profile-row">
+        <input class="field field-sm" type="text" id="new-profile-input" placeholder="Profile name…" maxlength="40">
+        <button class="btn-confirm" id="new-profile-confirm">Add</button>
+        <button class="btn-ghost btn-cancel" id="new-profile-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Link to web dashboard -->
+    <a class="btn-primary" href="" target="_blank" id="manage-link">
+      Manage blocklist →
+    </a>
+
+    <p class="footer-hint">Blocklist syncs every 5 min</p>
+  </div>
+
+  <!-- ─── Strict → Friction confirmation (breathing hold) ───────────────── -->
+  <!-- Downgrading out of Strict Mode costs the same 30s breathing hold as
+       unlocking a blocked site — otherwise Strict Mode is one click from
+       being undone and doesn't add anything. Switching the other way
+       (Friction → Strict) stays instant. -->
+  <div class="container hidden" id="view-confirm">
+    <div class="header-row">
+      <div class="brand-box">
+        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+        <span class="brand-name">Please Don't Scroll</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="confirm-label">Leaving Strict Mode</p>
+
+    <div class="confirm-ring">
+      <svg class="confirm-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
+        <circle class="confirm-ring__track" cx="110" cy="110" r="100" />
+        <circle class="confirm-ring__fill" id="confirm-ring-fill" cx="110" cy="110" r="100" />
+      </svg>
+      <span class="confirm-countdown" id="confirm-countdown">30</span>
+    </div>
+
+    <p class="confirm-hint">
+      Still want out in 30 seconds? It'll switch to Friction Mode automatically.
+    </p>
+
+    <button class="btn-ghost" id="confirm-cancel-btn">Stay in Strict Mode</button>
+  </div>
+
+  <!-- ─── Unauthenticated view ───────────────────────────────────────── -->
+  <div class="container" id="view-auth">
+    <div class="header-row">
+      <div class="brand-box">
+        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+        <span class="brand-name">Please Don't Scroll</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="auth-headline">Sign in to activate<br>your blocklist.</p>
+
+    <div class="form-group">
+      <input class="field" type="email" id="email-input" placeholder="Email" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+    </div>
+
+    <p class="auth-error hidden" id="auth-error"></p>
+
+    <button class="btn-primary" id="login-btn">Sign in</button>
+
+    <p class="footer-hint">No account? <a href="#" id="signup-link">Create an account</a></p>
+  </div>
+
+  <!-- ─── Sign-up sub-view (replaces auth form) ─────────────────────── -->
+  <div class="container hidden" id="view-signup">
+    <div class="header-row">
+      <div class="brand-box">
+        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+        <span class="brand-name">Focus</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="auth-headline">Create your account.</p>
+
+    <div class="form-group">
+      <input class="field" type="email" id="signup-email" placeholder="Email" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
+    </div>
+
+    <p class="auth-error hidden" id="signup-error"></p>
+
+    <button class="btn-primary" id="signup-btn">Create account</button>
+
+    <p class="footer-hint"><a href="#" id="back-to-login">Back to sign in</a></p>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

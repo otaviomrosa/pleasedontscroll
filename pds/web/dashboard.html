@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Please Don't Scroll | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Tokens ───────────────────────────────────────────────────────── */
+    :root {
+      --black:        #000000;
+      --white:        #ffffff;
+      --text:         #111111;
+      --text-muted:   #8e8e93;
+      --bg:           #ffffff;
+      --card:         #ffffff;
+      --border:       rgba(0, 0, 0, 0.11);
+      --border-hover: rgba(0, 0, 0, 0.16);
+      --error:        #c0392b;
+      --dot-active:   #2d6a4f;
+      --indigo:       #6366f1;
+      --indigo-dim:   rgba(99, 102, 241, 0.1);
+      --indigo-glow:  rgba(99, 102, 241, 0.22);
+      --radius-card:  20px;
+      --radius-btn:   12px;
+      --radius-field: 10px;
+      --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.07);
+      --font-ui:      'DM Sans', -apple-system, sans-serif;
+      --font-serif:   'Lora', serif;
+    }
+
+    /* ─── Reset ────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* ─── Layout ───────────────────────────────────────────────────────── */
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ─── Public nav (auth screen only — hidden with #auth-screen on login,
+       distinct classes from .top-nav below so nothing collides with the
+       in-app header) ────────────────────────────────────────────────── */
+    .public-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .public-nav-logo {
+      height: 26px;
+      width: auto;
+      filter: invert(1);
+      opacity: 0.9;
+      position: relative;
+      top: 2px;
+    }
+
+    .public-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .public-nav-link {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 24px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .public-nav-link:hover {
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* ─── Auth screen ──────────────────────────────────────────────────── */
+    .auth-shell {
+      padding: 160px 24px 80px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      padding: 44px 40px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .auth-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 14px;
+    }
+
+    .auth-title {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.7rem;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      margin: 0 0 8px;
+      line-height: 1.2;
+    }
+
+    .auth-sub {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin: 0 0 32px;
+    }
+
+    .form-group { margin-bottom: 12px; }
+
+    .field {
+      display: block;
+      width: 100%;
+      padding: 11px 14px;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: #f5f5f7;
+      border: 1px solid transparent;
+      border-radius: var(--radius-field);
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .field::placeholder { color: var(--text-muted); }
+
+    .field:focus {
+      background: var(--white);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      border: none;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 8px;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover    { opacity: 0.82; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .btn-ghost:hover { color: var(--text); }
+
+    .auth-toggle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin: 16px 0 0;
+    }
+
+    .auth-toggle a {
+      color: var(--text);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .auth-toggle a:hover { text-decoration: underline; }
+
+    .error-msg {
+      font-size: 0.8rem;
+      color: var(--error);
+      margin: 8px 0 0;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* ─── Top nav ──────────────────────────────────────────────────────── */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .nav-logo-link {
+      display: block;
+      line-height: 0;
+    }
+
+    .nav-logo {
+      height: 32px;
+      width: auto;
+      display: block;
+      filter: invert(1);
+      position: relative;
+      top: 2px; /* optical correction — the mark's visual weight sits high in its box */
+    }
+
+    /* ─── Section headers ──────────────────────────────────────────────── */
+    .section-title {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.5rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin: 0 0 20px;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+    }
+
+    /* ─── Card ─────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius-card);
+      padding: 28px 28px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    /* ─── Profile tabs ─────────────────────────────────────────────────── */
+    .profile-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .profile-tab {
+      font-family: var(--font-ui);
+      font-size: 0.84rem;
+      font-weight: 400;
+      padding: 6px 18px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .profile-tab:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    .profile-tab.active {
+      background: var(--black);
+      color: var(--white);
+      border-color: var(--black);
+      font-weight: 500;
+    }
+
+    /* Delete icon inside inactive tabs */
+    .profile-tab-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      font-size: 0.65rem;
+      line-height: 1;
+      opacity: 0;
+      background: rgba(0, 0, 0, 0.1);
+      transition: opacity 0.15s;
+      vertical-align: middle;
+    }
+
+    .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
+
+    .btn-add-profile {
+      font-family: var(--font-ui);
+      font-size: 0.84rem;
+      font-weight: 400;
+      padding: 6px 14px;
+      border-radius: 24px;
+      border: 1px dashed var(--border-hover);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-add-profile:hover {
+      border-style: solid;
+      color: var(--text);
+    }
+
+    /* New profile inline form */
+    .new-profile-form {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .new-profile-form.visible { display: flex; }
+
+    .field-inline {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      border-radius: var(--radius-field);
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-radius: var(--radius-btn);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-sm.dark { background: var(--black); color: var(--white); }
+    .btn-sm.dark:hover { opacity: 0.82; }
+    .btn-sm.dark:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-sm.light {
+      background: none;
+      color: var(--text-muted);
+    }
+
+    .btn-sm.light:hover { color: var(--text); }
+
+    /* ─── Divider ───────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    /* ─── URL input row ─────────────────────────────────────────────────── */
+    .url-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .url-input-row .field { flex: 1; margin: 0; }
+
+    .url-input-row .btn-sm { flex-shrink: 0; }
+
+    /* ─── URL list ──────────────────────────────────────────────────────── */
+    .url-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .url-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .url-item:last-child { border-bottom: none; }
+
+    .url-text {
+      font-size: 0.88rem;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .url-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dot-active);
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .url-left {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .btn-delete-url {
+      background: none;
+      border: none;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    .btn-delete-url:hover {
+      color: var(--error);
+      background: rgba(192, 57, 43, 0.06);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ─── Premium badge ─────────────────────────────────────────────────── */
+    .premium-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      background: var(--indigo-dim);
+      border: 1px solid rgba(99, 102, 241, 0.22);
+      padding: 3px 10px;
+      border-radius: 24px;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+
+    .premium-badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--indigo);
+      animation: pulse-badge 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* ─── Upgrade banner ─────────────────────────────────────────────────── */
+    .upgrade-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--black);
+      border-radius: var(--radius-card);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upgrade-banner::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -50px;
+      transform: translateY(-50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle at center, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    .upgrade-banner-text {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.45;
+      position: relative;
+    }
+
+    .upgrade-banner-text strong {
+      display: block;
+      color: var(--white);
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .btn-upgrade {
+      flex-shrink: 0;
+      display: inline-block;
+      padding: 9px 18px;
+      background: var(--white);
+      color: var(--black);
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 24px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
+      position: relative;
+    }
+
+    .btn-upgrade:hover { opacity: 0.85; }
+
+    /* ─── Toast ──────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--black);
+      color: var(--white);
+      font-size: 0.88rem;
+      font-weight: 400;
+      padding: 12px 24px;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── Utility ───────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Auth screen ───────────────────────────────────────────────────── -->
+  <div id="auth-screen">
+
+    <!-- Only relevant pre-login — lives inside #auth-screen so it hides
+         automatically with it once showApp() runs. -->
+    <nav class="public-nav">
+      <a href="index.html">
+        <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="public-nav-logo">
+      </a>
+      <div class="public-nav-links">
+        <a href="index.html" class="public-nav-link">Home</a>
+        <a href="pricing.html" class="public-nav-link">Pricing</a>
+      </div>
+    </nav>
+
+    <div class="auth-shell" id="login-card">
+      <div class="auth-card">
+        <p class="auth-eyebrow">Dashboard</p>
+        <h1 class="auth-title">Welcome back.</h1>
+        <p class="auth-sub">Sign in to manage your blocklist, profiles, and mode.</p>
+
+        <div class="form-group">
+          <input class="field" type="email" id="email-input" placeholder="Email" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+        </div>
+
+        <p class="error-msg" id="auth-error"></p>
+
+        <button class="btn-primary" id="login-btn">Sign in</button>
+
+        <p class="auth-toggle">No account? <a href="#" id="show-signup">Create one free</a></p>
+      </div>
+    </div>
+
+    <!-- Sign-up sub-form (hidden by default) -->
+    <div class="auth-shell hidden" id="signup-card">
+      <div class="auth-card">
+        <p class="auth-eyebrow">Dashboard</p>
+        <h1 class="auth-title">Create your account.</h1>
+        <p class="auth-sub">Start blocking in under a minute.</p>
+
+        <div class="form-group">
+          <input class="field" type="email" id="signup-email" placeholder="Email" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
+        </div>
+
+        <p class="error-msg" id="signup-error"></p>
+
+        <button class="btn-primary" id="signup-btn">Create account</button>
+
+        <p class="auth-toggle"><a href="#" id="show-login">Back to sign in</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── App screen ────────────────────────────────────────────────────── -->
+  <div id="app-screen" class="hidden">
+    <div class="page-wrap">
+
+      <!-- Top nav -->
+      <div class="top-nav">
+        <div style="display:flex;align-items:center;gap:0;">
+          <a href="index.html" class="nav-logo-link">
+            <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
+          </a>
+          <!-- Premium badge: shown by JS when is_premium = true -->
+          <span class="premium-badge hidden" id="premium-badge">
+            <span class="premium-badge-dot"></span>
+            Pro
+          </span>
+        </div>
+        <button class="btn-ghost" id="logout-btn">Sign out</button>
+      </div>
+
+      <!-- Upgrade banner: shown by JS when is_premium = false -->
+      <div class="upgrade-banner hidden" id="upgrade-banner">
+        <div class="upgrade-banner-text">
+          <strong>Unlock Focus Pro</strong>
+          Multiple profiles, instant sync &amp; upcoming analytics for $4.99/mo.
+        </div>
+        <a href="pricing.html" class="btn-upgrade">See plans</a>
+      </div>
+
+      <!-- Profiles card -->
+      <div class="card">
+        <p class="section-label">Profiles</p>
+
+        <!-- Profile tabs (rendered by JS) -->
+        <div class="profile-tabs" id="profile-tabs"></div>
+
+        <!-- Add profile controls -->
+        <button class="btn-add-profile" id="add-profile-btn">+ New profile</button>
+
+        <div class="new-profile-form" id="new-profile-form">
+          <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="40">
+          <button class="btn-sm dark" id="new-profile-confirm">Add</button>
+          <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Blocklist card — scoped to selected profile -->
+      <div class="card">
+        <h2 class="section-title" id="blocklist-heading">Blocklist</h2>
+
+        <div class="url-input-row">
+          <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com">
+          <button class="btn-sm dark" id="add-url-btn">Block site</button>
+        </div>
+
+        <ul class="url-list" id="url-list">
+          <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast for success messages (e.g. upgrade confirmation) -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { webStorageAdapter } from '../core/auth/storage.js';
+    import * as Auth from '../core/auth/session.js';
+    import { fetchProfiles, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
+    import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
+    import { fetchIsPremium } from '../core/sync/userSettings.js';
+
+    // ─── State ─────────────────────────────────────────────────────────────────
+    let currentUser    = null;
+    let profiles       = [];
+    let selectedProfile = null; // { id, name, is_active }
+
+    // Refreshes (and persists) the token on demand — every action below calls
+    // this rather than caching a single token from boot(), so a long-open tab
+    // doesn't start failing once the initial token expires.
+    async function currentAccessToken() {
+      return Auth.getValidAccessToken(webStorageAdapter);
+    }
+
+    // ─── Auth ──────────────────────────────────────────────────────────────────
+
+    async function boot() {
+      const accessToken = await currentAccessToken();
+      if (accessToken) {
+        const session = await Auth.getStoredSession(webStorageAdapter);
+        currentUser = session.user;
+        showApp();
+      } else {
+        showAuthScreen();
+      }
+    }
+
+    function showAuthScreen() {
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+    }
+
+    async function showApp() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      await Promise.all([loadProfiles(), loadPremiumStatus()]);
+      handlePostLoginRedirect();
+    }
+
+    // ─── Premium status ────────────────────────────────────────────────────────
+
+    /**
+     * Fetches is_premium from user_settings and updates the nav badge + upgrade banner.
+     * RLS ensures users only ever see their own row.
+     */
+    async function loadPremiumStatus() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const isPremium = await fetchIsPremium(accessToken, currentUser.id);
+
+      document.getElementById('premium-badge').classList.toggle('hidden', !isPremium);
+      document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
+    }
+
+    /**
+     * After sign-in/sign-up, check for:
+     *  - ?upgrade=success  — show a thank-you toast (returned from Stripe)
+     *  - ?redirect=upgrade — user was sent here from pricing.html while logged out;
+     *                        forward them to pricing.html now that they're authenticated.
+     */
+    function handlePostLoginRedirect() {
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get('upgrade') === 'success') {
+        showToast('Welcome to Focus Pro. Your account has been upgraded.');
+        // Reload premium status — the webhook may have already fired.
+        loadPremiumStatus();
+        // Clean the URL so a refresh doesn't re-trigger the toast.
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+
+      if (params.get('redirect') === 'upgrade') {
+        window.history.replaceState({}, '', window.location.pathname);
+        window.location.href = 'pricing.html';
+      }
+    }
+
+    // ─── Toast ─────────────────────────────────────────────────────────────────
+
+    function showToast(msg, duration = 4000) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), duration);
+    }
+
+    // ─── Error helpers ─────────────────────────────────────────────────────────
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function hideError(id) {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.classList.remove('visible');
+    }
+
+    // ─── Profiles ──────────────────────────────────────────────────────────────
+
+    async function loadProfiles() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      profiles = await fetchProfiles(accessToken);
+
+      // Default selection: currently active profile, or the first one.
+      selectedProfile = profiles.find(p => p.is_active) || profiles[0] || null;
+
+      renderProfileTabs();
+      if (selectedProfile) loadBlocklist(selectedProfile.id);
+    }
+
+    function renderProfileTabs() {
+      const container = document.getElementById('profile-tabs');
+      container.innerHTML = '';
+
+      for (const profile of profiles) {
+        const tab = document.createElement('button');
+        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}`;
+        tab.dataset.profileId = profile.id;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = profile.name;
+        tab.appendChild(nameSpan);
+
+        // Delete button (only shown on hover via CSS, hidden for active profile)
+        if (!profile.is_active) {
+          const del = document.createElement('span');
+          del.className = 'profile-tab-delete';
+          del.textContent = '×';
+          del.title = 'Delete profile';
+          del.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleDeleteProfile(profile.id);
+          });
+          tab.appendChild(del);
+        }
+
+        tab.addEventListener('click', () => handleSelectProfile(profile));
+        container.appendChild(tab);
+      }
+    }
+
+    /**
+     * Selects a profile in the dashboard UI (does NOT switch the active blocking
+     * profile — that requires the extension. Dashboard selection is view-only scoping).
+     * Clicking the active-status tab will activate it for blocking via Supabase.
+     */
+    async function handleSelectProfile(profile) {
+      selectedProfile = profile;
+
+      // If the selected tab is not the current blocking-active profile, give the
+      // user the option to activate it by clicking a highlighted tab.
+      // We also actually set is_active in DB when a user clicks a tab, so the
+      // extension picks it up on its next refresh.
+      if (!profile.is_active) {
+        await activateProfile(profile.id);
+      }
+
+      renderProfileTabs();
+      loadBlocklist(profile.id);
+    }
+
+    /**
+     * Sets one profile as active in Supabase (deactivates all others for this user).
+     * The extension's 5-min refresh cycle will pick this up automatically.
+     *
+     * @param {string} profileId
+     */
+    async function activateProfile(profileId) {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const ok = await switchProfile(accessToken, currentUser.id, profileId);
+      if (!ok) { console.error('[PDS] activateProfile failed'); return; }
+
+      // Update local state.
+      profiles = profiles.map(p => ({ ...p, is_active: p.id === profileId }));
+      selectedProfile = profiles.find(p => p.id === profileId) || selectedProfile;
+    }
+
+    async function handleDeleteProfile(profileId) {
+      // Guard: do not delete the last profile.
+      if (profiles.length <= 1) {
+        alert('You need at least one profile.');
+        return;
+      }
+
+      // Guard: do not delete the active profile without switching first.
+      const target = profiles.find(p => p.id === profileId);
+      if (target?.is_active) {
+        alert('Switch to a different profile before deleting this one.');
+        return;
+      }
+
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const ok = await deleteProfile(accessToken, profileId);
+      if (!ok) { console.error('[PDS] deleteProfile failed'); return; }
+
+      profiles = profiles.filter(p => p.id !== profileId);
+
+      // If we deleted the selected profile, fall back to the active one.
+      if (selectedProfile?.id === profileId) {
+        selectedProfile = profiles.find(p => p.is_active) || profiles[0] || null;
+      }
+
+      renderProfileTabs();
+      if (selectedProfile) loadBlocklist(selectedProfile.id);
+    }
+
+    // ─── Blocklist ─────────────────────────────────────────────────────────────
+
+    async function loadBlocklist(profileId) {
+      const heading = document.getElementById('blocklist-heading');
+      const profile  = profiles.find(p => p.id === profileId);
+      heading.textContent = profile ? `${profile.name}'s Blocklist` : 'Blocklist';
+
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const rows = await fetchBlockedUrls(accessToken, profileId);
+      renderUrlList(rows ?? []);
+    }
+
+    function renderUrlList(items) {
+      const list  = document.getElementById('url-list');
+      const empty = document.getElementById('url-empty');
+      list.innerHTML = '';
+
+      if (items.length === 0) {
+        list.appendChild(empty);
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      for (const item of items) {
+        const li = document.createElement('li');
+        li.className = 'url-item';
+
+        const left = document.createElement('div');
+        left.className = 'url-left';
+
+        const dot = document.createElement('div');
+        dot.className = 'url-dot';
+
+        const text = document.createElement('span');
+        text.className = 'url-text';
+        text.textContent = item.url;
+
+        left.appendChild(dot);
+        left.appendChild(text);
+
+        const del = document.createElement('button');
+        del.className = 'btn-delete-url';
+        del.textContent = 'Remove';
+        del.addEventListener('click', () => handleDeleteUrl(item.id));
+
+        li.appendChild(left);
+        li.appendChild(del);
+        list.appendChild(li);
+      }
+    }
+
+    async function handleAddUrl() {
+      if (!selectedProfile) return;
+
+      const input = document.getElementById('url-input');
+      const url   = input.value.trim();
+      if (!url) return;
+
+      const btn = document.getElementById('add-url-btn');
+      btn.textContent = '…';
+      btn.disabled    = true;
+
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const created = await addBlockedUrl(accessToken, {
+        profileId: selectedProfile.id,
+        userId: currentUser.id,
+        url,
+      });
+
+      btn.textContent = 'Block site';
+      btn.disabled    = false;
+
+      if (!created) { alert('Could not add that URL. Please try again.'); return; }
+
+      input.value = '';
+      loadBlocklist(selectedProfile.id);
+    }
+
+    async function handleDeleteUrl(urlId) {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const ok = await removeBlockedUrl(accessToken, urlId);
+      if (!ok) { console.error('[PDS] deleteUrl failed'); return; }
+
+      loadBlocklist(selectedProfile.id);
+    }
+
+    // ─── Event wiring ──────────────────────────────────────────────────────────
+
+    // Auth
+    document.getElementById('show-signup').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('login-card').classList.add('hidden');
+      document.getElementById('signup-card').classList.remove('hidden');
+    });
+
+    document.getElementById('show-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('signup-card').classList.add('hidden');
+      document.getElementById('login-card').classList.remove('hidden');
+    });
+
+    ['email-input', 'password-input'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('login-btn').click();
+      });
+    });
+
+    ['signup-email', 'signup-password'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('signup-btn').click();
+      });
+    });
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      hideError('auth-error');
+      const email    = document.getElementById('email-input').value.trim();
+      const password = document.getElementById('password-input').value;
+      const btn      = document.getElementById('login-btn');
+
+      btn.textContent = 'Signing in…';
+      btn.disabled    = true;
+
+      const { session, error } = await Auth.signIn(email, password);
+
+      btn.textContent = 'Sign in';
+      btn.disabled    = false;
+
+      if (error) { showError('auth-error', error); return; }
+
+      await Auth.persistSession(webStorageAdapter, session);
+      currentUser = session.user;
+      showApp();
+    });
+
+    document.getElementById('signup-btn').addEventListener('click', async () => {
+      hideError('signup-error');
+      const email    = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const btn      = document.getElementById('signup-btn');
+
+      btn.textContent = 'Creating…';
+      btn.disabled    = true;
+
+      const { session, error } = await Auth.signUp(email, password);
+
+      btn.textContent = 'Create account';
+      btn.disabled    = false;
+
+      if (error) { showError('signup-error', error); return; }
+
+      await Auth.persistSession(webStorageAdapter, session);
+      currentUser = session.user;
+      showApp();
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await Auth.signOut(webStorageAdapter);
+      currentUser = null;
+      profiles    = [];
+      selectedProfile = null;
+      showAuthScreen();
+    });
+
+    // Add URL
+    document.getElementById('add-url-btn').addEventListener('click', handleAddUrl);
+    document.getElementById('url-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAddUrl();
+    });
+
+    // New profile form
+    document.getElementById('add-profile-btn').addEventListener('click', () => {
+      document.getElementById('new-profile-form').classList.add('visible');
+      document.getElementById('new-profile-name').focus();
+    });
+
+    document.getElementById('new-profile-cancel').addEventListener('click', () => {
+      document.getElementById('new-profile-form').classList.remove('visible');
+      document.getElementById('new-profile-name').value = '';
+    });
+
+    async function handleCreateProfile() {
+      const input = document.getElementById('new-profile-name');
+      const name  = input.value.trim();
+      if (!name) return;
+
+      const btn = document.getElementById('new-profile-confirm');
+      btn.textContent = '…';
+      btn.disabled    = true;
+
+      const accessToken = await currentAccessToken();
+      const newProfile  = accessToken ? await createProfile(accessToken, currentUser.id, name) : null;
+
+      btn.textContent = 'Add';
+      btn.disabled    = false;
+
+      if (!newProfile) { console.error('[PDS] createProfile failed'); return; }
+
+      profiles.push(newProfile);
+      input.value = '';
+      document.getElementById('new-profile-form').classList.remove('visible');
+
+      renderProfileTabs();
+    }
+
+    document.getElementById('new-profile-confirm').addEventListener('click', handleCreateProfile);
+    document.getElementById('new-profile-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleCreateProfile();
+      if (e.key === 'Escape') document.getElementById('new-profile-cancel').click();
+    });
+
+    // ─── Boot ──────────────────────────────────────────────────────────────────
+    boot();
+  </script>
+</body>
+</html>

@@ -73,12 +73,20 @@
     }
 
     .nav-logo {
-      height: 28px;
+      height: 26px;
       width: auto;
       filter: invert(1);
       opacity: 0.9;
       position: relative;
       top: 2px;
+      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
+       clean flip. Counter-clockwise; the cubic-bezier above gives a
+       slow-start/fast-middle/slow-end feel. */
+    .nav-logo:hover {
+      transform: rotate(-180deg);
     }
 
     .nav-links {
@@ -119,6 +127,91 @@
     }
 
     .nav-cta:hover { opacity: 0.78; }
+
+    /* ─── Account menu (shown instead of the nav-cta pill once logged in,
+       same pattern duplicated on index.html and dashboard.html — no shared
+       component system in this build-free codebase) ────────────────── */
+    .account-menu { position: relative; }
+
+    .account-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--black);
+      color: var(--white);
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .account-avatar:hover { opacity: 0.82; }
+
+    .account-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 200px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-card);
+      padding: 8px;
+      display: none;
+      z-index: 200;
+    }
+
+    .account-dropdown.open { display: block; }
+
+    .account-dropdown-header {
+      padding: 8px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    .account-dropdown-email {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .account-dropdown-pro-tag {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.06);
+      padding: 2px 8px;
+      border-radius: 24px;
+    }
+
+    .account-dropdown-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.86rem;
+      color: var(--text);
+      text-decoration: none;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .account-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
+
+    .hidden { display: none !important; }
 
     /* ─── Page sections ───────────────────────────────────────────────── */
     .page {
@@ -764,8 +857,19 @@
     </a>
     <div class="nav-links">
       <a href="index.html" class="nav-link">Home</a>
-      <a href="pricing.html" class="nav-link active">Plans</a>
       <a href="dashboard.html" class="nav-cta" id="nav-cta">Get started</a>
+      <div class="account-menu hidden" id="account-menu">
+        <button class="account-avatar" id="account-avatar-btn"></button>
+        <div class="account-dropdown" id="account-dropdown">
+          <div class="account-dropdown-header">
+            <div class="account-dropdown-email" id="account-email"></div>
+            <span class="account-dropdown-pro-tag hidden" id="account-pro-tag">Pro</span>
+          </div>
+          <a href="dashboard.html" class="account-dropdown-item">Dashboard</a>
+          <a href="dashboard.html#settings-card" class="account-dropdown-item">Settings</a>
+          <button class="account-dropdown-item" id="account-signout-btn">Sign out</button>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -1012,14 +1116,15 @@
   <script type="module">
     import { webStorageAdapter } from '../core/auth/storage.js'
     import * as Auth from '../core/auth/session.js'
-    import { createCheckoutSession } from '../core/sync/billing.js'
+    import { createCheckoutSession, createPortalSession } from '../core/sync/billing.js'
+    import { fetchIsPremium } from '../core/sync/userSettings.js'
 
     // ─── CONFIGURE THIS ────────────────────────────────────────────────────────
     // Fill in your Stripe publishable key and the price ID for the Focus Pro plan.
     // Find the price ID in Stripe Dashboard → Products → Focus Pro → Price ID.
     // The publishable key starts with pk_live_ (production) or pk_test_ (test mode).
-    const STRIPE_PUBLISHABLE_KEY = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'
-    const FOCUS_PRO_PRICE_ID     = 'price_REPLACE_WITH_YOUR_STRIPE_PRICE_ID'
+    const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TvrhIFNvKhBLa0wh8cdu1VgqD7GiRAtNyNLDwxsdtPTpXKeftJw7nIK9TlMgDiB0kph5dp5RAkrYrL3Ch7noC2d007eqflMqL'
+    const FOCUS_PRO_PRICE_ID     = 'price_1Tw8GyFNvKhBLa0wP93sCh2f'
     // ──────────────────────────────────────────────────────────────────────────
 
     // ─── Toast helper ──────────────────────────────────────────────────────────
@@ -1032,8 +1137,17 @@
 
     // ─── Checkout flow ─────────────────────────────────────────────────────────
 
-    async function handleUpgrade() {
-      const btn = document.getElementById('pro-cta')
+    // Set by checkProCtaState() below — flips both CTA buttons over to the
+    // "already subscribed" path instead of creating a second Checkout
+    // Session. create-checkout-session also re-checks this server-side
+    // (defense in depth, same reasoning as the Strict Mode gating), so this
+    // is UX, not the actual enforcement.
+    let isPremiumUser = false
+
+    async function handleUpgrade(e) {
+      if (isPremiumUser) return handleManageSubscription(e)
+
+      const btn = e.currentTarget
 
       // Check if the user has an active session
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
@@ -1046,6 +1160,7 @@
       }
 
       // Disable button while we create the session
+      const originalText = btn.textContent
       btn.textContent = 'Preparing checkout…'
       btn.disabled = true
 
@@ -1053,8 +1168,8 @@
 
       if (error || !url) {
         console.error('[PDS] Checkout error:', error)
-        showToast('Something went wrong. Please try again.')
-        btn.textContent = 'Get Focus Pro'
+        showToast(error || 'Something went wrong. Please try again.')
+        btn.textContent = originalText
         btn.disabled = false
         return
       }
@@ -1063,9 +1178,51 @@
       window.location.href = url
     }
 
+    // Redirects an already-Pro user to Stripe's Billing Portal (cancel /
+    // update payment method) instead of creating another subscription.
+    async function handleManageSubscription(e) {
+      const btn = e.currentTarget
+      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
+      if (!accessToken) {
+        window.location.href = 'dashboard.html'
+        return
+      }
+
+      const originalText = btn.textContent
+      btn.textContent = 'Opening billing portal…'
+      btn.disabled = true
+
+      const { url, error } = await createPortalSession(accessToken)
+
+      if (error || !url) {
+        console.error('[PDS] Billing portal error:', error)
+        showToast(error || 'Something went wrong. Please try again.')
+        btn.textContent = originalText
+        btn.disabled = false
+        return
+      }
+
+      window.location.href = url
+    }
+
+    // Checks premium status and relabels both CTA buttons if the signed-in
+    // user is already subscribed — runs alongside updateNavCta() below.
+    async function checkProCtaState() {
+      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
+      if (!accessToken) return
+
+      const session = await Auth.getStoredSession(webStorageAdapter)
+      isPremiumUser = await fetchIsPremium(accessToken, session.user.id)
+      if (!isPremiumUser) return
+
+      document.getElementById('pro-cta').textContent = 'Manage subscription'
+      document.getElementById('bottom-cta-btn').textContent = 'Manage subscription'
+    }
+
     // ─── Wire up all CTA buttons ───────────────────────────────────────────────
     document.getElementById('pro-cta').addEventListener('click', handleUpgrade)
     document.getElementById('bottom-cta-btn').addEventListener('click', handleUpgrade)
+    checkProCtaState()
 
     // ─── FAQ accordion ─────────────────────────────────────────────────────────
     document.querySelectorAll('.faq-item').forEach(item => {
@@ -1078,17 +1235,46 @@
       })
     })
 
-    // ─── Nav CTA — if logged in, point to dashboard; else to sign-in ──────────
-    async function updateNavCta() {
+    // ─── Account menu — shows the nav-cta pill when logged out, or an
+    // avatar + dropdown (Dashboard / Settings / Sign out) when logged in.
+    // Same pattern duplicated on index.html and dashboard.html.
+    async function initAccountMenu() {
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
       const navCta = document.getElementById('nav-cta')
-      if (accessToken) {
-        navCta.href   = 'dashboard.html'
-        navCta.textContent = 'Dashboard'
+      const menu = document.getElementById('account-menu')
+
+      if (!accessToken) {
+        menu.classList.add('hidden')
+        navCta.classList.remove('hidden')
+        return
       }
+
+      const session = await Auth.getStoredSession(webStorageAdapter)
+      navCta.classList.add('hidden')
+      menu.classList.remove('hidden')
+      document.getElementById('account-email').textContent = session.user.email
+      document.getElementById('account-avatar-btn').textContent =
+        session.user.email.charAt(0).toUpperCase()
+
+      const isPremium = await fetchIsPremium(accessToken, session.user.id)
+      document.getElementById('account-pro-tag').classList.toggle('hidden', !isPremium)
     }
 
-    updateNavCta()
+    document.getElementById('account-avatar-btn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      document.getElementById('account-dropdown').classList.toggle('open')
+    })
+
+    document.addEventListener('click', () => {
+      document.getElementById('account-dropdown').classList.remove('open')
+    })
+
+    document.getElementById('account-signout-btn').addEventListener('click', async () => {
+      await Auth.signOut(webStorageAdapter)
+      window.location.href = 'index.html'
+    })
+
+    initAccountMenu()
   </script>
 
 </body>

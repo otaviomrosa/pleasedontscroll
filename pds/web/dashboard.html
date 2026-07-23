@@ -78,6 +78,14 @@
       opacity: 0.9;
       position: relative;
       top: 2px;
+      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
+       clean flip. Counter-clockwise; the cubic-bezier above gives a
+       slow-start/fast-middle/slow-end feel. */
+    .public-nav-logo:hover {
+      transform: rotate(-180deg);
     }
 
     .public-nav-links {
@@ -223,6 +231,25 @@
 
     .error-msg.visible { display: block; }
 
+    .auth-forgot {
+      font-size: 0.8rem;
+      text-align: right;
+      margin: -4px 0 20px;
+    }
+
+    .auth-forgot a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .auth-forgot a:hover { color: var(--text); text-decoration: underline; }
+
+    .auth-success {
+      font-size: 0.8rem;
+      color: var(--dot-active);
+      margin: 8px 0 0;
+    }
+
     /* ─── Top nav ──────────────────────────────────────────────────────── */
     .top-nav {
       display: flex;
@@ -237,13 +264,150 @@
     }
 
     .nav-logo {
-      height: 32px;
+      height: 30px;
       width: auto;
       display: block;
       filter: invert(1);
       position: relative;
-      top: 2px; /* optical correction — the mark's visual weight sits high in its box */
+      top: 0px; /* optical correction — the mark's visual weight sits high in its box */
+      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
     }
+
+    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
+       clean flip. Counter-clockwise; the cubic-bezier above gives a
+       slow-start/fast-middle/slow-end feel. */
+    .nav-logo:hover {
+      transform: rotate(-180deg);
+    }
+
+    /* ─── Account menu (same pattern duplicated on index.html and
+       pricing.html — no shared component system in this build-free
+       codebase). Dashboard's own "Settings" item is an in-page anchor
+       (#settings-card) rather than a link, since it's already here. ─── */
+    .account-menu { position: relative; }
+
+    .account-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--black);
+      color: var(--white);
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .account-avatar:hover { opacity: 0.82; }
+
+    .account-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 200px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-card);
+      padding: 8px;
+      display: none;
+      z-index: 200;
+    }
+
+    .account-dropdown.open { display: block; }
+
+    .account-dropdown-header {
+      padding: 8px 12px 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    .account-dropdown-email {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    .account-dropdown-pro-tag {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.06);
+      padding: 2px 8px;
+      border-radius: 24px;
+    }
+
+    .account-dropdown-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.86rem;
+      color: var(--text);
+      text-decoration: none;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .account-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
+
+    /* ─── Settings disclosure (top-level Settings card, and the nested
+       Change password sub-section within it) ─────────────────────────── */
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      text-align: left;
+    }
+
+    .settings-body {
+      margin-top: 20px;
+    }
+
+    .settings-subheader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 0 0 12px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      text-align: left;
+    }
+
+    .settings-subbody {
+      margin-bottom: 4px;
+    }
+
+    .chevron {
+      display: inline-block;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      transition: transform 0.2s ease;
+    }
+
+    .chevron.open { transform: rotate(180deg); }
 
     /* ─── Section headers ──────────────────────────────────────────────── */
     .section-title {
@@ -306,6 +470,23 @@
       color: var(--white);
       border-color: var(--black);
       font-weight: 500;
+    }
+
+    .profile-tab.locked {
+      color: var(--text-muted);
+      opacity: 0.6;
+      cursor: pointer; /* still clickable — routes to pricing.html */
+    }
+
+    .profile-tab.locked:hover {
+      opacity: 0.85;
+      border-color: var(--border-hover);
+    }
+
+    .profile-tab-lock {
+      margin-left: 6px;
+      font-size: 0.7rem;
+      vertical-align: middle;
     }
 
     /* Delete icon inside inactive tabs */
@@ -621,6 +802,8 @@
           <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
         </div>
 
+        <p class="auth-forgot"><a href="#" id="show-forgot">Forgot your password?</a></p>
+
         <p class="error-msg" id="auth-error"></p>
 
         <button class="btn-primary" id="login-btn">Sign in</button>
@@ -650,6 +833,46 @@
         <p class="auth-toggle"><a href="#" id="show-login">Back to sign in</a></p>
       </div>
     </div>
+
+    <!-- Forgot-password sub-form (hidden by default) -->
+    <div class="auth-shell hidden" id="forgot-card">
+      <div class="auth-card">
+        <p class="auth-eyebrow">Dashboard</p>
+        <h1 class="auth-title">Reset your password.</h1>
+        <p class="auth-sub">Enter your email and we'll send you a reset link.</p>
+
+        <div class="form-group">
+          <input class="field" type="email" id="forgot-email" placeholder="Email" autocomplete="email">
+        </div>
+
+        <p class="error-msg" id="forgot-error"></p>
+        <p class="auth-success hidden" id="forgot-success">If an account exists for that email, a reset link is on its way.</p>
+
+        <button class="btn-primary" id="forgot-btn">Send reset link</button>
+
+        <p class="auth-toggle"><a href="#" id="forgot-back-to-login">Back to sign in</a></p>
+      </div>
+    </div>
+
+    <!-- New-password sub-form — only ever shown when the page loads with a
+         Supabase recovery link's tokens in the URL hash (see completeRecoveryFlow()) -->
+    <div class="auth-shell hidden" id="reset-card">
+      <div class="auth-card">
+        <p class="auth-eyebrow">Dashboard</p>
+        <h1 class="auth-title">Choose a new password.</h1>
+
+        <div class="form-group">
+          <input class="field" type="password" id="reset-password" placeholder="New password" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <input class="field" type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password">
+        </div>
+
+        <p class="error-msg" id="reset-error"></p>
+
+        <button class="btn-primary" id="reset-btn">Update password</button>
+      </div>
+    </div>
   </div>
 
   <!-- ─── App screen ────────────────────────────────────────────────────── -->
@@ -658,17 +881,27 @@
 
       <!-- Top nav -->
       <div class="top-nav">
-        <div style="display:flex;align-items:center;gap:0;">
-          <a href="index.html" class="nav-logo-link">
-            <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-          </a>
+        <a href="index.html" class="nav-logo-link">
+          <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
+        </a>
+        <div style="display:flex;align-items:center;gap:12px;">
           <!-- Premium badge: shown by JS when is_premium = true -->
           <span class="premium-badge hidden" id="premium-badge">
             <span class="premium-badge-dot"></span>
             Pro
           </span>
+          <div class="account-menu" id="account-menu">
+            <button class="account-avatar" id="account-avatar-btn"></button>
+            <div class="account-dropdown" id="account-dropdown">
+              <div class="account-dropdown-header">
+                <div class="account-dropdown-email" id="account-email"></div>
+                <span class="account-dropdown-pro-tag hidden" id="account-pro-tag">Pro</span>
+              </div>
+              <a href="#settings-card" class="account-dropdown-item" id="settings-link">Settings</a>
+              <button class="account-dropdown-item" id="logout-btn">Sign out</button>
+            </div>
+          </div>
         </div>
-        <button class="btn-ghost" id="logout-btn">Sign out</button>
       </div>
 
       <!-- Upgrade banner: shown by JS when is_premium = false -->
@@ -687,14 +920,17 @@
         <!-- Profile tabs (rendered by JS) -->
         <div class="profile-tabs" id="profile-tabs"></div>
 
-        <!-- Add profile controls -->
-        <button class="btn-add-profile" id="add-profile-btn">+ New profile</button>
+        <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
+             only for premium users, to avoid a flash of an actionable
+             button before premium status resolves. -->
+        <button class="btn-add-profile hidden" id="add-profile-btn">+ New profile</button>
 
         <div class="new-profile-form" id="new-profile-form">
           <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="40">
           <button class="btn-sm dark" id="new-profile-confirm">Add</button>
           <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
         </div>
+        <p class="error-msg" id="profile-error"></p>
       </div>
 
       <!-- Blocklist card — scoped to selected profile -->
@@ -705,10 +941,52 @@
           <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com">
           <button class="btn-sm dark" id="add-url-btn">Block site</button>
         </div>
+        <p class="error-msg" id="url-error"></p>
 
         <ul class="url-list" id="url-list">
           <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
         </ul>
+      </div>
+
+      <!-- Settings card — reachable via the account menu's "Settings" link,
+           or directly at dashboard.html#settings-card. Collapsed by default
+           to keep the page minimal; "Change password" is a second, nested
+           disclosure inside it for the same reason. -->
+      <div class="card" id="settings-card">
+        <button class="settings-header" id="settings-toggle" aria-expanded="false">
+          <h2 class="section-title" style="margin: 0;">Settings</h2>
+          <span class="chevron" id="settings-chevron">&#9662;</span>
+        </button>
+
+        <div class="settings-body hidden" id="settings-body">
+          <p class="section-label">Signed in as</p>
+          <p class="url-text" id="settings-email" style="margin: 0 0 20px;"></p>
+
+          <div class="divider"></div>
+
+          <button class="settings-subheader" id="password-toggle" aria-expanded="false">
+            <p class="section-label" style="margin: 0;">Change password</p>
+            <span class="chevron" id="password-chevron">&#9662;</span>
+          </button>
+          <div class="settings-subbody hidden" id="password-body">
+            <div class="form-group">
+              <input class="field" type="password" id="new-password-input" placeholder="New password" autocomplete="new-password">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
+            </div>
+            <p class="error-msg" id="password-error"></p>
+            <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <p class="section-label">Subscription</p>
+          <p class="url-text hidden" id="settings-not-premium" style="margin: 0 0 12px; color: var(--text-muted); font-size: 0.88rem;">
+            You're on the Free plan. <a href="pricing.html">See Focus Pro &rarr;</a>
+          </p>
+          <button class="btn-sm light hidden" id="cancel-subscription-btn" style="padding-left: 0;">Manage subscription</button>
+        </div>
       </div>
 
     </div>
@@ -723,11 +1001,37 @@
     import { fetchProfiles, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
     import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
     import { fetchIsPremium } from '../core/sync/userSettings.js';
+    import { createPortalSession } from '../core/sync/billing.js';
+    import { EXTENSION_ID } from '../core/config.js';
+    import { isValidBlocklistUrl } from '../core/blocklist/hostname.js';
+    import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../core/validation.js';
 
     // ─── State ─────────────────────────────────────────────────────────────────
     let currentUser    = null;
     let profiles       = [];
     let selectedProfile = null; // { id, name, is_active }
+    // Set by loadPremiumStatus() — profiles beyond the first (oldest, by
+    // created_at — fetchProfiles() already orders that way) are locked in
+    // the UI for free users. Real enforcement is server-side
+    // (007_profile_limit.sql); this only controls what's shown/clickable.
+    let isPremiumUser  = false;
+
+    // ─── Extension "poke" ─────────────────────────────────────────────────────
+    // Tells the extension's background worker to refresh its blocklist right
+    // now instead of waiting on its poll interval. Best-effort only — if the
+    // extension isn't installed, EXTENSION_ID is still the placeholder, or
+    // this browser has no `chrome` global at all, this just silently does
+    // nothing and the extension's own poll (background/index.js) covers it.
+    function pokeExtension() {
+      if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) return;
+      try {
+        chrome.runtime.sendMessage(EXTENSION_ID, { type: 'BLOCKLIST_CHANGED' }, () => {
+          void chrome.runtime.lastError; // swallow "no such extension" etc.
+        });
+      } catch {
+        // Same reasoning — this is an optimization, never load-bearing.
+      }
+    }
 
     // Refreshes (and persists) the token on demand — every action below calls
     // this rather than caching a single token from boot(), so a long-open tab
@@ -739,6 +1043,11 @@
     // ─── Auth ──────────────────────────────────────────────────────────────────
 
     async function boot() {
+      // A password-recovery link takes priority over any existing session
+      // in this browser — someone clicking it wants to reset a password,
+      // not land in whatever account happens to already be signed in here.
+      if (completeRecoveryFlow()) return;
+
       const accessToken = await currentAccessToken();
       if (accessToken) {
         const session = await Auth.getStoredSession(webStorageAdapter);
@@ -749,6 +1058,37 @@
       }
     }
 
+    // ─── Password recovery ─────────────────────────────────────────────────────
+    // Supabase's recovery email links to /auth/v1/verify, which (after
+    // verifying the token server-side) redirects the browser back to
+    // requestPasswordReset()'s redirectTo with session tokens in the URL
+    // *hash* (not a query string): #access_token=...&type=recovery&...
+
+    let recoveryAccessToken = null;
+
+    function parseHashParams() {
+      return Object.fromEntries(new URLSearchParams(window.location.hash.replace(/^#/, '')));
+    }
+
+    /** Returns true if a recovery link was detected and handled (reset-card shown). */
+    function completeRecoveryFlow() {
+      const { access_token, type } = parseHashParams();
+      if (type !== 'recovery' || !access_token) return false;
+
+      recoveryAccessToken = access_token;
+      window.history.replaceState({}, '', window.location.pathname);
+
+      showView('reset-card');
+      return true;
+    }
+
+    // ─── Auth sub-view switching (login / signup / forgot / reset) ────────────
+    function showView(id) {
+      ['login-card', 'signup-card', 'forgot-card', 'reset-card'].forEach((cardId) => {
+        document.getElementById(cardId).classList.toggle('hidden', cardId !== id);
+      });
+    }
+
     function showAuthScreen() {
       document.getElementById('auth-screen').classList.remove('hidden');
       document.getElementById('app-screen').classList.add('hidden');
@@ -757,9 +1097,54 @@
     async function showApp() {
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('app-screen').classList.remove('hidden');
-      await Promise.all([loadProfiles(), loadPremiumStatus()]);
+      initAccountMenu();
+      // Sequential, not parallel: loadProfiles()'s renderProfileTabs() needs
+      // isPremiumUser (set by loadPremiumStatus()) to know which profiles to
+      // lock, so premium status must resolve first.
+      await loadPremiumStatus();
+      await loadProfiles();
       handlePostLoginRedirect();
     }
+
+    // ─── Account menu ──────────────────────────────────────────────────────────
+    // Same avatar + dropdown pattern as index.html/pricing.html, minus the
+    // logged-out fallback (this page only reaches here once logged in).
+    function initAccountMenu() {
+      document.getElementById('account-email').textContent = currentUser.email;
+      document.getElementById('settings-email').textContent = currentUser.email;
+      document.getElementById('account-avatar-btn').textContent =
+        currentUser.email.charAt(0).toUpperCase();
+    }
+
+    document.getElementById('account-avatar-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('account-dropdown').classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      document.getElementById('account-dropdown').classList.remove('open');
+    });
+
+    document.getElementById('settings-link').addEventListener('click', () => {
+      document.getElementById('account-dropdown').classList.remove('open');
+    });
+
+    // ─── Settings disclosure ────────────────────────────────────────────────────
+    function setDisclosure(toggleId, bodyId, chevronId, open) {
+      document.getElementById(bodyId).classList.toggle('hidden', !open);
+      document.getElementById(toggleId).setAttribute('aria-expanded', String(open));
+      document.getElementById(chevronId).classList.toggle('open', open);
+    }
+
+    document.getElementById('settings-toggle').addEventListener('click', () => {
+      const isOpen = !document.getElementById('settings-body').classList.contains('hidden');
+      setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', !isOpen);
+    });
+
+    document.getElementById('password-toggle').addEventListener('click', () => {
+      const isOpen = !document.getElementById('password-body').classList.contains('hidden');
+      setDisclosure('password-toggle', 'password-body', 'password-chevron', !isOpen);
+    });
 
     // ─── Premium status ────────────────────────────────────────────────────────
 
@@ -772,9 +1157,13 @@
       if (!accessToken) return;
 
       const isPremium = await fetchIsPremium(accessToken, currentUser.id);
+      isPremiumUser = isPremium;
 
       document.getElementById('premium-badge').classList.toggle('hidden', !isPremium);
+      document.getElementById('account-pro-tag').classList.toggle('hidden', !isPremium);
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
+      document.getElementById('settings-not-premium').classList.toggle('hidden', isPremium);
+      document.getElementById('cancel-subscription-btn').classList.toggle('hidden', !isPremium);
     }
 
     /**
@@ -797,6 +1186,11 @@
       if (params.get('redirect') === 'upgrade') {
         window.history.replaceState({}, '', window.location.pathname);
         window.location.href = 'pricing.html';
+      }
+
+      if (window.location.hash === '#settings-card') {
+        setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', true);
+        document.getElementById('settings-card').scrollIntoView({ behavior: 'smooth' });
       }
     }
 
@@ -842,14 +1236,31 @@
       const container = document.getElementById('profile-tabs');
       container.innerHTML = '';
 
-      for (const profile of profiles) {
+      // profiles[0] is the oldest (fetchProfiles orders by created_at.asc)
+      // — the one free-tier account keeps. Anything after it is
+      // Focus-Pro-only; locked in the UI when the user isn't premium. Real
+      // enforcement is the trigger in 007_profile_limit.sql, not this.
+      profiles.forEach((profile, index) => {
+        const locked = !isPremiumUser && index > 0;
+
         const tab = document.createElement('button');
-        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}`;
+        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}${locked ? ' locked' : ''}`;
         tab.dataset.profileId = profile.id;
 
         const nameSpan = document.createElement('span');
         nameSpan.textContent = profile.name;
         tab.appendChild(nameSpan);
+
+        if (locked) {
+          const lock = document.createElement('span');
+          lock.className = 'profile-tab-lock';
+          lock.textContent = '🔒';
+          tab.appendChild(lock);
+          tab.title = 'Unlock more profiles with Focus Pro';
+          tab.addEventListener('click', () => { window.location.href = 'pricing.html'; });
+          container.appendChild(tab);
+          return;
+        }
 
         // Delete button (only shown on hover via CSS, hidden for active profile)
         if (!profile.is_active) {
@@ -866,7 +1277,9 @@
 
         tab.addEventListener('click', () => handleSelectProfile(profile));
         container.appendChild(tab);
-      }
+      });
+
+      document.getElementById('add-profile-btn').classList.toggle('hidden', !isPremiumUser);
     }
 
     /**
@@ -905,19 +1318,20 @@
       // Update local state.
       profiles = profiles.map(p => ({ ...p, is_active: p.id === profileId }));
       selectedProfile = profiles.find(p => p.id === profileId) || selectedProfile;
+      pokeExtension();
     }
 
     async function handleDeleteProfile(profileId) {
       // Guard: do not delete the last profile.
       if (profiles.length <= 1) {
-        alert('You need at least one profile.');
+        showToast('You need at least one profile.');
         return;
       }
 
       // Guard: do not delete the active profile without switching first.
       const target = profiles.find(p => p.id === profileId);
       if (target?.is_active) {
-        alert('Switch to a different profile before deleting this one.');
+        showToast('Switch to a different profile before deleting this one.');
         return;
       }
 
@@ -994,9 +1408,15 @@
     async function handleAddUrl() {
       if (!selectedProfile) return;
 
+      hideError('url-error');
       const input = document.getElementById('url-input');
       const url   = input.value.trim();
       if (!url) return;
+
+      if (!isValidBlocklistUrl(url)) {
+        showError('url-error', 'Enter a valid site, like instagram.com.');
+        return;
+      }
 
       const btn = document.getElementById('add-url-btn');
       btn.textContent = '…';
@@ -1014,10 +1434,11 @@
       btn.textContent = 'Block site';
       btn.disabled    = false;
 
-      if (!created) { alert('Could not add that URL. Please try again.'); return; }
+      if (!created) { showError('url-error', 'Could not add that site. Please try again.'); return; }
 
       input.value = '';
       loadBlocklist(selectedProfile.id);
+      pokeExtension();
     }
 
     async function handleDeleteUrl(urlId) {
@@ -1028,6 +1449,7 @@
       if (!ok) { console.error('[PDS] deleteUrl failed'); return; }
 
       loadBlocklist(selectedProfile.id);
+      pokeExtension();
     }
 
     // ─── Event wiring ──────────────────────────────────────────────────────────
@@ -1035,14 +1457,86 @@
     // Auth
     document.getElementById('show-signup').addEventListener('click', (e) => {
       e.preventDefault();
-      document.getElementById('login-card').classList.add('hidden');
-      document.getElementById('signup-card').classList.remove('hidden');
+      showView('signup-card');
     });
 
     document.getElementById('show-login').addEventListener('click', (e) => {
       e.preventDefault();
-      document.getElementById('signup-card').classList.add('hidden');
-      document.getElementById('login-card').classList.remove('hidden');
+      showView('login-card');
+    });
+
+    document.getElementById('show-forgot').addEventListener('click', (e) => {
+      e.preventDefault();
+      hideError('forgot-error');
+      document.getElementById('forgot-success').classList.add('hidden');
+      showView('forgot-card');
+    });
+
+    document.getElementById('forgot-back-to-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      showView('login-card');
+    });
+
+    document.getElementById('forgot-btn').addEventListener('click', async () => {
+      hideError('forgot-error');
+      document.getElementById('forgot-success').classList.add('hidden');
+
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!isValidEmail(email)) {
+        showError('forgot-error', 'Enter a valid email address.');
+        return;
+      }
+
+      const btn = document.getElementById('forgot-btn');
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { ok, error } = await Auth.requestPasswordReset(email, redirectTo);
+
+      btn.textContent = 'Send reset link';
+      btn.disabled = false;
+
+      if (!ok) { showError('forgot-error', error); return; }
+
+      document.getElementById('forgot-email').value = '';
+      document.getElementById('forgot-success').classList.remove('hidden');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', async () => {
+      hideError('reset-error');
+      const newPassword     = document.getElementById('reset-password').value;
+      const confirmPassword = document.getElementById('reset-password-confirm').value;
+
+      if (!isValidPassword(newPassword)) {
+        showError('reset-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showError('reset-error', 'Passwords do not match.');
+        return;
+      }
+      if (!recoveryAccessToken) {
+        showError('reset-error', 'This reset link has expired. Request a new one.');
+        return;
+      }
+
+      const btn = document.getElementById('reset-btn');
+      btn.textContent = 'Updating…';
+      btn.disabled = true;
+
+      const { ok, error } = await Auth.updatePassword(recoveryAccessToken, newPassword);
+
+      btn.textContent = 'Update password';
+      btn.disabled = false;
+
+      if (!ok) { showError('reset-error', error); return; }
+
+      recoveryAccessToken = null;
+      document.getElementById('reset-password').value = '';
+      document.getElementById('reset-password-confirm').value = '';
+      showView('login-card');
+      showToast('Password updated. Sign in with your new password.');
     });
 
     ['email-input', 'password-input'].forEach(id => {
@@ -1062,6 +1556,11 @@
       const email    = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
       const btn      = document.getElementById('login-btn');
+
+      if (!isValidEmail(email) || !password) {
+        showError('auth-error', 'Enter a valid email and your password.');
+        return;
+      }
 
       btn.textContent = 'Signing in…';
       btn.disabled    = true;
@@ -1083,6 +1582,15 @@
       const email    = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const btn      = document.getElementById('signup-btn');
+
+      if (!isValidEmail(email)) {
+        showError('signup-error', 'Enter a valid email address.');
+        return;
+      }
+      if (!isValidPassword(password)) {
+        showError('signup-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        return;
+      }
 
       btn.textContent = 'Creating…';
       btn.disabled    = true;
@@ -1107,6 +1615,65 @@
       showAuthScreen();
     });
 
+    // ─── Settings: change password ─────────────────────────────────────────────
+    document.getElementById('change-password-btn').addEventListener('click', async () => {
+      hideError('password-error');
+      const newPassword     = document.getElementById('new-password-input').value;
+      const confirmPassword = document.getElementById('confirm-password-input').value;
+
+      if (!isValidPassword(newPassword)) {
+        showError('password-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showError('password-error', 'Passwords do not match.');
+        return;
+      }
+
+      const btn = document.getElementById('change-password-btn');
+      btn.textContent = 'Updating…';
+      btn.disabled = true;
+
+      const accessToken = await currentAccessToken();
+      const { ok, error } = accessToken
+        ? await Auth.updatePassword(accessToken, newPassword)
+        : { ok: false, error: 'Not signed in.' };
+
+      btn.textContent = 'Update password';
+      btn.disabled = false;
+
+      if (!ok) { showError('password-error', error); return; }
+
+      document.getElementById('new-password-input').value = '';
+      document.getElementById('confirm-password-input').value = '';
+      showToast('Password updated.');
+    });
+
+    // ─── Settings: cancel subscription ─────────────────────────────────────────
+    // Redirects to Stripe's hosted Billing Portal — no custom cancellation
+    // flow lives in this repo, same reasoning as checkout itself.
+    document.getElementById('cancel-subscription-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('cancel-subscription-btn');
+      const originalText = btn.textContent;
+      btn.textContent = 'Opening billing portal…';
+      btn.disabled = true;
+
+      const accessToken = await currentAccessToken();
+      const { url, error } = accessToken
+        ? await createPortalSession(accessToken)
+        : { url: null, error: 'Not signed in.' };
+
+      if (error || !url) {
+        console.error('[PDS] Billing portal error:', error);
+        showToast(error || 'Something went wrong. Please try again.');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+      }
+
+      window.location.href = url;
+    });
+
     // Add URL
     document.getElementById('add-url-btn').addEventListener('click', handleAddUrl);
     document.getElementById('url-input').addEventListener('keydown', (e) => {
@@ -1115,19 +1682,26 @@
 
     // New profile form
     document.getElementById('add-profile-btn').addEventListener('click', () => {
+      hideError('profile-error');
       document.getElementById('new-profile-form').classList.add('visible');
       document.getElementById('new-profile-name').focus();
     });
 
     document.getElementById('new-profile-cancel').addEventListener('click', () => {
+      hideError('profile-error');
       document.getElementById('new-profile-form').classList.remove('visible');
       document.getElementById('new-profile-name').value = '';
     });
 
     async function handleCreateProfile() {
+      hideError('profile-error');
       const input = document.getElementById('new-profile-name');
       const name  = input.value.trim();
-      if (!name) return;
+
+      if (!isValidProfileName(name)) {
+        showError('profile-error', 'Enter a profile name (up to 40 characters).');
+        return;
+      }
 
       const btn = document.getElementById('new-profile-confirm');
       btn.textContent = '…';
@@ -1139,7 +1713,10 @@
       btn.textContent = 'Add';
       btn.disabled    = false;
 
-      if (!newProfile) { console.error('[PDS] createProfile failed'); return; }
+      if (!newProfile) {
+        showError('profile-error', 'Could not create that profile. Please try again.');
+        return;
+      }
 
       profiles.push(newProfile);
       input.value = '';

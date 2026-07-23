@@ -1,10 +1,15 @@
 {
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/dashboard.html", "destination": "/dashboard", "permanent": true },
+    { "source": "/pricing.html", "destination": "/pricing", "permanent": true },
+    { "source": "/privacy.html", "destination": "/privacy", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/", "destination": "/web/index.html" },
-    { "source": "/index.html", "destination": "/web/index.html" },
-    { "source": "/dashboard.html", "destination": "/web/dashboard.html" },
-    { "source": "/pricing.html", "destination": "/web/pricing.html" },
-    { "source": "/privacy.html", "destination": "/web/privacy.html" },
+    { "source": "/dashboard", "destination": "/web/dashboard.html" },
+    { "source": "/pricing", "destination": "/web/pricing.html" },
+    { "source": "/privacy", "destination": "/web/privacy.html" },
     { "source": "/assets/:path*", "destination": "/web/assets/:path*" }
   ]
 }

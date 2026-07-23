@@ -36,22 +36,101 @@ async function authFetch(path, body) {
 }
 
 /**
+ * Maps a failed Supabase Auth response to clearer, polished copy shown to
+ * the user. Takes the whole parsed body, not a single field, because
+ * different Auth endpoints (and different Supabase versions) put the error
+ * text under different keys — error_description (OAuth-style, the token
+ * endpoint), msg (most other Auth endpoints), message, or error. Checking
+ * all of them here, once, means a call site can't silently regress to
+ * showing the generic fallback just because it only checked one field (that
+ * exact bug happened: signIn/signUp only checked error_description/message
+ * and missed msg, which is what this endpoint actually returns).
+ *
+ * Supabase deliberately returns the SAME "Invalid login credentials"
+ * message whether the email doesn't exist or the password is wrong —
+ * intentional, industry-standard behavior to prevent account enumeration
+ * (an attacker probing which emails have accounts by reading the error).
+ * Don't try to split this into separate "no such email" / "wrong password"
+ * messages — Supabase's API doesn't expose enough to do that safely, and
+ * faking it would reintroduce the enumeration risk this protects against.
+ */
+function friendlyAuthError(data) {
+  const raw = data?.error_description || data?.msg || data?.message || data?.error || '';
+  const msg = raw.toLowerCase();
+
+  if (msg.includes('invalid login credentials')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (msg.includes('email not confirmed')) {
+    return 'Please confirm your email before signing in — check your inbox.';
+  }
+  if (msg.includes('already registered') || msg.includes('already exists')) {
+    return 'An account with this email already exists. Try signing in instead.';
+  }
+
+  return raw || 'Something went wrong. Please try again.';
+}
+
+/**
  * Signs in with email + password. Returns { session, error }.
  * `session` matches Supabase's token response shape: access_token,
  * refresh_token, expires_at (unix seconds), user: { id, email, ... }.
  */
 export async function signIn(email, password) {
   const { res, data } = await authFetch('/auth/v1/token?grant_type=password', { email, password });
-  if (!res.ok) return { session: null, error: data.error_description || data.message || 'Sign-in failed.' };
+  if (!res.ok) return { session: null, error: friendlyAuthError(data) };
   return { session: data, error: null };
 }
 
 /** Signs up a new user. Returns { session, error }. */
 export async function signUp(email, password) {
   const { res, data } = await authFetch('/auth/v1/signup', { email, password });
-  if (!res.ok) return { session: null, error: data.error_description || data.message || 'Sign-up failed.' };
+  if (!res.ok) return { session: null, error: friendlyAuthError(data) };
   if (data.access_token) return { session: data, error: null };
   return { session: null, error: 'Check your email to confirm your account.' };
+}
+
+/**
+ * Sends a password-recovery email. `redirectTo` must be an allowlisted
+ * Redirect URL in Supabase Dashboard → Authentication → URL Configuration,
+ * or Supabase silently ignores it. Clicking the emailed link lands the user
+ * back on `redirectTo` with recovery tokens in the URL hash (not a query
+ * string) — see dashboard.html's completeRecoveryFlow() for how those get
+ * turned into an actual password change via updatePassword() above.
+ *
+ * Always resolves { ok: true } on a 2xx, regardless of whether the email
+ * actually belongs to an account — Supabase itself doesn't reveal that (same
+ * enumeration-prevention reasoning as friendlyAuthError's login mapping), so
+ * there's nothing more specific to tell the caller.
+ */
+export async function requestPasswordReset(email, redirectTo) {
+  const { res, data } = await authFetch(
+    `/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`,
+    { email },
+  );
+  if (!res.ok) return { ok: false, error: friendlyAuthError(data) };
+  return { ok: true, error: null };
+}
+
+/**
+ * Changes the signed-in user's password. Requires a valid access token
+ * (not the pre-auth apikey-only flow signIn/signUp use) — this hits
+ * Supabase Auth's "update current user" endpoint.
+ * Returns { ok: true } or { ok: false, error }.
+ */
+export async function updatePassword(accessToken, newPassword) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: friendlyAuthError(data) };
+  return { ok: true, error: null };
 }
 
 /** Exchanges a refresh_token for a fresh session, or null if it's no longer valid. */

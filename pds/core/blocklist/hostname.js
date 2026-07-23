@@ -31,3 +31,19 @@ export function hostnameOf(url) {
     return null;
   }
 }
+
+const HOSTNAME_RE = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+/**
+ * Whether a user-entered blocklist value looks like a real, addable
+ * hostname (has a dot-separated domain shape once normalized). Distinct
+ * from normalizeToHostname() above, which is deliberately lenient — never
+ * throws, always returns *something* — because it's used for tab-URL
+ * matching where a non-match is harmless. This one runs at input time,
+ * where "hello world" silently being saved as a "blocked site" that can
+ * never match anything is a real (if minor) bug worth catching.
+ */
+export function isValidBlocklistUrl(rawUrl) {
+  if (typeof rawUrl !== 'string' || !rawUrl.trim()) return false;
+  return HOSTNAME_RE.test(normalizeToHostname(rawUrl));
+}

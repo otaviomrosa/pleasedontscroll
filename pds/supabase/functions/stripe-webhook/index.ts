@@ -46,6 +46,33 @@ const supabaseAdmin = createClient(
   { auth: { persistSession: false } }
 )
 
+/**
+ * On downgrade, if the user's currently-active profile isn't their oldest
+ * ("free") one, switches activity back to the oldest — otherwise blocking
+ * would keep enforcing a profile's list that the user, now on Free,
+ * shouldn't have access to anymore (the profile itself isn't deleted, it's
+ * just locked in the UI — see 007_profile_limit.sql and docs/ARCHITECTURE.md). A no-op
+ * if the user has one profile or the active one is already the oldest.
+ */
+async function reactivateDefaultProfileIfNeeded(userId: string) {
+  const { data: profiles, error } = await supabaseAdmin
+    .from('profiles')
+    .select('id, is_active')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+
+  if (error || !profiles || profiles.length <= 1) return
+
+  const defaultProfile = profiles[0]
+  const activeProfile = profiles.find((p) => p.is_active)
+
+  if (activeProfile && activeProfile.id !== defaultProfile.id) {
+    await supabaseAdmin.from('profiles').update({ is_active: false }).eq('id', activeProfile.id)
+    await supabaseAdmin.from('profiles').update({ is_active: true }).eq('id', defaultProfile.id)
+    console.log(`[PDS] Downgrade: reactivated default profile ${defaultProfile.id} for user ${userId}`)
+  }
+}
+
 serve(async (req: Request) => {
   // ─── 1. Read the raw body bytes (required for signature verification) ─────────
   const body = await req.text()
@@ -124,14 +151,19 @@ serve(async (req: Request) => {
         const PREMIUM_STATUSES: Stripe.Subscription.Status[] = ['active', 'trialing']
         const isPremium = PREMIUM_STATUSES.includes(subscription.status)
 
-        const { error } = await supabaseAdmin
+        const { data: updatedRows, error } = await supabaseAdmin
           .from('user_settings')
           .update({ is_premium: isPremium })
           .eq('stripe_customer_id', stripeCustomerId)
+          .select('id')
 
         if (error) {
           console.error('[PDS] Failed to sync subscription status:', error)
           return new Response('Database update failed', { status: 500 })
+        }
+
+        if (!isPremium && updatedRows?.[0]?.id) {
+          await reactivateDefaultProfileIfNeeded(updatedRows[0].id)
         }
 
         console.log(`[PDS] Subscription status "${subscription.status}" for Stripe customer ${stripeCustomerId} — is_premium=${isPremium}`)
@@ -143,14 +175,19 @@ serve(async (req: Request) => {
         const subscription = event.data.object as Stripe.Subscription
         const stripeCustomerId = subscription.customer as string
 
-        const { error } = await supabaseAdmin
+        const { data: updatedRows, error } = await supabaseAdmin
           .from('user_settings')
           .update({ is_premium: false })
           .eq('stripe_customer_id', stripeCustomerId)
+          .select('id')
 
         if (error) {
           console.error('[PDS] Failed to downgrade user on cancellation:', error)
           return new Response('Database update failed', { status: 500 })
+        }
+
+        if (updatedRows?.[0]?.id) {
+          await reactivateDefaultProfileIfNeeded(updatedRows[0].id)
         }
 
         console.log(`[PDS] Subscription cancelled for Stripe customer: ${stripeCustomerId}`)

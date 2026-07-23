@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeToHostname, isNavigableUrl, hostnameOf } from '../core/blocklist/hostname.js';
+import { normalizeToHostname, isNavigableUrl, hostnameOf, isValidBlocklistUrl } from '../core/blocklist/hostname.js';
 
 test('normalizeToHostname', async (t) => {
   await t.test('bare domain', () => {
@@ -77,5 +77,37 @@ test('hostnameOf', async (t) => {
 
   await t.test('returns null for empty string', () => {
     assert.equal(hostnameOf(''), null);
+  });
+});
+
+test('isValidBlocklistUrl', async (t) => {
+  await t.test('bare domain is valid', () => {
+    assert.equal(isValidBlocklistUrl('instagram.com'), true);
+  });
+
+  await t.test('full URL with path is valid', () => {
+    assert.equal(isValidBlocklistUrl('https://www.reddit.com/r/all'), true);
+  });
+
+  await t.test('subdomain is valid', () => {
+    assert.equal(isValidBlocklistUrl('mail.google.com'), true);
+  });
+
+  await t.test('garbage text is rejected', () => {
+    assert.equal(isValidBlocklistUrl('hello world'), false);
+  });
+
+  await t.test('single word with no TLD is rejected', () => {
+    assert.equal(isValidBlocklistUrl('localhost'), false);
+  });
+
+  await t.test('empty/whitespace-only is rejected', () => {
+    assert.equal(isValidBlocklistUrl(''), false);
+    assert.equal(isValidBlocklistUrl('   '), false);
+  });
+
+  await t.test('non-string input is rejected', () => {
+    assert.equal(isValidBlocklistUrl(undefined), false);
+    assert.equal(isValidBlocklistUrl(null), false);
   });
 });

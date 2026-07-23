@@ -65,7 +65,10 @@
     <div class="profiles-section">
       <div class="profiles-header">
         <span class="profiles-label">Profile</span>
-        <button class="btn-add-profile" id="add-profile-btn" title="New profile">+</button>
+        <!-- Starts hidden, shown by renderProfilePills() only for premium
+             users — avoids a flash of an actionable button before premium
+             status resolves. -->
+        <button class="btn-add-profile hidden" id="add-profile-btn" title="New profile">+</button>
       </div>
 
       <!-- Pills rendered by popup.js -->
@@ -88,7 +91,7 @@
       Manage blocklist →
     </a>
 
-    <p class="footer-hint">Blocklist syncs every 5 min</p>
+    <p class="footer-hint">Blocklist syncs every minute</p>
   </div>
 
   <!-- ─── Strict → Friction confirmation (breathing hold) ───────────────── -->

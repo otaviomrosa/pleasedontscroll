@@ -31,11 +31,25 @@ let blockingMode = 'friction';
 // directly and get it anyway.
 let isPremium = false;
 
-// Refresh interval ID so we can clear it if the user logs out.
-let refreshIntervalId = null;
-
-// How often to re-fetch the blocklist from Supabase (ms).
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+// How often to re-fetch the blocklist from Supabase. This is the fallback
+// path — a second device/browser signed into the same account (or a Stripe
+// webhook flipping is_premium) has no direct channel to this one, so it
+// relies on this timer. Same-browser dashboard edits get an immediate
+// refresh via the externally_connectable message below instead of waiting
+// on this — see BLOCKLIST_CHANGED in the message listener.
+//
+// Uses chrome.alarms, not setInterval: MV3 tears the service worker down
+// after ~30s idle, and a setInterval timer does NOT survive that teardown
+// (this was a real bug — is_premium flipping true server-side after a
+// Stripe checkout wasn't reflected in the extension until an explicit
+// sign-out/sign-in, because the poll had silently stopped firing).
+// chrome.alarms is designed specifically to wake a terminated service
+// worker reliably. Chrome also clamps periodInMinutes to a 1-minute
+// minimum for installed (non-unpacked) extensions, so this can't actually
+// go below 60s in production regardless of the value below — keep this in
+// sync with the "Blocklist syncs every ___" footer hint in popup.html.
+const REFRESH_ALARM_NAME = 'pds-refresh';
+const REFRESH_PERIOD_MINUTES = 1;
 
 // ─── Blocklist management ─────────────────────────────────────────────────────
 
@@ -87,12 +101,15 @@ async function refreshBlocklist() {
 }
 
 /**
- * Starts (or restarts) the periodic blocklist refresh interval.
+ * Starts (or restarts) the periodic blocklist refresh alarm.
  */
 function startRefreshCycle() {
-  if (refreshIntervalId !== null) clearInterval(refreshIntervalId);
-  refreshIntervalId = setInterval(refreshBlocklist, REFRESH_INTERVAL_MS);
+  chrome.alarms.create(REFRESH_ALARM_NAME, { periodInMinutes: REFRESH_PERIOD_MINUTES });
 }
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === REFRESH_ALARM_NAME) refreshBlocklist();
+});
 
 // ─── Tab interception logic ───────────────────────────────────────────────────
 
@@ -244,6 +261,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (ok) await refreshBlocklist();
       sendResponse({ ok, activeProfile });
     })();
+    return true; // async
+  }
+});
+
+// ─── External message protocol (from the web dashboard) ───────────────────────
+// Only origins listed in manifest.json's externally_connectable.matches can
+// reach this listener at all — Chrome enforces that before the message ever
+// gets here, so no extra sender-origin check is needed for security. This is
+// purely a "sync got faster" optimization, never a hard dependency: if the
+// dashboard's EXTENSION_ID is stale/unset, or this message never arrives for
+// any other reason, refreshBlocklist() still runs on its normal interval.
+
+chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
+  if (message?.type === 'BLOCKLIST_CHANGED') {
+    refreshBlocklist().then(() => sendResponse({ ok: true }));
     return true; // async
   }
 });

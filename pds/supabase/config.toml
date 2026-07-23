@@ -1,0 +1,19 @@
+# Per-function platform settings. Both functions below do their own auth
+# verification inside the code (create-checkout-session: service-role
+# auth.getUser() on the incoming JWT; stripe-webhook: Stripe-Signature
+# verification via the webhook secret) — the gateway's verify_jwt is
+# redundant on top of that, and actively breaks things:
+#   - stripe-webhook MUST have it off: Stripe's webhook calls never carry a
+#     Supabase user JWT at all, so the gateway would reject every real
+#     delivery before the Stripe-signature check ever runs.
+#   - create-checkout-session needs it off because the gateway's JWT check
+#     doesn't currently handle this project's newer ES256 (asymmetric)
+#     signing keys correctly, rejecting valid tokens as "missing".
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-portal-session]
+verify_jwt = false

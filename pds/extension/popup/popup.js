@@ -6,6 +6,7 @@ import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import * as Auth from '../../core/auth/session.js';
 import { fetchProfiles, createProfile } from '../../core/sync/profiles.js';
 import { DASHBOARD_URL, PRICING_URL } from '../../core/config.js';
+import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../../core/validation.js';
 
 // ─── Session persistence (adds background notification on top of /core) ──────
 
@@ -69,18 +70,29 @@ function renderProfilePills(profiles) {
     return;
   }
 
-  for (const profile of profiles) {
+  // profiles[0] is the oldest (fetchProfiles orders by created_at.asc) —
+  // the one free-tier account keeps. Anything after it is Focus-Pro-only;
+  // locked here for free users. Real enforcement is the trigger in
+  // 007_profile_limit.sql, not this.
+  profiles.forEach((profile, index) => {
+    const locked = !isPremium && index > 0;
+
     const pill = document.createElement('button');
-    pill.className = `profile-pill${profile.is_active ? ' active' : ''}`;
+    pill.className = `profile-pill${profile.is_active ? ' active' : ''}${locked ? ' locked' : ''}`;
     pill.textContent = profile.name;
     pill.dataset.profileId = profile.id;
 
-    if (!profile.is_active) {
+    if (locked) {
+      pill.title = 'Unlock more profiles with Focus Pro';
+      pill.addEventListener('click', () => chrome.tabs.create({ url: PRICING_URL }));
+    } else if (!profile.is_active) {
       pill.addEventListener('click', () => handleSwitchProfile(profile.id));
     }
 
     container.appendChild(pill);
-  }
+  });
+
+  document.getElementById('add-profile-btn').classList.toggle('hidden', !isPremium);
 }
 
 /**
@@ -269,8 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const email    = document.getElementById('email-input').value.trim();
     const password = document.getElementById('password-input').value;
 
-    if (!email || !password) {
-      setError(authError, 'Please enter your email and password.');
+    if (!isValidEmail(email) || !password) {
+      setError(authError, 'Enter a valid email and your password.');
       return;
     }
 
@@ -315,8 +327,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const email    = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
 
-    if (!email || !password) {
-      setError(signupError, 'Please enter your email and password.');
+    if (!isValidEmail(email)) {
+      setError(signupError, 'Enter a valid email address.');
+      return;
+    }
+    if (!isValidPassword(password)) {
+      setError(signupError, `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 
@@ -385,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const name       = input.value.trim();
     const confirmBtn = document.getElementById('new-profile-confirm');
 
-    if (!name) return;
+    if (!isValidProfileName(name)) return;
 
     const accessToken = await getValidAccessToken();
     if (!accessToken) return;

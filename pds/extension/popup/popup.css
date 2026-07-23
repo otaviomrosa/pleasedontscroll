@@ -472,6 +472,17 @@ body {
   font-weight: 500;
 }
 
+/* Locked pill (Focus Pro-only profile, free account) — still clickable,
+   routes to the pricing page instead of switching */
+.profile-pill.locked {
+  color: var(--text-muted);
+  opacity: 0.55;
+}
+
+.profile-pill.locked:hover {
+  opacity: 0.8;
+}
+
 /* Loading skeleton pill */
 .profile-pill-skeleton {
   display: inline-block;

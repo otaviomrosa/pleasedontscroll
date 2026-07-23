@@ -24,3 +24,26 @@ export async function createCheckoutSession(accessToken, priceId) {
   if (!data.url) return { url: null, error: 'No checkout URL returned.' };
   return { url: data.url, error: null };
 }
+
+/**
+ * Invokes the create-portal-session Edge Function — returns a Stripe-hosted
+ * Billing Portal URL where the user can cancel their subscription or update
+ * their payment method, without any custom cancellation UI in this repo.
+ * @param {string} accessToken
+ * @returns {Promise<{ url: string | null, error: string | null }>}
+ */
+export async function createPortalSession(accessToken) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-portal-session`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { url: null, error: data.error || 'Could not open billing portal.' };
+  if (!data.url) return { url: null, error: 'No portal URL returned.' };
+  return { url: data.url, error: null };
+}

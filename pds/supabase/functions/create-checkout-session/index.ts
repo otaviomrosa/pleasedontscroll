@@ -99,6 +99,25 @@ serve(async (req: Request) => {
       })
     }
 
+    // ─── 2b. Refuse to sell a second subscription to an already-Pro user ────────
+    // The pricing page hides/relabels the Upgrade button client-side for
+    // premium users, but that's UI only — checked again here so a stale tab
+    // or a direct call to this function can't create a duplicate Checkout
+    // Session (and, since Stripe would just create a second subscription
+    // rather than reject it outright, a duplicate charge).
+    const { data: existingSettings } = await supabaseAdmin
+      .from('user_settings')
+      .select('is_premium')
+      .eq('id', user.id)
+      .single()
+
+    if (existingSettings?.is_premium) {
+      return new Response(JSON.stringify({ error: 'You already have an active Focus Pro subscription.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // ─── 3. Redirect URLs use the request-scoped `origin` validated above ───────
     // (Do NOT trust the incoming Origin header blindly for this — it's
     // attacker-settable for anyone calling this function directly, and an
@@ -108,7 +127,13 @@ serve(async (req: Request) => {
     // ─── 4. Create the Stripe Checkout Session ───────────────────────────────────
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      // Managed Payments (on by default for this account) otherwise owns
+      // payment-method selection AND gates on the product's Stripe tax code
+      // being in its eligible set — hit both restrictions during testing.
+      // Opting out here keeps this checkout on plain, predictable behavior
+      // instead of chasing Managed Payments' eligibility rules.
       payment_method_types: ['card'],
+      managed_payments: { enabled: false },
       customer_email: user.email,
       line_items: [
         {
@@ -121,8 +146,8 @@ serve(async (req: Request) => {
       metadata: {
         user_id: user.id,
       },
-      success_url: `${origin}/dashboard.html?upgrade=success`,
-      cancel_url: `${origin}/pricing.html`,
+      success_url: `${origin}/dashboard?upgrade=success`,
+      cancel_url: `${origin}/pricing`,
       // Allow promotion codes for future marketing flexibility
       allow_promotion_codes: true,
     }, {

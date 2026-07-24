@@ -264,7 +264,7 @@
     }
 
     .nav-logo {
-      height: 30px;
+      height: 26px;
       width: auto;
       display: block;
       filter: invert(1);
@@ -343,7 +343,7 @@
       color: var(--text-muted);
       background: rgba(0, 0, 0, 0.06);
       padding: 2px 8px;
-      border-radius: 24px;
+      border-radius: 4px;
     }
 
     .account-dropdown-item {
@@ -390,7 +390,7 @@
       width: 100%;
       background: none;
       border: none;
-      padding: 0 0 12px;
+      padding: 8px 0;
       cursor: pointer;
       font-family: var(--font-ui);
       text-align: left;
@@ -566,6 +566,31 @@
     }
 
     .btn-sm.light:hover { color: var(--text); }
+
+    .btn-sm.danger { background: var(--error); color: var(--white); }
+    .btn-sm.danger:hover { opacity: 0.85; }
+    .btn-sm.danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── Settings: Danger zone ───────────────────────────────────────────── */
+    .danger-label { color: var(--error); }
+
+    .danger-link { color: var(--error); }
+    .danger-link:hover { color: var(--error); opacity: 0.8; }
+
+    .danger-confirm {
+      margin-top: 12px;
+      padding: 14px;
+      background: rgba(192, 57, 43, 0.06);
+      border: 1px solid rgba(192, 57, 43, 0.22);
+      border-radius: var(--radius-field);
+    }
+
+    .danger-warning {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+      margin: 0 0 12px;
+    }
 
     /* ─── Divider ───────────────────────────────────────────────────────── */
     .divider {
@@ -986,6 +1011,22 @@
             You're on the Free plan. <a href="pricing.html">See Focus Pro &rarr;</a>
           </p>
           <button class="btn-sm light hidden" id="cancel-subscription-btn" style="padding-left: 0;">Manage subscription</button>
+
+          <div class="divider"></div>
+
+          <p class="section-label danger-label">Danger zone</p>
+          <button class="btn-sm light danger-link" id="delete-account-btn" style="padding-left: 0;">Delete account</button>
+
+          <div class="danger-confirm hidden" id="delete-account-confirm">
+            <p class="danger-warning">
+              This permanently deletes your account, profiles, and blocklist,
+              and cancels any active subscription. This cannot be undone.
+            </p>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-sm light" id="delete-account-cancel">Cancel</button>
+              <button class="btn-sm danger" id="delete-account-confirm-btn">Yes, delete my account</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1002,6 +1043,7 @@
     import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
     import { fetchIsPremium } from '../core/sync/userSettings.js';
     import { createPortalSession } from '../core/sync/billing.js';
+    import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
     import { isValidBlocklistUrl } from '../core/blocklist/hostname.js';
     import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../core/validation.js';
@@ -1125,8 +1167,18 @@
       document.getElementById('account-dropdown').classList.remove('open');
     });
 
-    document.getElementById('settings-link').addEventListener('click', () => {
+    document.getElementById('settings-link').addEventListener('click', (e) => {
+      // Explicit expand + scroll instead of relying on the native #hash
+      // anchor: this link is an in-page click (already on dashboard.html),
+      // so none of the page-load logic that expands the settings section
+      // for a fresh navigation (handlePostLoginRedirect(), below) runs —
+      // without this it just silently scrolls to a collapsed, easy-to-miss
+      // header. Navigating here FROM index.html/pricing.html already works
+      // correctly via that page-load path; this only covers the in-page case.
+      e.preventDefault();
       document.getElementById('account-dropdown').classList.remove('open');
+      setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', true);
+      document.getElementById('settings-card').scrollIntoView({ behavior: 'smooth' });
     });
 
     // ─── Settings disclosure ────────────────────────────────────────────────────
@@ -1672,6 +1724,39 @@
       }
 
       window.location.href = url;
+    });
+
+    // ─── Settings: delete account ───────────────────────────────────────────────
+    document.getElementById('delete-account-btn').addEventListener('click', () => {
+      document.getElementById('delete-account-btn').classList.add('hidden');
+      document.getElementById('delete-account-confirm').classList.remove('hidden');
+    });
+
+    document.getElementById('delete-account-cancel').addEventListener('click', () => {
+      document.getElementById('delete-account-confirm').classList.add('hidden');
+      document.getElementById('delete-account-btn').classList.remove('hidden');
+    });
+
+    document.getElementById('delete-account-confirm-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('delete-account-confirm-btn');
+      btn.textContent = 'Deleting…';
+      btn.disabled = true;
+
+      const accessToken = await currentAccessToken();
+      const { ok, error } = accessToken
+        ? await deleteAccount(accessToken)
+        : { ok: false, error: 'Not signed in.' };
+
+      if (!ok) {
+        console.error('[PDS] Delete account error:', error);
+        showToast(error || 'Something went wrong. Please try again.');
+        btn.textContent = 'Yes, delete my account';
+        btn.disabled = false;
+        return;
+      }
+
+      await Auth.signOut(webStorageAdapter);
+      window.location.href = 'index.html';
     });
 
     // Add URL

@@ -266,16 +266,16 @@
       <h2>What we collect</h2>
       <p>When you create an account and use PDS, we store:</p>
       <ul>
-        <li><strong>Your email address</strong>, to authenticate you. Passwords are handled entirely by our authentication provider (Supabase) — we never see or store your password ourselves.</li>
+        <li><strong>Your email address</strong>, to authenticate you. Passwords are handled entirely by our authentication provider (Supabase), and we never see or store your password ourselves.</li>
         <li><strong>The sites you add to your blocklist</strong>, and the names of any profiles you create (e.g. "Deep Work"), so we can sync them between the extension and your dashboard.</li>
         <li><strong>Your blocking-mode preference</strong> (Friction or Strict) and whether you have an active Focus Pro subscription.</li>
-        <li><strong>If you subscribe to Focus Pro</strong>, a customer reference ID from our payment processor, Stripe, so we know which account to upgrade. We do not collect or store your card details — those go directly to Stripe.</li>
+        <li><strong>If you subscribe to Focus Pro</strong>, a customer reference ID from our payment processor, Stripe, so we know which account to upgrade. We do not collect or store your card details; those go directly to Stripe.</li>
       </ul>
 
       <h2>What we don't do</h2>
       <p>
         The extension checks the site a tab is navigating to against your own
-        blocklist locally, in the background — it does not send your general
+        blocklist locally, in the background. It does not send your general
         browsing history anywhere. We only know about the specific sites you
         chose to add to a blocklist, not the rest of what you browse. We do
         not sell your data, share it with advertisers, or use it for
@@ -287,11 +287,11 @@
         Your account and blocklist data are stored in our database, provided
         by <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>
         (PostgreSQL with row-level security), so that only your authenticated
-        account can read or write your own rows — not other users, and not us
+        account can read or write your own rows, not other users, and not us
         through the application itself. The website is hosted on
         <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a>.
-        Fonts are loaded from Google Fonts, which — like any web font
-        provider — receives a request from your browser when a page loads.
+        Fonts are loaded from Google Fonts, which, like any web font
+        provider, receives a request from your browser when a page loads.
         Payments are processed by
         <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>,
         subject to Stripe's own privacy policy.
@@ -301,7 +301,7 @@
       <p>
         We don't use tracking cookies. The web dashboard keeps your session in
         your browser's local storage, and the extension keeps it in Chrome's
-        extension storage — both stay on your device and are used only to
+        extension storage. Both stay on your device and are used only to
         keep you signed in.
       </p>
 
@@ -309,11 +309,12 @@
       <p>
         You can edit or delete anything in your blocklist and profiles
         directly from the dashboard at any time. To delete your account and
-        all associated data entirely, email us at
-        <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>
-        and we'll take care of it — we don't yet have a self-service "delete
-        my account" button, and we'd rather say that plainly than pretend
-        otherwise.
+        all associated data entirely, use the Delete Account option under
+        Settings in your dashboard. This immediately and permanently removes
+        your account, profiles, and blocklist, and cancels any active
+        subscription. It cannot be undone. If you'd rather we do it for you,
+        email
+        <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>.
       </p>
 
       <h2>Children's privacy</h2>

@@ -82,13 +82,24 @@ async function refreshBlocklist() {
   }
 
   const session = await getStoredSession(chromeStorageAdapter);
-  blockingMode = await fetchBlockingMode(accessToken, session.user.id);
-  isPremium = await fetchIsPremium(accessToken, session.user.id);
 
-  const pauseIso = await fetchPauseUntil(accessToken, session.user.id);
+  // None of these four depend on each other's result, so run them
+  // concurrently instead of one after another — this was the main cost
+  // behind GET_STATE's forced refresh feeling slow (see the message
+  // listener below): four sequential round trips collapse to the time of
+  // the single slowest one. Only fetchBlockedUrls (below) genuinely has to
+  // wait, since it needs profile.id from this batch first.
+  const [mode, premium, pauseIso, profile] = await Promise.all([
+    fetchBlockingMode(accessToken, session.user.id),
+    fetchIsPremium(accessToken, session.user.id),
+    fetchPauseUntil(accessToken, session.user.id),
+    fetchActiveProfile(accessToken),
+  ]);
+
+  blockingMode = mode;
+  isPremium = premium;
   pausedUntil = pauseIso ? new Date(pauseIso).getTime() : null;
 
-  const profile = await fetchActiveProfile(accessToken);
   if (!profile) {
     blockedHosts.clear();
     activeProfile = null;
@@ -198,6 +209,23 @@ async function checkAndBlockTab(tabId, url) {
   }
 }
 
+/**
+ * Snapshot of state the popup cares about, built from the current
+ * in-memory cache. Shared by GET_STATE's immediate response and the
+ * STATE_REFRESHED push that follows once a background refresh completes.
+ */
+function buildStatePayload() {
+  return {
+    blockedCount:  blockedHosts.size,
+    blockedHosts:  [...blockedHosts],
+    isPaused:      pausedUntil !== null && Date.now() < pausedUntil,
+    pauseUntil:    pausedUntil,
+    activeProfile,
+    blockingMode,
+    isPremium,
+  };
+}
+
 // ─── Event listeners ──────────────────────────────────────────────────────────
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -237,28 +265,29 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === 'GET_STATE') {
-    // Re-sync before answering rather than serving whatever's cached in
-    // memory: that cache is only as fresh as the last chrome.alarms tick
-    // (up to 60s stale) or the dashboard's poke (a no-op until EXTENSION_ID
-    // is a real published ID — see core/config.js). Popup open is exactly
-    // the moment a user is looking for accurate status, so it shouldn't be
-    // at the mercy of the poll cadence — this was caught by pausing 10
-    // minutes via the Friction breathing flow, then immediately overriding
-    // with an indefinite pause from the dashboard: the popup kept showing
-    // the stale 10-minute expiry until the next alarm happened to fire.
-    (async () => {
-      await refreshBlocklist();
-      sendResponse({
-        blockedCount:  blockedHosts.size,
-        blockedHosts:  [...blockedHosts],
-        isPaused:      pausedUntil !== null && Date.now() < pausedUntil,
-        pauseUntil:    pausedUntil,
-        activeProfile,
-        blockingMode,
-        isPremium,
+    // Answer immediately from whatever's cached — instant, no network
+    // wait — then kick off a live refresh in the background and push a
+    // follow-up STATE_REFRESHED if the popup is still open to receive it.
+    //
+    // This used to await refreshBlocklist() before responding at all,
+    // which fixed a real bug (the popup showing a stale pause expiry that
+    // wouldn't correct itself until the next chrome.alarms tick — see
+    // docs/ARCHITECTURE.md §5) but made every popup open feel slow, since
+    // refreshBlocklist() is several sequential Supabase round trips. The
+    // cache is usually already close to fresh (the 60s alarm, plus
+    // whatever the last GET_STATE's own background refresh left behind),
+    // so serving it immediately and correcting moments later if it turns
+    // out stale gets both: an instant-feeling open AND the same eventual
+    // correctness, without paying for a full refresh on every single click
+    // of the toolbar icon.
+    sendResponse(buildStatePayload());
+
+    refreshBlocklist().then(() => {
+      chrome.runtime.sendMessage({ type: 'STATE_REFRESHED', ...buildStatePayload() }, () => {
+        void chrome.runtime.lastError; // no popup listening anymore — fine, this is just an optimization
       });
-    })();
-    return true; // async
+    });
+    return true;
   }
 
   if (message.type === 'SET_BLOCKING_MODE') {
@@ -286,7 +315,27 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       }
 
       const ok = await setBlockingMode(accessToken, session.user.id, mode);
-      if (ok) blockingMode = mode;
+      if (ok) {
+        blockingMode = mode;
+
+        // Strict Mode and an active pause can't coexist — a pause is
+        // meaningless the instant Strict Mode is in effect (checkAndBlockTab
+        // already ignores pausedUntil whenever the fresh mode is 'strict'),
+        // but leaving the stale paused_until sitting in Supabase means every
+        // *display* of pause state (the dashboard's toggle, the popup's
+        // pause bar) keeps showing "Paused" even though nothing is actually
+        // paused anymore — enforcement was already correct, only the UI
+        // lagged. So switching into Strict also clears the pause outright,
+        // not just ignores it: write paused_until back to null and reset
+        // the local cache, so the dashboard toggle reads as "on" again the
+        // next time it re-syncs, instead of showing a pause that can't do
+        // anything. Friction→Strict only — going the other way has nothing
+        // to clear (Strict never lets a pause exist in the first place).
+        if (mode === 'strict' && pausedUntil !== null) {
+          const cleared = await setPauseUntil(accessToken, session.user.id, null);
+          if (cleared) pausedUntil = null;
+        }
+      }
       sendResponse({ ok, blockingMode, isPremium });
     })();
     return true; // async

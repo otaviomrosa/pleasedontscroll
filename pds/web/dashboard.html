@@ -311,7 +311,7 @@
       /* extra breathing room from the logo, on top of .top-nav-left's own
          gap (which also spaces this row from #pause-label after it —
          kept that one as-is, only this side needed more room) */
-      margin-left: 6px;
+      margin-left: 10px;
     }
 
     .pause-toggle {
@@ -517,18 +517,6 @@
       word-break: break-all;
     }
 
-    .account-dropdown-pro-tag {
-      display: inline-block;
-      margin-top: 5px;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: rgba(0, 0, 0, 0.06);
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
 
     .account-dropdown-item {
       display: block;
@@ -1208,7 +1196,6 @@
             <div class="account-dropdown" id="account-dropdown">
               <div class="account-dropdown-header">
                 <div class="account-dropdown-email" id="account-email"></div>
-                <span class="account-dropdown-pro-tag" id="account-pro-tag">Free</span>
               </div>
               <a href="#settings-card" class="account-dropdown-item" id="settings-link">Settings</a>
               <button class="account-dropdown-item" id="logout-btn">Sign out</button>
@@ -1689,7 +1676,6 @@
       isPremiumUser = isPremium;
 
       document.getElementById('premium-badge').classList.toggle('hidden', !isPremium);
-      document.getElementById('account-pro-tag').textContent = isPremium ? 'Pro' : 'Free';
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
     }
 

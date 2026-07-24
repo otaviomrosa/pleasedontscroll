@@ -179,19 +179,6 @@
       word-break: break-all;
     }
 
-    .account-dropdown-pro-tag {
-      display: inline-block;
-      margin-top: 5px;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: rgba(0, 0, 0, 0.06);
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
     .account-dropdown-item {
       display: block;
       width: 100%;
@@ -685,7 +672,6 @@
         <div class="account-dropdown" id="account-dropdown">
           <div class="account-dropdown-header">
             <div class="account-dropdown-email" id="account-email"></div>
-            <span class="account-dropdown-pro-tag" id="account-pro-tag">Free</span>
           </div>
           <a href="dashboard.html" class="account-dropdown-item">Dashboard</a>
           <a href="dashboard.html#settings-card" class="account-dropdown-item">Settings</a>
@@ -829,7 +815,6 @@
   <script type="module">
     import { webStorageAdapter } from '../core/auth/storage.js'
     import * as Auth from '../core/auth/session.js'
-    import { fetchIsPremium } from '../core/sync/userSettings.js'
 
     // ─── Account menu — shows the "Sign in" pill when logged out, or an
     // avatar + dropdown (Dashboard / Settings / Sign out) when logged in.
@@ -851,9 +836,6 @@
       document.getElementById('account-email').textContent = session.user.email
       document.getElementById('account-avatar-btn').textContent =
         session.user.email.charAt(0).toUpperCase()
-
-      const isPremium = await fetchIsPremium(accessToken, session.user.id)
-      document.getElementById('account-pro-tag').textContent = isPremium ? 'Pro' : 'Free'
     }
 
     document.getElementById('account-avatar-btn').addEventListener('click', (e) => {

@@ -161,6 +161,12 @@ async function handleSetMode(mode) {
   renderModeToggle(mode); // optimistic
   const response = await chrome.runtime.sendMessage({ type: 'SET_BLOCKING_MODE', mode });
   renderModeToggle(response?.ok ? response.blockingMode : (response?.blockingMode ?? mode));
+
+  // Switching into Strict also clears any active pause server-side (see
+  // background/index.js's SET_BLOCKING_MODE handler) — refresh the status
+  // dot/pause bar so that shows up immediately in this same popup session,
+  // instead of only on the next time the popup happens to be reopened.
+  await refreshStatRow();
 }
 
 // ─── Strict → Friction confirmation (breathing hold) ───────────────────────
@@ -205,45 +211,65 @@ function cancelFrictionConfirm() {
 }
 
 /**
+ * Renders the stat row (blocked count, status dot, pause bar, mode toggle)
+ * from a state object — shared by refreshStatRow()'s own GET_STATE reply
+ * and the STATE_REFRESHED push background.js sends once its live re-check
+ * completes (see the onMessage listener below).
+ */
+function applyState(state) {
+  document.getElementById('blocked-count').textContent = state.blockedCount ?? '—';
+  isPremium = state.isPremium === true;
+  renderModeToggle(state.blockingMode ?? 'friction');
+
+  const dot   = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+
+  if (state.isPaused) {
+    dot.className     = 'status-dot paused';
+    label.textContent = 'Paused';
+  } else if (state.blockedCount > 0) {
+    dot.className     = 'status-dot active';
+    label.textContent = 'Blocking active';
+  } else {
+    dot.className     = 'status-dot idle';
+    label.textContent = 'No sites blocked yet';
+  }
+
+  const pauseBar = document.getElementById('pause-bar');
+  if (state.isPaused && state.pauseUntil) {
+    pauseBar.classList.remove('hidden');
+    document.getElementById('pause-until-label').textContent =
+      isIndefinitePause(state.pauseUntil)
+        ? 'you resume it'
+        : new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else {
+    pauseBar.classList.add('hidden');
+  }
+}
+
+/**
  * Refreshes the blocked-count and status pill from the background state.
+ * background.js answers GET_STATE instantly from its own cache (see its
+ * comment in the message listener) rather than waiting on a live Supabase
+ * re-check — that re-check happens after, in the background, and arrives
+ * here as a STATE_REFRESHED push if anything actually changed.
  */
 async function refreshStatRow() {
   try {
     const state = await chrome.runtime.sendMessage({ type: 'GET_STATE' });
-
-    document.getElementById('blocked-count').textContent = state.blockedCount ?? '—';
-    isPremium = state.isPremium === true;
-    renderModeToggle(state.blockingMode ?? 'friction');
-
-    const dot   = document.getElementById('status-dot');
-    const label = document.getElementById('status-label');
-
-    if (state.isPaused) {
-      dot.className     = 'status-dot paused';
-      label.textContent = 'Paused';
-    } else if (state.blockedCount > 0) {
-      dot.className     = 'status-dot active';
-      label.textContent = 'Blocking active';
-    } else {
-      dot.className     = 'status-dot idle';
-      label.textContent = 'No sites blocked yet';
-    }
-
-    const pauseBar = document.getElementById('pause-bar');
-    if (state.isPaused && state.pauseUntil) {
-      pauseBar.classList.remove('hidden');
-      document.getElementById('pause-until-label').textContent =
-        isIndefinitePause(state.pauseUntil)
-          ? 'you resume it'
-          : new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else {
-      pauseBar.classList.add('hidden');
-    }
+    applyState(state);
   } catch {
     document.getElementById('status-label').textContent = 'Syncing…';
     document.getElementById('blocked-count').textContent = '…';
   }
 }
+
+// Only matters while the popup is still open — if it's already closed by
+// the time background.js's live re-check finishes, this message just goes
+// nowhere, which is fine (same as the dashboard's BLOCKLIST_CHANGED poke).
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === 'STATE_REFRESHED') applyState(message);
+});
 
 // ─── App view render ──────────────────────────────────────────────────────────
 
@@ -253,8 +279,13 @@ async function refreshStatRow() {
  */
 async function renderAppView(accessToken) {
   showView(viewApp);
-  await refreshStatRow();
-  renderProfilePills(await fetchProfiles(accessToken));
+  // Independent of each other (stat row comes from background.js's cache,
+  // profiles are a separate direct REST call) — no reason to wait for one
+  // before starting the other.
+  await Promise.all([
+    refreshStatRow(),
+    fetchProfiles(accessToken).then(renderProfilePills),
+  ]);
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────

@@ -280,6 +280,190 @@
       transform: rotate(-180deg);
     }
 
+    /* ─── Pause blocking ──────────────────────────────────────────────────────
+       A regular iOS-style switch. Default (no class) = blocking is always
+       on, which is the normal/expected state — black track, knob right,
+       same visual convention as "on" everywhere else this shape is used.
+       .paused = the exception, applied only while an actual pause is in
+       effect — gray track (same gray as the extending pill), knob left.
+       Clicking it doesn't resize the switch itself; a separate gray pill
+       (.pause-options-pill) grows out from behind it, tucked underneath
+       via a negative margin + lower z-index so the switch visually
+       "covers" the seam and it reads as one continuous shape emerging from
+       the switch rather than two independent pieces. */
+    .top-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pause-toggle-row {
+      position: relative; /* anchors #pause-strict-msg to the right of the switch */
+      display: flex;
+      align-items: center;
+      /* min-width: matches the switch's own 46px — without this, the
+         pill's negative margin-left makes the flex layout think this row
+         is much narrower than it visually is (the row's calculated width
+         includes the child's negative margin, but the switch itself still
+         renders at its full 46px regardless), so #pause-label right after
+         it in .top-nav-left was starting underneath/behind the switch. */
+      min-width: 46px;
+      /* extra breathing room from the logo, on top of .top-nav-left's own
+         gap (which also spaces this row from #pause-label after it —
+         kept that one as-is, only this side needed more room) */
+      margin-left: 6px;
+    }
+
+    .pause-toggle {
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+      width: 46px;
+      height: 26px;
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      box-shadow: var(--shadow-card);
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      transition: background 0.25s ease;
+    }
+
+    /* Paused = the exception state, not the default */
+    .pause-toggle.paused {
+      background: #f5f5f7;
+    }
+
+    @keyframes pause-shake {
+      0%, 100% { transform: translateX(0); }
+      20%      { transform: translateX(-2px); }
+      40%      { transform: translateX(2px); }
+      60%      { transform: translateX(-2px); }
+      80%      { transform: translateX(2px); }
+    }
+
+    .pause-toggle.shake { animation: pause-shake 0.3s ease; }
+
+    /* top/left: 2px, not 3px — the switch's own 1px border eats into the
+       interior box it's positioned within (absolutely positioned children
+       are placed relative to the padding edge, inside the border), so with
+       a 1px border the true interior is 24×44px, not 26×46. 2px on all
+       sides is what actually centers a 20px knob in that.
+       Default position is the right side (translateX), matching the
+       default "blocking always on" state; .paused pulls it back to the left. */
+    .pause-toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transform: translateX(20px);
+      transition: transform 0.25s ease;
+    }
+
+    .pause-toggle.paused .pause-toggle-knob {
+      transform: translateX(0);
+    }
+
+    /* Tucked behind the switch (lower z-index, pulled left under it) so
+       its rounded left edge is always hidden — only the part that grows
+       past the switch's right edge is ever visible.
+       No padding of its own: a container's OWN padding is never actually
+       suppressed by width: 0 (box-sizing: border-box only clamps the
+       *content* area to 0, padding still renders at full size regardless —
+       that was the real cause of the sliver that kept surviving every
+       previous attempt at this). The equivalent spacing lives as
+       margin-left on the child (.pause-durations) instead, where it's a
+       normal descendant that overflow: hidden legitimately clips.
+       Width (not max-width) target is set from JS (openPauseOptions())
+       rather than guessed here — a hardcoded value either clips the last
+       button or leaves a visible gap of empty gray after it depending on
+       actual rendered text width, so it's measured for real instead. */
+    .pause-options-pill {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      width: 0;
+      height: 26px;
+      margin-left: -20px;
+      background: #f5f5f7;
+      border-radius: 13px;
+      overflow: hidden;
+      white-space: nowrap;
+      transition: width 0.3s ease;
+    }
+
+    .pause-durations {
+      display: flex;
+      align-items: center;
+      margin-left: 28px;
+      padding-right: 10px;
+    }
+
+    /* min-width + centered text: "30m" is the widest label, so every
+       option gets that same footprint instead of each button hugging its
+       own text — reads as a row of equal-sized slots, not ragged widths. */
+    .pause-duration-btn {
+      font-family: var(--font-ui);
+      font-size: 0.86rem;
+      font-weight: 400;
+      min-width: 45px;
+      padding: 4px 6px;
+      border: none;
+      background: none;
+      color: rgb(88, 88, 88);
+      cursor: pointer;
+      white-space: nowrap;
+      text-align: center;
+      transition: color 0.15s;
+    }
+
+    .pause-duration-btn:hover { color: var(--text); }
+
+    /* Inline SVG instead of the ∞ Unicode glyph: DM Sans doesn't include
+       that character, so it was silently rendering from a fallback system
+       font — which explained both the mismatched weight and why nudging
+       font-weight jumped straight from too-thick to too-thin with nothing
+       usable in between (system fallback fonts typically ship only a
+       couple of discrete weight instances, not a smooth range). SVG
+       stroke-width gives exact, reliable control regardless of font
+       support — same approach the popup's Strict Mode lock icon already
+       uses elsewhere in this codebase. */
+    .pause-duration-infinite {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pause-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Absolutely positioned relative to .pause-toggle-row (not part of
+       normal flow) so it appears cleanly to the right of the switch
+       without pushing anything below it down the page — it used to be a
+       block-level <p> under the whole nav row, which shifted every card
+       beneath it whenever Strict Mode blocked a pause attempt. */
+    .pause-strict-msg {
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+      font-size: 0.78rem;
+      color: var(--error);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
     /* ─── Account menu (same pattern duplicated on index.html and
        pricing.html — no shared component system in this build-free
        codebase). Dashboard's own "Settings" item is an in-page anchor
@@ -379,26 +563,68 @@
       text-align: left;
     }
 
+    /* Title + subtitle stack (Settings / user@email.com), not inline —
+       reads as a normal list-header pattern instead of a cramped single
+       line, and the chevron centers against the whole two-line block. */
+    .settings-header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0; /* lets the email ellipsis-truncate instead of overflowing */
+      overflow: hidden;
+    }
+
+    .settings-header-email {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .settings-body {
       margin-top: 20px;
     }
 
-    .settings-subheader {
+    /* Account list rows (Change password / Manage subscription / Delete
+       account) — deliberately plain, "look like links" rather than boxed
+       buttons, so the section reads as one compact list instead of several
+       spread-out blocks. The divider lives on .settings-item (the row +
+       its optional expandable panel together), not on .settings-link-row
+       itself — otherwise it sits right under the row's text and stays
+       there while the panel expands below it, instead of moving down to
+       sit under the panel like a normal list divider should. */
+    .settings-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-link-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
       background: none;
       border: none;
-      padding: 8px 0;
+      padding: 11px 0;
       cursor: pointer;
       font-family: var(--font-ui);
+      font-size: 0.88rem;
+      color: var(--text);
+      text-decoration: none;
       text-align: left;
     }
 
+    .settings-link-row:hover { opacity: 0.7; }
+
     .settings-subbody {
-      margin-bottom: 4px;
+      margin: 4px 0 12px;
     }
+
 
     .chevron {
       display: inline-block;
@@ -413,7 +639,7 @@
     .section-title {
       font-family: var(--font-serif);
       font-weight: 400;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: var(--text);
       letter-spacing: -0.02em;
       margin: 0 0 20px;
@@ -442,15 +668,25 @@
     .profile-tabs {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
-      margin-bottom: 20px;
     }
 
     .profile-tab {
+      /* display:inline-flex + a fixed height, instead of letting the
+         button's height come from its tallest inline content: that's what
+         let bumping .profile-tab-delete's font-size grow the whole pill
+         taller and throw the name's baseline upward. With a fixed height
+         and align-items:center, every child (name, lock, delete) is
+         centered on the cross axis regardless of its own font-size, so the
+         delete icon can be sized freely without touching the pill at all. */
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
       font-family: var(--font-ui);
       font-size: 0.84rem;
       font-weight: 400;
-      padding: 6px 18px;
+      padding: 0 18px;
       border-radius: 24px;
       border: 1px solid var(--border);
       background: transparent;
@@ -489,30 +725,44 @@
       vertical-align: middle;
     }
 
-    /* Delete icon inside inactive tabs */
+    /* Tabs that carry a delete icon get a smaller right-hand padding —
+       the icon's own margin + width already provide trailing space, so
+       keeping the tab's full 18px right padding on top of that stacked
+       up to 38px of empty space past the name when the icon is at
+       opacity:0 (not hovered). */
+    .profile-tab.has-delete {
+      padding-right: 11px;
+    }
+
+    /* Delete icon inside inactive tabs — a plain gray glyph, no circle
+       background behind it. */
     .profile-tab-delete {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       margin-left: 6px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      font-size: 0.65rem;
+      font-size: 1.3rem;
       line-height: 1;
+      color: rgb(150, 150, 150);
       opacity: 0;
-      background: rgba(0, 0, 0, 0.1);
-      transition: opacity 0.15s;
+      transition: opacity 0.15s, color 0.15s;
       vertical-align: middle;
+    }
+
+    .profile-tab-delete:hover {
+      color: rgb(90, 90, 90);
     }
 
     .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
 
     .btn-add-profile {
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
       font-family: var(--font-ui);
       font-size: 0.84rem;
       font-weight: 400;
-      padding: 6px 14px;
+      padding: 0 14px;
       border-radius: 24px;
       border: 1px dashed var(--border-hover);
       background: transparent;
@@ -571,14 +821,12 @@
     .btn-sm.danger:hover { opacity: 0.85; }
     .btn-sm.danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ─── Settings: Danger zone ───────────────────────────────────────────── */
-    .danger-label { color: var(--error); }
-
+    /* ─── Settings: delete account ────────────────────────────────────────── */
     .danger-link { color: var(--error); }
     .danger-link:hover { color: var(--error); opacity: 0.8; }
 
     .danger-confirm {
-      margin-top: 12px;
+      margin: 0;
       padding: 14px;
       background: rgba(192, 57, 43, 0.06);
       border: 1px solid rgba(192, 57, 43, 0.22);
@@ -671,7 +919,12 @@
 
     .empty-state {
       text-align: center;
-      padding: 32px 0;
+      /* Symmetric so the text still looks centered in its own local space
+         (the card has no fixed height, so there's nothing else to center
+         it against) — but smaller than before, since it still stacks on
+         the card's own bottom padding and a full 32px both sides made the
+         card noticeably more bottom-heavy than top. */
+      padding: 16px 0;
       color: var(--text-muted);
       font-size: 0.88rem;
     }
@@ -906,9 +1159,44 @@
 
       <!-- Top nav -->
       <div class="top-nav">
-        <a href="index.html" class="nav-logo-link">
-          <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-        </a>
+        <div class="top-nav-left">
+          <a href="index.html" class="nav-logo-link">
+            <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
+          </a>
+
+          <!-- Pause blocking: Friction Mode only. Deliberately dashboard-only
+               (not in the extension popup) so pausing costs a real trip, not
+               a one-click escape — see docs/ARCHITECTURE.md §5 for the full mechanism.
+               No extra wait on top of that: the 30s hold already lives on
+               leaving Strict Mode (in the popup) — a Friction-mode user
+               picking a duration here commits immediately.
+               The toggle itself never moves or resizes; a separate gray
+               pill (.pause-options-pill) grows out from behind it to the
+               right, tucked underneath via z-index + negative margin so it
+               reads as one continuous shape. -->
+          <div class="pause-toggle-row" id="pause-toggle-row">
+            <button class="pause-toggle" id="pause-toggle" aria-expanded="false" aria-pressed="false" title="Pause blocking">
+              <span class="pause-toggle-knob"></span>
+            </button>
+            <div class="pause-options-pill" id="pause-toggle-options">
+              <div class="pause-durations" id="pause-durations-row">
+                <button class="pause-duration-btn" data-minutes="30" type="button">30m</button>
+                <button class="pause-duration-btn" data-minutes="60" type="button">1h</button>
+                <button class="pause-duration-btn" data-minutes="120" type="button">2h</button>
+                <button class="pause-duration-btn" data-minutes="360" type="button">6h</button>
+                <button class="pause-duration-btn" data-minutes="720" type="button">12h</button>
+                <button class="pause-duration-btn pause-duration-infinite" data-minutes="infinite" type="button" title="Pause indefinitely, until you resume it">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18.178 8c5.096 0 5.096 8 0 8-5.096 0-7.646-8-12.906-8-4.789 0-4.789 8 0 8 5.26 0 7.81-8 12.906-8z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p class="pause-strict-msg hidden" id="pause-strict-msg">Blocking can't be paused while in Strict Mode.</p>
+          </div>
+          <span class="pause-label hidden" id="pause-label"></span>
+        </div>
+
         <div style="display:flex;align-items:center;gap:12px;">
           <!-- Premium badge: shown by JS when is_premium = true -->
           <span class="premium-badge hidden" id="premium-badge">
@@ -920,7 +1208,7 @@
             <div class="account-dropdown" id="account-dropdown">
               <div class="account-dropdown-header">
                 <div class="account-dropdown-email" id="account-email"></div>
-                <span class="account-dropdown-pro-tag hidden" id="account-pro-tag">Pro</span>
+                <span class="account-dropdown-pro-tag" id="account-pro-tag">Free</span>
               </div>
               <a href="#settings-card" class="account-dropdown-item" id="settings-link">Settings</a>
               <button class="account-dropdown-item" id="logout-btn">Sign out</button>
@@ -979,52 +1267,50 @@
            disclosure inside it for the same reason. -->
       <div class="card" id="settings-card">
         <button class="settings-header" id="settings-toggle" aria-expanded="false">
-          <h2 class="section-title" style="margin: 0;">Settings</h2>
+          <span class="settings-header-title">
+            <h2 class="section-title" style="margin: 0;">Settings</h2>
+            <span class="settings-header-email" id="settings-email"></span>
+          </span>
           <span class="chevron" id="settings-chevron">&#9662;</span>
         </button>
 
         <div class="settings-body hidden" id="settings-body">
-          <p class="section-label">Signed in as</p>
-          <p class="url-text" id="settings-email" style="margin: 0 0 20px;"></p>
 
-          <div class="divider"></div>
-
-          <button class="settings-subheader" id="password-toggle" aria-expanded="false">
-            <p class="section-label" style="margin: 0;">Change password</p>
-            <span class="chevron" id="password-chevron">&#9662;</span>
-          </button>
-          <div class="settings-subbody hidden" id="password-body">
-            <div class="form-group">
-              <input class="field" type="password" id="new-password-input" placeholder="New password" autocomplete="new-password">
+          <div class="settings-item">
+            <button class="settings-link-row" id="password-toggle" aria-expanded="false">
+              Change password
+              <span class="chevron" id="password-chevron">&#9662;</span>
+            </button>
+            <div class="settings-subbody hidden" id="password-body">
+              <div class="form-group">
+                <input class="field" type="password" id="new-password-input" placeholder="New password" autocomplete="new-password">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
+              </div>
+              <p class="error-msg" id="password-error"></p>
+              <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
-            </div>
-            <p class="error-msg" id="password-error"></p>
-            <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
           </div>
 
-          <div class="divider"></div>
+          <div class="settings-item">
+            <a href="pricing.html" class="settings-link-row" id="subscription-link">Manage subscription</a>
+          </div>
 
-          <p class="section-label">Subscription</p>
-          <p class="url-text hidden" id="settings-not-premium" style="margin: 0 0 12px; color: var(--text-muted); font-size: 0.88rem;">
-            You're on the Free plan. <a href="pricing.html">See Focus Pro &rarr;</a>
-          </p>
-          <button class="btn-sm light hidden" id="cancel-subscription-btn" style="padding-left: 0;">Manage subscription</button>
-
-          <div class="divider"></div>
-
-          <p class="section-label danger-label">Danger zone</p>
-          <button class="btn-sm light danger-link" id="delete-account-btn" style="padding-left: 0;">Delete account</button>
-
-          <div class="danger-confirm hidden" id="delete-account-confirm">
-            <p class="danger-warning">
-              This permanently deletes your account, profiles, and blocklist,
-              and cancels any active subscription. This cannot be undone.
-            </p>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn-sm light" id="delete-account-cancel">Cancel</button>
-              <button class="btn-sm danger" id="delete-account-confirm-btn">Yes, delete my account</button>
+          <div class="settings-item">
+            <button class="settings-link-row danger-link" id="delete-account-btn" aria-expanded="false">
+              Delete account
+              <span class="chevron" id="delete-chevron">&#9662;</span>
+            </button>
+            <div class="danger-confirm hidden" id="delete-account-confirm">
+              <p class="danger-warning">
+                This permanently deletes your account, profiles, and blocklist,
+                and cancels any active subscription. This cannot be undone.
+              </p>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-sm light" id="delete-account-cancel">Cancel</button>
+                <button class="btn-sm danger" id="delete-account-confirm-btn">Yes, delete my account</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1041,7 +1327,7 @@
     import * as Auth from '../core/auth/session.js';
     import { fetchProfiles, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
     import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
-    import { fetchIsPremium } from '../core/sync/userSettings.js';
+    import { fetchIsPremium, fetchBlockingMode, fetchPauseUntil, setPauseUntil, INDEFINITE_PAUSE_ISO, isIndefinitePause } from '../core/sync/userSettings.js';
     import { createPortalSession } from '../core/sync/billing.js';
     import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
@@ -1057,6 +1343,13 @@
     // the UI for free users. Real enforcement is server-side
     // (007_profile_limit.sql); this only controls what's shown/clickable.
     let isPremiumUser  = false;
+    // Pause blocking — set by refreshPauseUI(), which always re-fetches
+    // fresh rather than trusting a cached value (same reasoning as
+    // SET_BLOCKING_MODE re-checking is_premium server-side): a stale mode
+    // reading here must never be the thing standing between Strict Mode
+    // and a bypass.
+    let currentBlockingMode = 'friction';
+    let currentPausedUntil  = null; // ISO string or null
 
     // ─── Extension "poke" ─────────────────────────────────────────────────────
     // Tells the extension's background worker to refresh its blocklist right
@@ -1145,8 +1438,192 @@
       // lock, so premium status must resolve first.
       await loadPremiumStatus();
       await loadProfiles();
+      await refreshPauseUI();
       handlePostLoginRedirect();
     }
+
+    // ─── Pause blocking ─────────────────────────────────────────────────────────
+
+    // "Latest click wins, stale results get silently dropped" — not a lock.
+    // A lock (disable the buttons until the in-flight request finishes) was
+    // tried first and was wrong on two counts: it's bad UX (a user should
+    // always be able to press/unpress a button, full stop — never held
+    // hostage by network latency), and it's fragile — if a request ever
+    // hangs (a live server having a slow moment, a stalled connection;
+    // fetch() has no built-in timeout), the lock never releases and the
+    // control is stuck disabled indefinitely. That's exactly what happened.
+    // This instead lets every click start immediately, no matter how many
+    // are in flight, and each one checks — right before it's about to
+    // mutate shared state or the DOM — whether a newer click has since
+    // started. If so, it quietly does nothing with its result. A hung
+    // request just becomes irrelevant once superseded; it can never block
+    // anything.
+    let pauseActionToken = 0;
+
+    /**
+     * Fetches blocking_mode + paused_until fresh from Supabase and updates
+     * the switch's appearance (knob position, track color, "Paused until"
+     * label). Called on load, on tab focus (visibilitychange, below), and
+     * again right before actually committing a pause — never trusts a
+     * value that might be stale by the time it matters.
+     */
+    async function refreshPauseUI() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+
+      const myToken = ++pauseActionToken;
+      const nextBlockingMode = await fetchBlockingMode(accessToken, currentUser.id);
+      const nextPausedUntil  = await fetchPauseUntil(accessToken, currentUser.id);
+      if (myToken !== pauseActionToken) return; // superseded by a newer click/refresh
+
+      currentBlockingMode = nextBlockingMode;
+      currentPausedUntil  = nextPausedUntil;
+
+      // isActive here means "a pause is currently in effect" — the
+      // .paused CSS class (gray track, knob left) is the exception state;
+      // no class at all is the default (black track, knob right, blocking
+      // always on), so this is inverted from what "isActive → add a class
+      // named .active" would normally suggest. Named .paused instead of
+      // .active specifically to avoid that trap.
+      const isActive = currentPausedUntil && new Date(currentPausedUntil).getTime() > Date.now();
+      document.getElementById('pause-toggle').classList.toggle('paused', !!isActive);
+      document.getElementById('pause-toggle').setAttribute('aria-pressed', String(!isActive));
+
+      const label = document.getElementById('pause-label');
+      if (isActive) {
+        label.textContent = isIndefinitePause(currentPausedUntil)
+          ? 'Paused indefinitely'
+          : `Paused until ${new Date(currentPausedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        label.classList.remove('hidden');
+      } else {
+        label.classList.add('hidden');
+      }
+    }
+
+    /**
+     * Expands the gray pill to fit its content exactly. Measured from the
+     * actual rendered content width each time rather than a hardcoded
+     * guess — a fixed value either clips the last button or leaves a
+     * visible gap of empty gray after it, depending on real text/font
+     * metrics, so there's nothing to guess here.
+     */
+    function openPauseOptions() {
+      const pill      = document.getElementById('pause-toggle-options');
+      const durations = document.getElementById('pause-durations-row');
+      pill.style.width = `${durations.scrollWidth + 24}px`; // +24 = .pause-durations' own margin-left reserve
+      pill.classList.add('open');
+      document.getElementById('pause-toggle').setAttribute('aria-expanded', 'true');
+    }
+
+    /** Collapses the gray pill back to zero width. */
+    function closePauseOptions() {
+      const pill = document.getElementById('pause-toggle-options');
+      pill.style.width = '0px';
+      pill.classList.remove('open');
+      document.getElementById('pause-toggle').setAttribute('aria-expanded', 'false');
+      document.getElementById('pause-strict-msg').classList.add('hidden');
+    }
+
+    function shakePauseToggle() {
+      const toggle = document.getElementById('pause-toggle');
+      toggle.classList.remove('shake'); // restart the animation if already mid-shake
+      void toggle.offsetWidth; // force reflow so re-adding the class replays it
+      toggle.classList.add('shake');
+      document.getElementById('pause-strict-msg').classList.remove('hidden');
+      setTimeout(() => toggle.classList.remove('shake'), 400);
+    }
+
+    document.getElementById('pause-toggle').addEventListener('click', async () => {
+      const myToken = ++pauseActionToken;
+
+      const isOpen = document.getElementById('pause-toggle-options').classList.contains('open');
+      if (isOpen) { closePauseOptions(); return; }
+
+      // Already paused — clicking resumes immediately, back to the
+      // default "always on" state. Resuming never needs friction, only
+      // pausing does (and that friction is the dashboard-only placement,
+      // not a wait — see below).
+      const isActive = currentPausedUntil && new Date(currentPausedUntil).getTime() > Date.now();
+      if (isActive) {
+        const accessToken = await currentAccessToken();
+        if (!accessToken || myToken !== pauseActionToken) return;
+        await setPauseUntil(accessToken, currentUser.id, null);
+        if (myToken !== pauseActionToken) return; // a newer click already took over
+        currentPausedUntil = null;
+        pokeExtension();
+        await refreshPauseUI();
+        return;
+      }
+
+      document.getElementById('pause-strict-msg').classList.add('hidden');
+
+      // Fresh check, not the value from page load — mode may have changed
+      // in the popup since.
+      const accessToken = await currentAccessToken();
+      if (!accessToken || myToken !== pauseActionToken) return;
+      const freshMode = await fetchBlockingMode(accessToken, currentUser.id);
+      if (myToken !== pauseActionToken) return;
+      currentBlockingMode = freshMode;
+
+      if (currentBlockingMode === 'strict') {
+        shakePauseToggle();
+        return;
+      }
+
+      openPauseOptions();
+    });
+
+    // Picking a duration commits immediately — no hold here. The 30s wait
+    // already exists for leaving Strict Mode (in the popup); a Friction-mode
+    // user pausing doesn't need a second one on top of it.
+    document.querySelectorAll('.pause-duration-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const myToken = ++pauseActionToken;
+        const isIndefinite = btn.dataset.minutes === 'infinite';
+
+        const accessToken = await currentAccessToken();
+        if (!accessToken) { closePauseOptions(); return; }
+        if (myToken !== pauseActionToken) return;
+
+        // Re-check mode one more time, right before committing — cheap
+        // insurance against a switch that happened in the popup while this
+        // pill was open.
+        const freshMode = await fetchBlockingMode(accessToken, currentUser.id);
+        if (myToken !== pauseActionToken) return;
+        if (freshMode === 'strict') {
+          closePauseOptions();
+          currentBlockingMode = freshMode;
+          shakePauseToggle();
+          return;
+        }
+
+        const pausedUntilIso = isIndefinite
+          ? INDEFINITE_PAUSE_ISO
+          : new Date(Date.now() + Number(btn.dataset.minutes) * 60 * 1000).toISOString();
+        const ok = await setPauseUntil(accessToken, currentUser.id, pausedUntilIso);
+        if (myToken !== pauseActionToken) return; // a newer click already took over
+
+        closePauseOptions();
+        if (ok) {
+          currentPausedUntil = pausedUntilIso;
+          pokeExtension();
+          await refreshPauseUI();
+        } else {
+          showToast('Could not pause blocking. Please try again.');
+        }
+      });
+    });
+
+    // Dashboard tabs are often left open for a while — re-check premium
+    // status and pause/mode state when the tab regains focus instead of
+    // only on initial load, so switching mode or upgrading in another tab
+    // (or the extension popup) doesn't leave this tab showing stale state.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && currentUser) {
+        loadPremiumStatus();
+        refreshPauseUI();
+      }
+    });
 
     // ─── Account menu ──────────────────────────────────────────────────────────
     // Same avatar + dropdown pattern as index.html/pricing.html, minus the
@@ -1212,10 +1689,8 @@
       isPremiumUser = isPremium;
 
       document.getElementById('premium-badge').classList.toggle('hidden', !isPremium);
-      document.getElementById('account-pro-tag').classList.toggle('hidden', !isPremium);
+      document.getElementById('account-pro-tag').textContent = isPremium ? 'Pro' : 'Free';
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
-      document.getElementById('settings-not-premium').classList.toggle('hidden', isPremium);
-      document.getElementById('cancel-subscription-btn').classList.toggle('hidden', !isPremium);
     }
 
     /**
@@ -1286,7 +1761,13 @@
 
     function renderProfileTabs() {
       const container = document.getElementById('profile-tabs');
-      container.innerHTML = '';
+      // Only remove the previously-rendered tabs, not container.innerHTML =
+      // '' — #add-profile-btn lives inside this container too (re-parented
+      // in below), and innerHTML = '' would detach it from the document
+      // entirely on every render after the first, permanently breaking the
+      // getElementById('add-profile-btn') lookup a few lines down (same
+      // failure mode the empty-blocklist-message bug hit earlier).
+      container.querySelectorAll('.profile-tab').forEach((el) => el.remove());
 
       // profiles[0] is the oldest (fetchProfiles orders by created_at.asc)
       // — the one free-tier account keeps. Anything after it is
@@ -1316,6 +1797,7 @@
 
         // Delete button (only shown on hover via CSS, hidden for active profile)
         if (!profile.is_active) {
+          tab.classList.add('has-delete');
           const del = document.createElement('span');
           del.className = 'profile-tab-delete';
           del.textContent = '×';
@@ -1331,7 +1813,17 @@
         container.appendChild(tab);
       });
 
-      document.getElementById('add-profile-btn').classList.toggle('hidden', !isPremiumUser);
+      // Moved into the same flex container as the tabs (not left as a
+      // separate block-level element below) so it always sits as a pill
+      // immediately after the last profile tab, wrapping onto a new line
+      // only when the row itself runs out of width — same as any other
+      // tab would. appendChild() here re-parents the existing button node
+      // (it lives outside #profile-tabs in the HTML) rather than cloning
+      // it, so its event listener and hidden/visible state carry over
+      // untouched across every re-render.
+      const addBtn = document.getElementById('add-profile-btn');
+      addBtn.classList.toggle('hidden', !isPremiumUser);
+      container.appendChild(addBtn);
     }
 
     /**
@@ -1419,13 +1911,21 @@
     }
 
     function renderUrlList(items) {
-      const list  = document.getElementById('url-list');
-      const empty = document.getElementById('url-empty');
+      const list = document.getElementById('url-list');
       list.innerHTML = '';
 
       if (items.length === 0) {
+        // Built fresh each time rather than reusing the static HTML node —
+        // list.innerHTML = '' above detaches it from the document
+        // permanently on the first non-empty render, so a later
+        // document.getElementById('url-empty') call would return null
+        // (silently breaking this branch on every empty render after the
+        // first non-empty one — real bug, not hypothetical).
+        const empty = document.createElement('li');
+        empty.className = 'empty-state';
+        empty.id = 'url-empty';
+        empty.textContent = 'No sites blocked in this profile yet.';
         list.appendChild(empty);
-        empty.classList.remove('hidden');
         return;
       }
 
@@ -1702,13 +2202,17 @@
     });
 
     // ─── Settings: cancel subscription ─────────────────────────────────────────
-    // Redirects to Stripe's hosted Billing Portal — no custom cancellation
-    // flow lives in this repo, same reasoning as checkout itself.
-    document.getElementById('cancel-subscription-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('cancel-subscription-btn');
-      const originalText = btn.textContent;
-      btn.textContent = 'Opening billing portal…';
-      btn.disabled = true;
+    // Free users: plain navigation to pricing.html (the href already on the
+    // element) to see plans/upgrade. Premium users: redirect to Stripe's
+    // hosted Billing Portal instead — no custom cancellation flow lives in
+    // this repo, same reasoning as checkout itself.
+    document.getElementById('subscription-link').addEventListener('click', async (e) => {
+      if (!isPremiumUser) return; // let the href navigate normally
+
+      e.preventDefault();
+      const link = document.getElementById('subscription-link');
+      const originalText = link.textContent;
+      link.textContent = 'Opening billing portal…';
 
       const accessToken = await currentAccessToken();
       const { url, error } = accessToken
@@ -1718,8 +2222,7 @@
       if (error || !url) {
         console.error('[PDS] Billing portal error:', error);
         showToast(error || 'Something went wrong. Please try again.');
-        btn.textContent = originalText;
-        btn.disabled = false;
+        link.textContent = originalText;
         return;
       }
 
@@ -1727,14 +2230,16 @@
     });
 
     // ─── Settings: delete account ───────────────────────────────────────────────
+    // Same expand/collapse pattern as "Change password" above — the row
+    // stays put, its chevron rotates, and the (still separately
+    // button-gated) confirmation panel expands underneath it.
     document.getElementById('delete-account-btn').addEventListener('click', () => {
-      document.getElementById('delete-account-btn').classList.add('hidden');
-      document.getElementById('delete-account-confirm').classList.remove('hidden');
+      const isOpen = !document.getElementById('delete-account-confirm').classList.contains('hidden');
+      setDisclosure('delete-account-btn', 'delete-account-confirm', 'delete-chevron', !isOpen);
     });
 
     document.getElementById('delete-account-cancel').addEventListener('click', () => {
-      document.getElementById('delete-account-confirm').classList.add('hidden');
-      document.getElementById('delete-account-btn').classList.remove('hidden');
+      setDisclosure('delete-account-btn', 'delete-account-confirm', 'delete-chevron', false);
     });
 
     document.getElementById('delete-account-confirm-btn').addEventListener('click', async () => {

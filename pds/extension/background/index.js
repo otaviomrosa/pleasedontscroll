@@ -8,16 +8,23 @@ import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import { getValidAccessToken, getStoredSession } from '../../core/auth/session.js';
 import { fetchActiveProfile, switchProfile } from '../../core/sync/profiles.js';
 import { fetchBlockedUrls } from '../../core/sync/blockedUrls.js';
-import { fetchBlockingMode, setBlockingMode, fetchIsPremium } from '../../core/sync/userSettings.js';
+import { fetchBlockingMode, setBlockingMode, fetchIsPremium, fetchPauseUntil, setPauseUntil } from '../../core/sync/userSettings.js';
 import { normalizeToHostname, isNavigableUrl, hostnameOf } from '../../core/blocklist/hostname.js';
 
 // ─── In-memory state ─────────────────────────────────────────────────────────
 // Blocked hostnames derived from the user's active profile's blocked_urls rows.
 let blockedHosts = new Set();
 
-// Per-profile pause timestamps. Key: profile UUID, value: epoch ms when pause expires.
-// Each profile's pause is independent — switching profiles is unaffected.
-const profilePauses = new Map();
+// User-level pause (not per-profile) — epoch ms when the pause expires, or
+// null. Set from the dashboard (Supabase-backed, see core/sync/userSettings.js's
+// fetchPauseUntil/setPauseUntil), read here on every refreshBlocklist().
+// Deliberately global rather than per-profile: the dashboard's pause toggle
+// is meant to disable blocking outright for a while, not scope it to
+// whichever profile happens to be active. Friction Mode only — isUrlBlocked()
+// below ignores this entirely when blockingMode is 'strict', so a pause can
+// never bypass Strict Mode even if one was already running when the user
+// switched into it.
+let pausedUntil = null;
 
 // The currently active profile row: { id, name } or null.
 let activeProfile = null;
@@ -75,6 +82,9 @@ async function refreshBlocklist() {
   blockingMode = await fetchBlockingMode(accessToken, session.user.id);
   isPremium = await fetchIsPremium(accessToken, session.user.id);
 
+  const pauseIso = await fetchPauseUntil(accessToken, session.user.id);
+  pausedUntil = pauseIso ? new Date(pauseIso).getTime() : null;
+
   const profile = await fetchActiveProfile(accessToken);
   if (!profile) {
     blockedHosts.clear();
@@ -123,11 +133,12 @@ function isUrlBlocked(url) {
   if (!isNavigableUrl(url)) return false;
   if (blockedHosts.size === 0) return false;
 
-  // Respect per-profile pause window set by the breathing UI.
-  if (activeProfile) {
-    const pauseUntil = profilePauses.get(activeProfile.id);
-    if (pauseUntil && Date.now() < pauseUntil) return false;
-  }
+  // Dashboard-triggered pause — Friction Mode only, deliberately. Strict
+  // Mode's entire promise is "no bypass"; a pause left running (or set)
+  // from another tab must never be able to override that, so this is
+  // checked only when blockingMode isn't 'strict', not just gated at the
+  // point the pause was created.
+  if (blockingMode === 'friction' && pausedUntil && Date.now() < pausedUntil) return false;
 
   const hostname = hostnameOf(url);
   return hostname !== null && blockedHosts.has(hostname);
@@ -185,35 +196,36 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'LOGOUT') {
     blockedHosts.clear();
     activeProfile = null;
-    profilePauses.clear();
+    pausedUntil = null;
     blockingMode = 'friction';
     isPremium = false;
     sendResponse({ ok: true });
     return true;
   }
 
-  if (message.type === 'PAUSE_BLOCKING') {
-    if (!activeProfile) { sendResponse({ ok: false }); return true; }
-    const durationMs = (message.durationMinutes || 10) * 60 * 1000;
-    const pauseUntil = Date.now() + durationMs;
-    profilePauses.set(activeProfile.id, pauseUntil);
-    console.log(`[PDS] Profile "${activeProfile.name}" paused for ${message.durationMinutes} minute(s).`);
-    sendResponse({ ok: true, pauseUntil });
-    return true;
-  }
-
   if (message.type === 'GET_STATE') {
-    const pauseUntil = activeProfile ? (profilePauses.get(activeProfile.id) ?? null) : null;
-    sendResponse({
-      blockedCount:  blockedHosts.size,
-      blockedHosts:  [...blockedHosts],
-      isPaused:      pauseUntil !== null && Date.now() < pauseUntil,
-      pauseUntil,
-      activeProfile,
-      blockingMode,
-      isPremium,
-    });
-    return true;
+    // Re-sync before answering rather than serving whatever's cached in
+    // memory: that cache is only as fresh as the last chrome.alarms tick
+    // (up to 60s stale) or the dashboard's poke (a no-op until EXTENSION_ID
+    // is a real published ID — see core/config.js). Popup open is exactly
+    // the moment a user is looking for accurate status, so it shouldn't be
+    // at the mercy of the poll cadence — this was caught by pausing 10
+    // minutes via the Friction breathing flow, then immediately overriding
+    // with an indefinite pause from the dashboard: the popup kept showing
+    // the stale 10-minute expiry until the next alarm happened to fire.
+    (async () => {
+      await refreshBlocklist();
+      sendResponse({
+        blockedCount:  blockedHosts.size,
+        blockedHosts:  [...blockedHosts],
+        isPaused:      pausedUntil !== null && Date.now() < pausedUntil,
+        pauseUntil:    pausedUntil,
+        activeProfile,
+        blockingMode,
+        isPremium,
+      });
+    })();
+    return true; // async
   }
 
   if (message.type === 'SET_BLOCKING_MODE') {
@@ -243,6 +255,53 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const ok = await setBlockingMode(accessToken, session.user.id, mode);
       if (ok) blockingMode = mode;
       sendResponse({ ok, blockingMode, isPremium });
+    })();
+    return true; // async
+  }
+
+  if (message.type === 'PAUSE_BLOCKING') {
+    // Sent by blocked.js's onComplete() once the 30s Friction Mode
+    // breathing countdown finishes — the automatic "you sat through the
+    // friction, here's a grace window" grant, distinct from the
+    // dashboard's deliberate pause. message.durationMinutes — currently
+    // always 10 (blocked.js), defaulted here too in case that ever
+    // changes without this file being touched.
+    //
+    // Written through to the same Supabase paused_until column the
+    // dashboard's setPauseUntil() writes (not a separate local-only
+    // variable) — this is what makes "a dashboard pause always overrides
+    // this" true for free: both are just the last write to one column, no
+    // merge logic needed either direction. It's also why this can't
+    // regress the way the old per-profile in-memory PAUSE_BLOCKING +
+    // profilePauses Map did (see docs/ARCHITECTURE.md §5) — that state lived only in
+    // the service worker and was silently wiped on every MV3 idle
+    // teardown; this survives it the same way the dashboard's pause
+    // already does, because it's the same durable column.
+    (async () => {
+      const accessToken = await getValidAccessToken(chromeStorageAdapter);
+      if (!accessToken) {
+        sendResponse({ ok: false, error: 'Not authenticated.' });
+        return;
+      }
+
+      const session = await getStoredSession(chromeStorageAdapter);
+
+      // Re-check fresh, not the mode blocked.html opened with 30s ago —
+      // isUrlBlocked() would ignore a stale-mode grant regardless (it
+      // re-checks blockingMode itself before honoring pausedUntil), but no
+      // reason to write a pause to Supabase at all if the user has since
+      // switched to Strict from another tab.
+      blockingMode = await fetchBlockingMode(accessToken, session.user.id);
+      if (blockingMode !== 'friction') {
+        sendResponse({ ok: false, error: 'Not in Friction Mode.' });
+        return;
+      }
+
+      const minutes = Number(message.durationMinutes) || 10;
+      const untilIso = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+      const ok = await setPauseUntil(accessToken, session.user.id, untilIso);
+      if (ok) pausedUntil = new Date(untilIso).getTime();
+      sendResponse({ ok });
     })();
     return true; // async
   }

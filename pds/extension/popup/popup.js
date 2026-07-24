@@ -5,6 +5,7 @@
 import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import * as Auth from '../../core/auth/session.js';
 import { fetchProfiles, createProfile } from '../../core/sync/profiles.js';
+import { isIndefinitePause } from '../../core/sync/userSettings.js';
 import { DASHBOARD_URL, PRICING_URL } from '../../core/config.js';
 import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../../core/validation.js';
 
@@ -232,7 +233,9 @@ async function refreshStatRow() {
     if (state.isPaused && state.pauseUntil) {
       pauseBar.classList.remove('hidden');
       document.getElementById('pause-until-label').textContent =
-        new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        isIndefinitePause(state.pauseUntil)
+          ? 'you resume it'
+          : new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else {
       pauseBar.classList.add('hidden');
     }

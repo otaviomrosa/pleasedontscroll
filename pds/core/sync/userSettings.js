@@ -33,3 +33,56 @@ export async function setBlockingMode(accessToken, userId, mode) {
   });
   return result !== null;
 }
+
+// Sentinel for "paused indefinitely, until manually resumed" — no schema
+// change needed for this: paused_until stays a plain TIMESTAMPTZ, and a
+// far-future value satisfies every existing `Date.now() < pausedUntil`
+// check (background/index.js's isUrlBlocked, refreshPauseUI's isActive)
+// without any special-casing there. Only the *display* layer (dashboard,
+// popup) needs to recognize this value to show "indefinitely" instead of a
+// real (meaningless, year-9999) clock time.
+export const INDEFINITE_PAUSE_ISO = '9999-12-31T23:59:59.000Z';
+
+/**
+ * Whether a paused_until value (ISO string OR epoch ms — background.js's
+ * GET_STATE hands back the latter) represents the indefinite sentinel.
+ * Compares the parsed year, not the raw string: Postgres/PostgREST don't
+ * necessarily round-trip the exact string that was written (e.g.
+ * `+00:00` vs `Z`, different sub-second precision), so a strict
+ * `=== INDEFINITE_PAUSE_ISO` check silently failed here — the value came
+ * back reformatted, fell through to the "real timestamp" display branch,
+ * and rendered as if it were a normal (if absurd, year-9999) time.
+ */
+export function isIndefinitePause(pausedUntil) {
+  if (!pausedUntil) return false;
+  return new Date(pausedUntil).getFullYear() >= 9000;
+}
+
+/**
+ * The user's current pause-until timestamp (ISO string), or null if not
+ * currently paused. Callers must still check it's in the future — this
+ * returns whatever's in the column, including an expired one.
+ */
+export async function fetchPauseUntil(accessToken, userId) {
+  const rows = await supabaseFetch(
+    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=paused_until`,
+    accessToken,
+  );
+  return rows?.[0]?.paused_until ?? null;
+}
+
+/**
+ * Sets (or clears, passing null) the user's pause-until timestamp. Returns
+ * true on success. Friction Mode only by convention — the caller (dashboard)
+ * is responsible for checking blocking_mode before calling this; the
+ * extension's own enforcement also re-checks mode independently (see
+ * background/index.js's isUrlBlocked), so this alone is never the only
+ * thing standing between Strict Mode and a bypass.
+ */
+export async function setPauseUntil(accessToken, userId, pausedUntilIso) {
+  const result = await supabaseFetch(`/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}`, accessToken, {
+    method: 'PATCH',
+    body: JSON.stringify({ paused_until: pausedUntilIso }),
+  });
+  return result !== null;
+}

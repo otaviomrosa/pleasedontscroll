@@ -27,6 +27,10 @@
  * @property {string | null} stripe_customer_id
  * @property {string | null} stripe_subscription_id
  * @property {'friction' | 'strict'} blocking_mode - User-level, not per-profile.
+ * @property {string | null} paused_until - ISO timestamp; blocking is
+ *   suspended until this time when set and in the future. Friction Mode
+ *   only — ignored entirely while blocking_mode is 'strict'. Set from the
+ *   dashboard (see docs/ARCHITECTURE.md §5), read by the extension's poll.
  * @property {string} created_at
  */
 

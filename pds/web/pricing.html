@@ -863,7 +863,7 @@
         <div class="account-dropdown" id="account-dropdown">
           <div class="account-dropdown-header">
             <div class="account-dropdown-email" id="account-email"></div>
-            <span class="account-dropdown-pro-tag hidden" id="account-pro-tag">Pro</span>
+            <span class="account-dropdown-pro-tag" id="account-pro-tag">Free</span>
           </div>
           <a href="dashboard.html" class="account-dropdown-item">Dashboard</a>
           <a href="dashboard.html#settings-card" class="account-dropdown-item">Settings</a>
@@ -1257,7 +1257,7 @@
         session.user.email.charAt(0).toUpperCase()
 
       const isPremium = await fetchIsPremium(accessToken, session.user.id)
-      document.getElementById('account-pro-tag').classList.toggle('hidden', !isPremium)
+      document.getElementById('account-pro-tag').textContent = isPremium ? 'Pro' : 'Free'
     }
 
     document.getElementById('account-avatar-btn').addEventListener('click', (e) => {

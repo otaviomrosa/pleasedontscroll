@@ -37,7 +37,7 @@ export async function setBlockingMode(accessToken, userId, mode) {
 // Sentinel for "paused indefinitely, until manually resumed" — no schema
 // change needed for this: paused_until stays a plain TIMESTAMPTZ, and a
 // far-future value satisfies every existing `Date.now() < pausedUntil`
-// check (background/index.js's isUrlBlocked, refreshPauseUI's isActive)
+// check (background/index.js's checkAndBlockTab, refreshPauseUI's isActive)
 // without any special-casing there. Only the *display* layer (dashboard,
 // popup) needs to recognize this value to show "indefinitely" instead of a
 // real (meaningless, year-9999) clock time.
@@ -76,7 +76,7 @@ export async function fetchPauseUntil(accessToken, userId) {
  * true on success. Friction Mode only by convention — the caller (dashboard)
  * is responsible for checking blocking_mode before calling this; the
  * extension's own enforcement also re-checks mode independently (see
- * background/index.js's isUrlBlocked), so this alone is never the only
+ * background/index.js's checkAndBlockTab), so this alone is never the only
  * thing standing between Strict Mode and a bypass.
  */
 export async function setPauseUntil(accessToken, userId, pausedUntilIso) {

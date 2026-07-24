@@ -16,14 +16,17 @@ import { normalizeToHostname, isNavigableUrl, hostnameOf } from '../../core/bloc
 let blockedHosts = new Set();
 
 // User-level pause (not per-profile) — epoch ms when the pause expires, or
-// null. Set from the dashboard (Supabase-backed, see core/sync/userSettings.js's
-// fetchPauseUntil/setPauseUntil), read here on every refreshBlocklist().
-// Deliberately global rather than per-profile: the dashboard's pause toggle
-// is meant to disable blocking outright for a while, not scope it to
-// whichever profile happens to be active. Friction Mode only — isUrlBlocked()
-// below ignores this entirely when blockingMode is 'strict', so a pause can
-// never bypass Strict Mode even if one was already running when the user
-// switched into it.
+// null. Set from the dashboard or the Friction Mode breathing flow
+// (Supabase-backed, see core/sync/userSettings.js's fetchPauseUntil/
+// setPauseUntil), refreshed on every refreshBlocklist() AND re-checked
+// live in checkAndBlockTab() below right before a block would actually
+// happen, since that's the one place staleness is immediately visible to
+// the user. Deliberately global rather than per-profile: the dashboard's
+// pause toggle is meant to disable blocking outright for a while, not
+// scope it to whichever profile happens to be active. Friction Mode only —
+// checkAndBlockTab() below ignores this entirely when blockingMode is
+// 'strict', so a pause can never bypass Strict Mode even if one was
+// already running when the user switched into it.
 let pausedUntil = null;
 
 // The currently active profile row: { id, name } or null.
@@ -124,34 +127,64 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // ─── Tab interception logic ───────────────────────────────────────────────────
 
 /**
- * Returns true if the given full URL matches any blocked hostname.
+ * Whether the given URL's hostname is on the current blocklist at all —
+ * a pure, fast, local Set lookup, independent of blocking_mode/pause. Used
+ * only to decide whether a live mode/pause recheck (below) is worth doing;
+ * the actual block/no-block decision is never made from this alone.
  *
  * @param {string} url - Full URL of the tab being navigated.
  * @returns {boolean}
  */
-function isUrlBlocked(url) {
+function isCandidateForBlocking(url) {
   if (!isNavigableUrl(url)) return false;
   if (blockedHosts.size === 0) return false;
-
-  // Dashboard-triggered pause — Friction Mode only, deliberately. Strict
-  // Mode's entire promise is "no bypass"; a pause left running (or set)
-  // from another tab must never be able to override that, so this is
-  // checked only when blockingMode isn't 'strict', not just gated at the
-  // point the pause was created.
-  if (blockingMode === 'friction' && pausedUntil && Date.now() < pausedUntil) return false;
-
   const hostname = hostnameOf(url);
   return hostname !== null && blockedHosts.has(hostname);
 }
 
 /**
- * Redirects a tab to the blocked.html intercept page if its URL is blocked.
+ * Redirects a tab to the blocked.html intercept page if it's currently
+ * blocked. "Currently" is always decided live against Supabase once a
+ * hostname is a blocklist candidate, never from the cached blockingMode/
+ * pausedUntil alone — those are only as fresh as the last
+ * refreshBlocklist() (startup, the 60s chrome.alarms tick, an external
+ * poke — a no-op pre-launch since EXTENSION_ID in core/config.js is still
+ * a placeholder — or a popup open), none of which are triggered by the
+ * act of navigating. That staleness cuts both ways, and both directions
+ * are real bugs a user would immediately notice: a pause set moments ago
+ * on the dashboard might not be reflected in the cache yet (blocks a site
+ * that should currently be let through), or a pause that already expired
+ * or was resumed might still look active in the cache (lets a site
+ * through that should currently be blocked). Re-checking live here — once
+ * a hostname is even a blocklist candidate, not on every navigation —
+ * closes both gaps with one round trip instead of only the first.
  *
  * @param {number} tabId
  * @param {string} url
  */
 async function checkAndBlockTab(tabId, url) {
-  if (!isUrlBlocked(url)) return;
+  if (!isCandidateForBlocking(url)) return;
+
+  const accessToken = await getValidAccessToken(chromeStorageAdapter);
+  if (accessToken) {
+    const session = await getStoredSession(chromeStorageAdapter);
+    blockingMode = await fetchBlockingMode(accessToken, session.user.id);
+
+    if (blockingMode === 'friction') {
+      const freshPauseIso = await fetchPauseUntil(accessToken, session.user.id);
+      pausedUntil = freshPauseIso ? new Date(freshPauseIso).getTime() : null;
+      if (pausedUntil && Date.now() < pausedUntil) return; // currently paused — let it through
+    } else {
+      // Strict Mode never honors a pause regardless of what's stored —
+      // keep the cache consistent with that so a later GET_STATE (e.g. the
+      // popup) doesn't display a pause that can no longer do anything.
+      pausedUntil = null;
+    }
+  }
+  // No valid access token: fall through and block using whatever mode is
+  // already cached. Staying cautious (still enforcing) is the safer
+  // default when a live check isn't possible — never silently grant an
+  // exemption that couldn't actually be verified.
 
   const blockedPageUrl =
     chrome.runtime.getURL('extension/blocked/blocked.html') +
@@ -287,7 +320,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const session = await getStoredSession(chromeStorageAdapter);
 
       // Re-check fresh, not the mode blocked.html opened with 30s ago —
-      // isUrlBlocked() would ignore a stale-mode grant regardless (it
+      // checkAndBlockTab() would ignore a stale-mode grant regardless (it
       // re-checks blockingMode itself before honoring pausedUntil), but no
       // reason to write a pause to Supabase at all if the user has since
       // switched to Strict from another tab.

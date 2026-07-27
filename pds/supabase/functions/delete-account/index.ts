@@ -31,6 +31,13 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
 serve(async (req: Request) => {
   const ALLOWED_ORIGINS = [
     Deno.env.get('SITE_URL'),
+    // Both the apex and www domain serve the site (no canonical redirect
+    // between them — see vercel.json), and manifest.json's
+    // externally_connectable already treats both as valid. SITE_URL alone
+    // only ever covers one of the two, so list both explicitly here too,
+    // rather than depending on which form SITE_URL happens to be set to.
+    'https://pleasedontscroll.com',
+    'https://www.pleasedontscroll.com',
     'http://localhost:8000',
     'http://localhost:3000',
   ].filter(Boolean)

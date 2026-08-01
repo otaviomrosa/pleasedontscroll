@@ -134,13 +134,19 @@ serve(async (req: Request) => {
     // ─── 4. Create the Stripe Checkout Session ───────────────────────────────────
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      // Managed Payments (on by default for this account) otherwise owns
-      // payment-method selection AND gates on the product's Stripe tax code
-      // being in its eligible set — hit both restrictions during testing.
-      // Opting out here keeps this checkout on plain, predictable behavior
-      // instead of chasing Managed Payments' eligibility rules.
-      payment_method_types: ['card'],
-      managed_payments: { enabled: false },
+      // Managed Payments left on the account default (not explicitly
+      // disabled) as of this change — being re-tested against the new live
+      // Brazilian account/product, since the previous failure (Managed
+      // Payments gating checkout on the product's Stripe tax code being in
+      // its eligible set) was tied to the old account's product setup and
+      // may not recur here. payment_method_types is also omitted now,
+      // matching Stripe's current guidance to let it pick eligible methods
+      // dynamically instead of hardcoding card-only — that's the actual
+      // point of turning this back on, not just a side effect.
+      //
+      // If this breaks again the same way, revert to the known-working
+      // state: add back `payment_method_types: ['card']` and
+      // `managed_payments: { enabled: false }` here.
       customer_email: user.email,
       line_items: [
         {

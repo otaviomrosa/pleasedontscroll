@@ -373,7 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
     signupBtn.textContent = 'Creating…';
     signupBtn.disabled    = true;
 
-    const { session, error } = await Auth.signUp(email, password);
+    // DASHBOARD_URL, not the extension's own chrome-extension:// origin —
+    // an email link can't reasonably target an unpublished extension popup,
+    // same reasoning "Change password"/password-reset are dashboard-only
+    // (see core/auth/session.js). Without this, the confirmation link falls
+    // back to Supabase's Site URL default instead.
+    const { session, error } = await Auth.signUp(email, password, DASHBOARD_URL);
 
     signupBtn.textContent = 'Create account';
     signupBtn.disabled    = false;

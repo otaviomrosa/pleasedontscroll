@@ -1,0 +1,130 @@
+<!--
+  PDS — Supabase Auth email template: "Confirm signup"
+  ============================================================
+  This file is the source of truth for this template — Supabase only
+  stores it inside the dashboard (Authentication → Emails → Templates →
+  "Confirm signup"), with no git history of its own, so edit it here first,
+  then paste the full contents of this file into that field. Same "config
+  lives outside this repo but we keep a versioned reference copy" pattern
+  as /supabase/policies for RLS.
+
+  Design tokens below are pulled directly from web/index.html's --root
+  custom properties (--black, --text-muted, --text-faint, --border,
+  --indigo, --font-ui, --font-serif, --radius-card, --radius-btn) — not
+  guessed. Deviates from the live site in a few email-specific ways:
+    - Table-based layout + inline styles instead of flexbox/CSS variables:
+      most mail clients (especially Outlook desktop) don't support either.
+    - Light gray (#f5f5f7 — the same gray already used for .paused states
+      in dashboard.html) page background behind a white card, instead of
+      relying on box-shadow for elevation: box-shadow renders inconsistently
+      across mail clients, so a flat canvas-vs-card contrast is more
+      reliable than this repo's usual --shadow-card technique.
+    - No embedded logo image: many clients hide images by default until a
+      user clicks "show images," which would leave a broken-image icon
+      where a logo should be. A small text wordmark avoids that entirely
+      and is arguably more consistent with this project's explicit
+      "flat black/white, no imagery" design principle (docs/ARCHITECTURE.md §4) than
+      an image would have been anyway.
+    - Google Fonts loaded via <link> as a progressive enhancement only —
+      every font-family declaration falls back to a real system stack
+      (Georgia/Times New Roman for Lora, -apple-system/Segoe UI/Roboto/
+      Arial for DM Sans) so the email still looks intentional in clients
+      that strip web fonts entirely.
+
+  Supabase template variable used: {{ .ConfirmationURL }}
+  (Confirm signup is the only template that exposes this variable name —
+  don't reuse this file verbatim for Reset Password, which uses a
+  different confirmation URL variable and different copy.)
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm your email</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@400&display=swap" rel="stylesheet">
+  <style>
+    /* Progressive enhancement only — nothing structural depends on this
+       block, since many clients strip <style> entirely. */
+    @media (max-width: 480px) {
+      .pds-container { width: 100% !important; }
+      .pds-card { padding: 36px 24px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f5f5f7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f7;">
+    <tr>
+      <td align="center" style="padding:48px 16px;">
+
+        <table role="presentation" class="pds-container" width="480" cellpadding="0" cellspacing="0" style="width:480px; max-width:100%;">
+
+          <!-- Wordmark -->
+          <tr>
+            <td align="center" style="padding-bottom:28px;">
+              <span style="font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#6e6e73;">
+                Please Don&rsquo;t Scroll
+              </span>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td class="pds-card" style="background-color:#ffffff; border:1px solid rgba(0,0,0,0.09); border-radius:24px; padding:48px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <h1 style="margin:0; font-family:'Lora', Georgia, 'Times New Roman', serif; font-weight:400; font-size:28px; line-height:1.25; letter-spacing:-0.02em; color:#000000;">
+                      Confirm your email
+                    </h1>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td align="center" style="padding-bottom:32px;">
+                    <p style="margin:0; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:15px; line-height:1.6; color:#6e6e73;">
+                      One click and you&rsquo;re set. Confirm your email to activate your blocklist and start putting real friction between you and the apps that don&rsquo;t deserve your attention.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- CTA button (table-wrapped, not a plain <a>, for consistent padding/background across clients) -->
+                <tr>
+                  <td align="center">
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" style="border-radius:50px; background-color:#000000;">
+                          <a href="{{ .ConfirmationURL }}" target="_blank"
+                             style="display:inline-block; padding:14px 36px; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:15px; font-weight:500; color:#ffffff; text-decoration:none; border-radius:50px;">
+                            Confirm email
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; font-size:12px; line-height:1.6; color:#aeaeb2;">
+                If you didn&rsquo;t create an account, you can safely ignore this email.<br>
+                <a href="https://pleasedontscroll.com" style="color:#aeaeb2; text-decoration:underline;">pleasedontscroll.com</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -82,9 +82,26 @@ export async function signIn(email, password) {
   return { session: data, error: null };
 }
 
-/** Signs up a new user. Returns { session, error }. */
-export async function signUp(email, password) {
-  const { res, data } = await authFetch('/auth/v1/signup', { email, password });
+/**
+ * Signs up a new user. Returns { session, error }.
+ *
+ * `redirectTo`, if given, is where the confirmation email's link lands the
+ * user (same `?redirect_to=` query param requestPasswordReset() below uses
+ * against Supabase Auth's REST API). Without it, Supabase falls back to the
+ * project's Site URL (Authentication → URL Configuration in the Supabase
+ * dashboard) — if that's ever left pointed at a local dev URL, every
+ * confirmation link sends users to localhost regardless of what domain they
+ * actually signed up from. Callers should always pass this explicitly
+ * rather than relying on that dashboard default. As with
+ * requestPasswordReset(), Supabase silently ignores redirectTo unless it's
+ * also in that same dashboard's Redirect URLs allowlist — passing it here
+ * doesn't skip needing that entry.
+ */
+export async function signUp(email, password, redirectTo) {
+  const path = redirectTo
+    ? `/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}`
+    : '/auth/v1/signup';
+  const { res, data } = await authFetch(path, { email, password });
   if (!res.ok) return { session: null, error: friendlyAuthError(data) };
   if (data.access_token) return { session: data, error: null };
   return { session: null, error: 'Check your email to confirm your account.' };
@@ -131,6 +148,21 @@ export async function updatePassword(accessToken, newPassword) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) return { ok: false, error: friendlyAuthError(data) };
   return { ok: true, error: null };
+}
+
+/**
+ * Fetches the user object for a given access token. Used to complete a
+ * session built from an implicit-flow redirect's URL hash (a signup
+ * confirmation link, for instance) — those only carry access_token/
+ * refresh_token/expires_in, not the user object itself, so this fills that
+ * gap before the caller persists a full session. Returns null on failure.
+ */
+export async function getUser(accessToken) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
 }
 
 /** Exchanges a refresh_token for a fresh session, or null if it's no longer valid. */

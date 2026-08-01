@@ -1074,7 +1074,7 @@
 
         <button class="btn-primary" id="login-btn">Sign in</button>
 
-        <p class="auth-toggle">No account? <a href="#" id="show-signup">Create one free</a></p>
+        <p class="auth-toggle">No account? <a href="#" id="show-signup">Create one for free</a></p>
       </div>
     </div>
 
@@ -1369,6 +1369,8 @@
       // in this browser — someone clicking it wants to reset a password,
       // not land in whatever account happens to already be signed in here.
       if (completeRecoveryFlow()) return;
+      // Same priority reasoning for a signup-confirmation link.
+      if (await completeSignupConfirmation()) return;
 
       const accessToken = await currentAccessToken();
       if (accessToken) {
@@ -1401,6 +1403,45 @@
       window.history.replaceState({}, '', window.location.pathname);
 
       showView('reset-card');
+      return true;
+    }
+
+    // ─── Signup confirmation ────────────────────────────────────────────────────
+    // Same mechanism as password recovery above — Supabase's confirmation link
+    // also redirects back here with a real session in the URL hash
+    // (#access_token=...&refresh_token=...&expires_in=...&type=signup), not just
+    // a "you're verified, now go log in" notice. Previously this hash was never
+    // read at all (only completeRecoveryFlow() checked the hash, and only for
+    // type=recovery), so confirming silently dropped a perfectly good session
+    // and left the user on the sign-in screen right after they'd just proven
+    // their email. Logging them straight in here instead.
+    //
+    // Unlike the recovery hash, this one doesn't include the user object
+    // (Supabase's implicit-flow fragment never does) — getUser() fills that gap
+    // before a full session gets persisted. expires_in is relative seconds, not
+    // the absolute expires_at getValidAccessToken() expects, so it's converted
+    // here too.
+
+    /** Returns true if a signup-confirmation link was detected and handled. */
+    async function completeSignupConfirmation() {
+      const { access_token, refresh_token, expires_in, type } = parseHashParams();
+      if (type !== 'signup' || !access_token) return false;
+
+      window.history.replaceState({}, '', window.location.pathname);
+
+      const user = await Auth.getUser(access_token);
+      if (!user) { showAuthScreen(); return true; }
+
+      const session = {
+        access_token,
+        refresh_token,
+        expires_at: Math.floor(Date.now() / 1000) + Number(expires_in || 3600),
+        user,
+      };
+
+      await Auth.persistSession(webStorageAdapter, session);
+      currentUser = user;
+      await showApp();
       return true;
     }
 
@@ -2133,7 +2174,13 @@
       btn.textContent = 'Creating…';
       btn.disabled    = true;
 
-      const { session, error } = await Auth.signUp(email, password);
+      // window.location.origin + pathname, not a hardcoded constant — same
+      // reasoning as the password-reset call below: correctly lands on
+      // whichever domain (apex or www) the user actually signed up from,
+      // instead of depending on Supabase's Site URL default (which is what
+      // was sending confirmation links to localhost).
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { session, error } = await Auth.signUp(email, password, redirectTo);
 
       btn.textContent = 'Create account';
       btn.disabled    = false;

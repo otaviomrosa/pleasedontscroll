@@ -73,6 +73,32 @@ async function reactivateDefaultProfileIfNeeded(userId: string) {
   }
 }
 
+/**
+ * Strict Mode is a Focus Pro feature — on downgrade, force the user back to
+ * Friction Mode if they're currently in Strict, mirroring
+ * reactivateDefaultProfileIfNeeded() right above: a downgraded user
+ * shouldn't be left stuck in a paid-only mode with no way out beyond
+ * knowing to find the toggle themselves and sit through the 30s
+ * leave-Strict hold. Enforcement itself was never actually unsafe either
+ * way — checkAndBlockTab() doesn't gate Strict on is_premium, it just
+ * keeps enforcing "no bypass" regardless of who's paying — this is about
+ * not leaving a free user's account silently misconfigured after an
+ * involuntary downgrade, not a security fix.
+ * A single conditional UPDATE (WHERE blocking_mode = 'strict') rather than
+ * a SELECT-then-UPDATE — a no-op if the user was already in Friction Mode.
+ */
+async function resetToFrictionModeIfNeeded(userId: string) {
+  const { error } = await supabaseAdmin
+    .from('user_settings')
+    .update({ blocking_mode: 'friction' })
+    .eq('id', userId)
+    .eq('blocking_mode', 'strict')
+
+  if (error) {
+    console.error(`[PDS] Failed to reset blocking_mode to friction for user ${userId}:`, error)
+  }
+}
+
 serve(async (req: Request) => {
   // ─── 1. Read the raw body bytes (required for signature verification) ─────────
   const body = await req.text()
@@ -164,6 +190,7 @@ serve(async (req: Request) => {
 
         if (!isPremium && updatedRows?.[0]?.id) {
           await reactivateDefaultProfileIfNeeded(updatedRows[0].id)
+          await resetToFrictionModeIfNeeded(updatedRows[0].id)
         }
 
         console.log(`[PDS] Subscription status "${subscription.status}" for Stripe customer ${stripeCustomerId} — is_premium=${isPremium}`)
@@ -188,6 +215,7 @@ serve(async (req: Request) => {
 
         if (updatedRows?.[0]?.id) {
           await reactivateDefaultProfileIfNeeded(updatedRows[0].id)
+          await resetToFrictionModeIfNeeded(updatedRows[0].id)
         }
 
         console.log(`[PDS] Subscription cancelled for Stripe customer: ${stripeCustomerId}`)

@@ -164,12 +164,26 @@ serve(async (req: Request) => {
       // Allow promotion codes for future marketing flexibility
       allow_promotion_codes: true,
     }, {
-      // Deterministic per (user, price) key so a client retry after a
-      // timeout reuses the in-flight/completed session instead of creating
-      // a duplicate one. Stripe expires idempotency keys after 24h, so this
-      // doesn't block a legitimate later resubscribe attempt — only same-day
-      // retries collapse.
-      idempotencyKey: `checkout_${user.id}_${priceId}`,
+      // Deterministic per (user, price, 5-minute window) key so a client
+      // retry shortly after a timeout reuses the in-flight/completed
+      // session instead of creating a duplicate one — that's the actual
+      // scenario this protects against (a double-click, or the client
+      // auto-retrying a fetch that timed out but actually succeeded
+      // server-side), which resolves within seconds, not hours.
+      //
+      // A previous version keyed only on (user, price) with no time
+      // component. Stripe idempotency keys are valid for 24h, so that
+      // wasn't "only same-day retries collapse" as the old comment here
+      // claimed — it meant ANY two checkout attempts by the same user for
+      // the same price within a day collided, including a genuine
+      // resubscribe after a real cancellation: Stripe just handed back the
+      // original, already-completed Checkout Session, which is exactly why
+      // a user who'd cancelled and tried to resubscribe saw Stripe's "You're
+      // all done here... this checkout session has timed out" message
+      // instead of a fresh checkout. Bucketing to 5 minutes keeps the
+      // intended double-submit protection while making any attempt more
+      // than 5 minutes after the last one get a genuinely fresh session.
+      idempotencyKey: `checkout_${user.id}_${priceId}_${Math.floor(Date.now() / (5 * 60 * 1000))}`,
     })
 
     // ─── 5. Return the checkout URL ──────────────────────────────────────────────

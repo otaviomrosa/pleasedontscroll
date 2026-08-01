@@ -656,6 +656,14 @@
       .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
     }
   </style>
+  <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
+  <!-- Plain script tag, not the @vercel/analytics npm package — that
+       package's framework integrations (e.g. the Next.js one) don't apply
+       here, since this is a build-free static site with no bundler. This
+       is Vercel's own vanilla-HTML integration path. Requires "Web
+       Analytics" enabled for this project in the Vercel dashboard, or the
+       script 404s harmlessly and nothing is tracked. -->
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 

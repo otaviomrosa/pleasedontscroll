@@ -32,22 +32,23 @@ export async function createProfile(accessToken, userId, name) {
 }
 
 /**
- * Atomically makes `profileId` the only active profile for `userId`.
- * Two REST calls (deactivate all, then activate one) — RLS scopes both to
- * the caller's own rows.
+ * Atomically makes `profileId` the only active profile for `userId`, via
+ * the switch_active_profile() RPC (010_atomic_profile_switch.sql) — a
+ * single transaction, not two separate PATCH requests. That used to be two
+ * round trips (deactivate all, then activate one); an interruption between
+ * them could leave a user with zero active profiles, which
+ * background/index.js's refreshBlocklist() has no good recovery from
+ * (disables blocking entirely). The RPC function enforces its own
+ * authorization (auth.uid() = userId) internally, since it runs as
+ * SECURITY DEFINER and bypasses RLS — see that migration's comments.
  */
 export async function switchProfile(accessToken, userId, profileId) {
-  await supabaseFetch(`/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}`, accessToken, {
-    method: 'PATCH',
-    body: JSON.stringify({ is_active: false }),
+  const result = await supabaseFetch('/rest/v1/rpc/switch_active_profile', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ p_user_id: userId, p_profile_id: profileId }),
   });
 
-  const activated = await supabaseFetch(`/rest/v1/profiles?id=eq.${encodeURIComponent(profileId)}`, accessToken, {
-    method: 'PATCH',
-    body: JSON.stringify({ is_active: true }),
-  });
-
-  return activated !== null;
+  return result !== null;
 }
 
 /** Deletes a profile. Its blocked_urls rows cascade-delete via the FK. */

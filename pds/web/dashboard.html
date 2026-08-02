@@ -343,7 +343,10 @@
       80%      { transform: translateX(2px); }
     }
 
-    .pause-toggle.shake { animation: pause-shake 0.3s ease; }
+    /* Generic — not scoped to .pause-toggle, so any element can reuse this
+       same "you can't do that right now" feedback (e.g. profile tabs and
+       blocklist remove buttons while in Lock Mode). */
+    .shake { animation: pause-shake 0.3s ease; }
 
     /* top/left: 2px, not 3px — the switch's own 1px border eats into the
        interior box it's positioned within (absolutely positioned children
@@ -433,7 +436,7 @@
        usable in between (system fallback fonts typically ship only a
        couple of discrete weight instances, not a smooth range). SVG
        stroke-width gives exact, reliable control regardless of font
-       support — same approach the popup's Strict Mode lock icon already
+       support — same approach the popup's Lock Mode lock icon already
        uses elsewhere in this codebase. */
     .pause-duration-infinite {
       display: inline-flex;
@@ -451,7 +454,7 @@
        normal flow) so it appears cleanly to the right of the switch
        without pushing anything below it down the page — it used to be a
        block-level <p> under the whole nav row, which shifted every card
-       beneath it whenever Strict Mode blocked a pause attempt. */
+       beneath it whenever Lock Mode blocked a pause attempt. */
     .pause-strict-msg {
       position: absolute;
       left: calc(100% + 10px);
@@ -708,9 +711,10 @@
     }
 
     .profile-tab-lock {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       margin-left: 6px;
-      font-size: 0.7rem;
-      vertical-align: middle;
     }
 
     /* Tabs that carry a delete icon get a smaller right-hand padding —
@@ -903,6 +907,20 @@
     .btn-delete-url:hover {
       color: var(--error);
       background: rgba(192, 57, 43, 0.06);
+    }
+
+    /* Lock Mode: the destructive red hover would signal "about to delete"
+       for a button that can't actually delete anything right now — swap
+       it for a neutral no-op hover instead. */
+    .btn-delete-url.locked {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-delete-url.locked:hover {
+      color: var(--text-muted);
+      background: none;
     }
 
     .empty-state {
@@ -1160,7 +1178,7 @@
                (not in the extension popup) so pausing costs a real trip, not
                a one-click escape — see docs/ARCHITECTURE.md §5 for the full mechanism.
                No extra wait on top of that: the 30s hold already lives on
-               leaving Strict Mode (in the popup) — a Friction-mode user
+               leaving Lock Mode (in the popup) — a Friction-mode user
                picking a duration here commits immediately.
                The toggle itself never moves or resizes; a separate gray
                pill (.pause-options-pill) grows out from behind it to the
@@ -1184,7 +1202,7 @@
                 </button>
               </div>
             </div>
-            <p class="pause-strict-msg hidden" id="pause-strict-msg">Blocking can't be paused while in Strict Mode.</p>
+            <p class="pause-strict-msg hidden" id="pause-strict-msg">Blocking can't be paused while in Lock Mode.</p>
           </div>
           <span class="pause-label hidden" id="pause-label"></span>
         </div>
@@ -1212,7 +1230,7 @@
       <div class="upgrade-banner hidden" id="upgrade-banner">
         <div class="upgrade-banner-text">
           <strong>Unlock Focus Pro</strong>
-          Strict Mode, unlimited profiles &amp; upcoming analytics for $4.99/mo.
+          Lock Mode, unlimited profiles &amp; upcoming analytics for $4.99/mo.
         </div>
         <a href="pricing.html" class="btn-upgrade">See plans</a>
       </div>
@@ -1337,7 +1355,7 @@
     // Pause blocking — set by refreshPauseUI(), which always re-fetches
     // fresh rather than trusting a cached value (same reasoning as
     // SET_BLOCKING_MODE re-checking is_premium server-side): a stale mode
-    // reading here must never be the thing standing between Strict Mode
+    // reading here must never be the thing standing between Lock Mode
     // and a bypass.
     let currentBlockingMode = 'friction';
     let currentPausedUntil  = null; // ISO string or null
@@ -1530,6 +1548,21 @@
       } else {
         label.classList.add('hidden');
       }
+
+      // Profile tabs' locked-by-Lock-Mode appearance depends on
+      // currentBlockingMode too — re-render so it stays in sync whenever
+      // this refreshes (e.g. the mode changed in the popup while this tab
+      // was open, caught on visibilitychange). Harmless no-op re-render
+      // when the mode hasn't actually changed; skipped before the first
+      // loadProfiles() call populates profiles at all.
+      if (profiles.length) renderProfileTabs();
+
+      // Same reasoning for the blocklist's remove buttons (Remove text vs.
+      // lock icon). loadBlocklist() re-fetches rather than re-rendering a
+      // cached list — this codebase doesn't keep one — but that's the same
+      // cost visibilitychange refreshes already pay elsewhere, and only
+      // runs while a profile is actually selected.
+      if (selectedProfile) loadBlocklist(selectedProfile.id);
     }
 
     /**
@@ -1563,6 +1596,18 @@
       toggle.classList.add('shake');
       document.getElementById('pause-strict-msg').classList.remove('hidden');
       setTimeout(() => toggle.classList.remove('shake'), 400);
+    }
+
+    /**
+     * Generic version of the shake above — "you can't do that right now"
+     * feedback for any element, not just the pause toggle. Used by profile
+     * tabs and blocklist remove buttons while in Lock Mode.
+     */
+    function shakeElement(el) {
+      el.classList.remove('shake');
+      void el.offsetWidth;
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 400);
     }
 
     document.getElementById('pause-toggle').addEventListener('click', async () => {
@@ -1606,7 +1651,7 @@
     });
 
     // Picking a duration commits immediately — no hold here. The 30s wait
-    // already exists for leaving Strict Mode (in the popup); a Friction-mode
+    // already exists for leaving Lock Mode (in the popup); a Friction-mode
     // user pausing doesn't need a second one on top of it.
     document.querySelectorAll('.pause-duration-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -1804,24 +1849,52 @@
       // — the one free-tier account keeps. Anything after it is
       // Focus-Pro-only; locked in the UI when the user isn't premium. Real
       // enforcement is the trigger in 007_profile_limit.sql, not this.
+      //
+      // A second, unrelated reason a tab can look locked: Lock Mode.
+      // Switching profiles requires Friction Mode (switch_active_profile()
+      // rejects it server-side — see 011_lock_mode_guards.sql), so every
+      // non-active profile renders with the same locked look while in Lock
+      // Mode, even for a premium user with full access to all of them.
+      // proLocked takes priority when both are true (a free user's extra
+      // profile is permanently unavailable regardless of mode, so pricing
+      // is still the more useful click target than a Lock Mode message).
       profiles.forEach((profile, index) => {
-        const locked = !isPremiumUser && index > 0;
+        const proLocked = !isPremiumUser && index > 0;
+        const modeLocked = !proLocked && currentBlockingMode === 'strict' && !profile.is_active;
 
         const tab = document.createElement('button');
-        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}${locked ? ' locked' : ''}`;
+        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}${(proLocked || modeLocked) ? ' locked' : ''}`;
         tab.dataset.profileId = profile.id;
 
         const nameSpan = document.createElement('span');
         nameSpan.textContent = profile.name;
         tab.appendChild(nameSpan);
 
-        if (locked) {
+        if (proLocked || modeLocked) {
           const lock = document.createElement('span');
           lock.className = 'profile-tab-lock';
-          lock.textContent = '🔒';
+          // Same lock icon as the extension popup's Lock Mode toggle
+          // (#strict-lock-icon in popup.html) — currentColor so it follows
+          // the tab's own text color instead of a fixed emoji glyph.
+          lock.innerHTML = `
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+          `;
           tab.appendChild(lock);
-          tab.title = 'Unlock more profiles with Focus Pro';
-          tab.addEventListener('click', () => { window.location.href = 'pricing.html'; });
+
+          if (proLocked) {
+            tab.title = 'Unlock more profiles with Focus Pro';
+            tab.addEventListener('click', () => { window.location.href = 'pricing.html'; });
+          } else {
+            tab.title = 'Switch to Friction Mode to change profiles';
+            tab.addEventListener('click', () => {
+              shakeElement(tab);
+              showError('profile-error', 'Switch to Friction Mode to change profiles.');
+            });
+          }
+
           container.appendChild(tab);
           return;
         }
@@ -1858,17 +1931,16 @@
     }
 
     /**
-     * Selects a profile in the dashboard UI (does NOT switch the active blocking
-     * profile — that requires the extension. Dashboard selection is view-only scoping).
-     * Clicking the active-status tab will activate it for blocking via Supabase.
+     * Selects a profile in the dashboard UI. Clicking a non-active tab both
+     * switches which blocklist is being viewed/edited here AND activates
+     * that profile for enforcement (writes is_active to Supabase via
+     * activateProfile() below, which the extension picks up on its next
+     * refresh or poke) — this does actually change what the extension
+     * enforces, not just what's shown in this tab.
      */
     async function handleSelectProfile(profile) {
       selectedProfile = profile;
 
-      // If the selected tab is not the current blocking-active profile, give the
-      // user the option to activate it by clicking a highlighted tab.
-      // We also actually set is_active in DB when a user clicks a tab, so the
-      // extension picks it up on its next refresh.
       if (!profile.is_active) {
         await activateProfile(profile.id);
       }
@@ -1979,8 +2051,30 @@
 
         const del = document.createElement('button');
         del.className = 'btn-delete-url';
-        del.textContent = 'Remove';
-        del.addEventListener('click', () => handleDeleteUrl(item.id));
+
+        // Removing a blocked site requires Friction Mode (blocked_urls'
+        // BEFORE DELETE trigger rejects it server-side — see
+        // 011_lock_mode_guards.sql) — adding stays allowed in either mode,
+        // since it only ever increases restriction. The lock icon matches
+        // the one used elsewhere for this same "not right now" state
+        // (profile tabs, the popup's Lock Mode toggle).
+        if (currentBlockingMode === 'strict') {
+          del.classList.add('locked');
+          del.title = 'Switch to Friction Mode to remove sites';
+          del.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+          `;
+          del.addEventListener('click', () => {
+            shakeElement(del);
+            showError('url-error', 'Switch to Friction Mode to remove sites.');
+          });
+        } else {
+          del.textContent = 'Remove';
+          del.addEventListener('click', () => handleDeleteUrl(item.id));
+        }
 
         li.appendChild(left);
         li.appendChild(del);

@@ -53,6 +53,13 @@ const supabaseAdmin = createClient(
  * shouldn't have access to anymore (the profile itself isn't deleted, it's
  * just locked in the UI — see 007_profile_limit.sql and docs/ARCHITECTURE.md). A no-op
  * if the user has one profile or the active one is already the oldest.
+ *
+ * Uses the switch_active_profile() RPC (010_atomic_profile_switch.sql) —
+ * one transaction instead of two separate .update() calls, same reasoning
+ * as core/sync/profiles.js's switchProfile(). auth.uid() is NULL for this
+ * service-role client, so the RPC's own authorization check is a no-op
+ * here, consistent with supabaseAdmin's existing trust model elsewhere in
+ * this file.
  */
 async function reactivateDefaultProfileIfNeeded(userId: string) {
   const { data: profiles, error } = await supabaseAdmin
@@ -67,8 +74,16 @@ async function reactivateDefaultProfileIfNeeded(userId: string) {
   const activeProfile = profiles.find((p) => p.is_active)
 
   if (activeProfile && activeProfile.id !== defaultProfile.id) {
-    await supabaseAdmin.from('profiles').update({ is_active: false }).eq('id', activeProfile.id)
-    await supabaseAdmin.from('profiles').update({ is_active: true }).eq('id', defaultProfile.id)
+    const { error: switchError } = await supabaseAdmin.rpc('switch_active_profile', {
+      p_user_id: userId,
+      p_profile_id: defaultProfile.id,
+    })
+
+    if (switchError) {
+      console.error(`[PDS] Failed to reactivate default profile for user ${userId}:`, switchError)
+      return
+    }
+
     console.log(`[PDS] Downgrade: reactivated default profile ${defaultProfile.id} for user ${userId}`)
   }
 }

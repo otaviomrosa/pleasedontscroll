@@ -67,26 +67,27 @@ test('createProfile includes user_id in the insert body', async () => {
   assert.equal(body.is_active, false);
 });
 
-test('switchProfile makes two PATCH calls: deactivate all, then activate one', async () => {
-  // Supabase always sends back the affected rows here (supabaseFetch sets
-  // `Prefer: return=representation` on every request), so a real successful
-  // PATCH/DELETE body is "[]" or "[{...}]" — never truly empty. Mocking an
-  // empty body (simulating a genuine 204) makes this fail, which is a real
-  // finding, not a test bug: see the note on supabaseFetch's null-on-failure
-  // contract below.
-  const calls = mockFetch([]);
+test('switchProfile calls the switch_active_profile RPC once, not two PATCHes', async () => {
+  // As of 010_atomic_profile_switch.sql, this is a single RPC call instead
+  // of two separate PATCHes — see that migration and switchProfile()'s own
+  // comment for why (a client interruption between two PATCHes could leave
+  // a user with zero active profiles). The RPC returns a real `true`, not
+  // an empty body — mocking an empty/false body here would make this fail,
+  // which is the correct behavior, not a test bug: supabaseFetch() can't
+  // tell "succeeded with an empty body" apart from "failed", so the SQL
+  // function deliberately returns a real boolean instead of VOID.
+  const calls = mockFetch(true);
   const ok = await switchProfile('token', 'user-123', 'profile-456');
 
   assert.equal(ok, true);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
 
-  assert.equal(calls[0].options.method, 'PATCH');
-  assert.match(calls[0].url, /user_id=eq\.user-123/);
-  assert.deepEqual(JSON.parse(calls[0].options.body), { is_active: false });
-
-  assert.equal(calls[1].options.method, 'PATCH');
-  assert.match(calls[1].url, /id=eq\.profile-456/);
-  assert.deepEqual(JSON.parse(calls[1].options.body), { is_active: true });
+  assert.equal(calls[0].options.method, 'POST');
+  assert.match(calls[0].url, /\/rest\/v1\/rpc\/switch_active_profile$/);
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    p_user_id: 'user-123',
+    p_profile_id: 'profile-456',
+  });
 });
 
 test('deleteProfile sends a DELETE to the right row', async () => {

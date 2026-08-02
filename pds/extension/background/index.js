@@ -21,6 +21,17 @@ import { isNavigableUrl, parseBlocklistEntry, matchesBlockedEntry } from '../../
 // hostname-keyed Map just for a fast-path reject.
 let blockedEntries = [];
 
+// Per-tab "last known non-blocked URL" — Map<tabId, url>. Lets blocked.html
+// offer a real "Go back" action instead of just closing the tab. Doesn't
+// (and can't, without much broader host permissions — see docs/ARCHITECTURE.md) fix
+// the browser's own back button: chrome.tabs.update() to blocked.html is a
+// normal navigation, so it still adds its own history entry after the
+// blocked site's, and clicking native back would just re-navigate to that
+// blocked URL and get re-intercepted. This sidesteps that by tracking the
+// page before the blocked attempt ourselves and giving blocked.html a
+// direct link there, bypassing tab history entirely.
+const lastSafeUrl = new Map();
+
 // User-level pause (not per-profile) — epoch ms when the pause expires, or
 // null. Set from the dashboard or the Friction Mode breathing flow
 // (Supabase-backed, see core/sync/userSettings.js's fetchPauseUntil/
@@ -180,7 +191,14 @@ function isCandidateForBlocking(url) {
  * @param {string} url
  */
 async function checkAndBlockTab(tabId, url) {
-  if (!isCandidateForBlocking(url)) return;
+  if (!isCandidateForBlocking(url)) {
+    // Not on the blocklist (or not a real navigable page — isNavigableUrl
+    // inside isCandidateForBlocking already filters out blocked.html's own
+    // chrome-extension:// URL, so redirecting TO the block page never
+    // overwrites the safe URL that got us there).
+    if (isNavigableUrl(url)) lastSafeUrl.set(tabId, url);
+    return;
+  }
 
   const accessToken = await getValidAccessToken(chromeStorageAdapter);
   if (accessToken) {
@@ -190,7 +208,10 @@ async function checkAndBlockTab(tabId, url) {
     if (blockingMode === 'friction') {
       const freshPauseIso = await fetchPauseUntil(accessToken, session.user.id);
       pausedUntil = freshPauseIso ? new Date(freshPauseIso).getTime() : null;
-      if (pausedUntil && Date.now() < pausedUntil) return; // currently paused — let it through
+      if (pausedUntil && Date.now() < pausedUntil) {
+        lastSafeUrl.set(tabId, url); // currently paused — let it through, still a safe page
+        return;
+      }
     } else {
       // Strict Mode never honors a pause regardless of what's stored —
       // keep the cache consistent with that so a later GET_STATE (e.g. the
@@ -203,9 +224,17 @@ async function checkAndBlockTab(tabId, url) {
   // default when a live check isn't possible — never silently grant an
   // exemption that couldn't actually be verified.
 
+  // The page before this blocked attempt, if we ever saw one for this tab
+  // (we won't for e.g. a tab that loaded straight into a blocked URL on
+  // browser startup) — blocked.html falls back to a plain "Close tab" when
+  // this is absent. See docs/ARCHITECTURE.md on why this is a same-permissions
+  // workaround, not a fix for the browser's own back button.
+  const backUrl = lastSafeUrl.get(tabId);
+
   const blockedPageUrl =
     chrome.runtime.getURL('extension/blocked/blocked.html') +
-    `?from=${encodeURIComponent(url)}&mode=${encodeURIComponent(blockingMode)}`;
+    `?from=${encodeURIComponent(url)}&mode=${encodeURIComponent(blockingMode)}` +
+    (backUrl ? `&back=${encodeURIComponent(backUrl)}` : '');
 
   try {
     await chrome.tabs.update(tabId, { url: blockedPageUrl });
@@ -254,6 +283,11 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   } catch {
     // Tab may no longer exist — ignore.
   }
+});
+
+// Keeps lastSafeUrl from growing unbounded across a long browser session.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  lastSafeUrl.delete(tabId);
 });
 
 // ─── Message protocol ─────────────────────────────────────────────────────────

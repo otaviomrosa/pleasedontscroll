@@ -15,6 +15,10 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+        <!-- Shown/hidden by applyState() based on isPremium — a plain
+             gray rounded-rectangle tag, not a colored badge (see
+             .pro-tag's CSS comment for why). -->
+        <span class="pro-tag hidden" id="pro-tag">Pro</span>
       </div>
       <button class="btn-ghost" id="logout-btn">Sign out</button>
     </div>
@@ -23,7 +27,6 @@
 
     <!-- Status pill -->
     <div class="status-row">
-      <span class="status-dot" id="status-dot"></span>
       <span class="status-label" id="status-label">Loading…</span>
     </div>
 

@@ -46,10 +46,15 @@
         </div>
 
         <!-- ─── Strict Mode content (no bypass) ───────────────────────────── -->
-        <p class="strict-copy" id="strictUi" hidden>
-          Close this tab and save your time.
-        </p>
+        <!-- Text set dynamically by blocked.js depending on whether a
+             ?back= URL is available — "Close this tab" is the fallback
+             for when it isn't (e.g. a tab that loaded straight into a
+             blocked URL with no prior page this session). -->
+        <p class="strict-copy" id="strictUi" hidden></p>
 
+        <!-- Label + behavior set dynamically by blocked.js — "Go back" to
+             the page before this blocked attempt when we know it, "Close
+             tab" otherwise. See background/index.js's lastSafeUrl. -->
         <button class="btn-leave" id="leaveBtn">Close tab</button>
 
       </div>

@@ -12,11 +12,6 @@
   --error:       #c0392b;
   --friction:    #4a90a4;
 
-  /* Status dot colours */
-  --dot-active:  #2d6a4f;
-  --dot-paused:  #c9a84c;
-  --dot-idle:    #8e8e93;
-
   --radius-card: 22px;
   --radius-btn:  12px;
   --radius-field:10px;
@@ -68,6 +63,28 @@ body {
   opacity: 0.8;
 }
 
+/* First version matched dashboard.html's #premium-badge exactly (pulsing
+   indigo dot, indigo-dim fill, full pill) — the founder found that too
+   loud for a tag that's visible constantly in the header, not just on
+   demand like the dashboard's version. This is deliberately plainer: flat
+   gray, no color/motion, rounded-rectangle rather than a pill — same
+   #f5f5f7 surface gray this file already uses for .field/.mode-toggle, so
+   it reads as a quiet label, not a second accent color competing with the
+   indigo already used for the Focus Pro CTA elsewhere. */
+.pro-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: #f5f5f7;
+  border-radius: 4px;
+  padding: 2px 6px;
+  line-height: 1.2;
+}
+
 /* ─── Divider ────────────────────────────────────────────────────────────────── */
 .divider {
   height: 1px;
@@ -82,19 +99,6 @@ body {
   gap: 7px;
   margin-bottom: 14px;
 }
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--dot-idle);
-  transition: background 0.3s ease;
-}
-
-.status-dot.active  { background: var(--dot-active); }
-.status-dot.paused  { background: var(--dot-paused); }
-.status-dot.idle    { background: var(--dot-idle); }
 
 .status-label {
   font-size: 0.82rem;

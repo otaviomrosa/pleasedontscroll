@@ -29,6 +29,13 @@ const params  = new URLSearchParams(window.location.search);
 const fromUrl = params.get('from') || '';
 const mode    = params.get('mode') === 'strict' ? 'strict' : 'friction';
 
+// The page the user was on right before this blocked attempt, if
+// background/index.js's lastSafeUrl had one for this tab — absent for a
+// tab that loaded straight into a blocked URL with no prior page this
+// session (e.g. right after browser startup). When present, "leaving"
+// navigates straight there instead of just closing the tab.
+const backUrl = params.get('back') || '';
+
 // Display just the hostname so the user knows where they were headed.
 let displayHost = fromUrl;
 try {
@@ -162,10 +169,26 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ─── Leave button ─────────────────────────────────────────────────────────────
+// "Go back" to the page before this blocked attempt when we know it
+// (backUrl), "Close tab" otherwise — a direct window.location navigation,
+// not chrome.tabs.goBack()/browser history, since the blocked URL is still
+// sitting in this tab's history and going back through it would just get
+// re-intercepted and land right back here. See background/index.js's
+// lastSafeUrl and its comment on why this doesn't (and mostly can't,
+// without much broader host permissions) fix the browser's own back button.
 
-document.getElementById('leaveBtn').addEventListener('click', () => {
+const leaveBtn = document.getElementById('leaveBtn');
+if (backUrl) {
+  leaveBtn.textContent = 'Go back';
+}
+
+leaveBtn.addEventListener('click', () => {
   clearInterval(countdownInterval);
-  chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
+  if (backUrl) {
+    window.location.href = backUrl;
+  } else {
+    chrome.tabs.getCurrent(tab => chrome.tabs.remove(tab.id));
+  }
 });
 
 // ─── Start everything ─────────────────────────────────────────────────────────
@@ -174,7 +197,9 @@ document.getElementById('leaveBtn').addEventListener('click', () => {
 
 if (mode === 'strict') {
   document.getElementById('frictionUi').hidden = true;
-  document.getElementById('strictUi').hidden = false;
+  const strictUi = document.getElementById('strictUi');
+  strictUi.textContent = backUrl ? 'Go back and save your time.' : 'Close this tab and save your time.';
+  strictUi.hidden = false;
 } else {
   startCountdown();
 }

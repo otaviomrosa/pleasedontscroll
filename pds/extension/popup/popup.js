@@ -220,19 +220,16 @@ function cancelFrictionConfirm() {
 function applyState(state) {
   document.getElementById('blocked-count').textContent = state.blockedCount ?? '—';
   isPremium = state.isPremium === true;
+  document.getElementById('pro-tag').classList.toggle('hidden', !isPremium);
   renderModeToggle(state.blockingMode ?? 'friction');
 
-  const dot   = document.getElementById('status-dot');
   const label = document.getElementById('status-label');
 
   if (state.isPaused) {
-    dot.className     = 'status-dot paused';
     label.textContent = 'Paused';
   } else if (state.blockedCount > 0) {
-    dot.className     = 'status-dot active';
     label.textContent = 'Blocking active';
   } else {
-    dot.className     = 'status-dot idle';
     label.textContent = 'No sites blocked yet';
   }
 

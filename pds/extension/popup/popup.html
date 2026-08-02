@@ -15,7 +15,6 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-        <span class="brand-name">Please Don't Scroll</span>
       </div>
       <button class="btn-ghost" id="logout-btn">Sign out</button>
     </div>
@@ -30,8 +29,11 @@
 
     <!-- Blocked sites count -->
     <div class="stat-row">
-      <span class="stat-value" id="blocked-count">0</span>
-      <span class="stat-desc">sites in this profile</span>
+      <div class="stat-main">
+        <span class="stat-value" id="blocked-count">0</span>
+        <span class="stat-desc">sites in this profile</span>
+      </div>
+      <a class="stat-manage-link" href="" target="_blank" id="manage-link">Blocklist →</a>
     </div>
 
     <!-- Pause indicator (shown only when paused) -->
@@ -56,42 +58,25 @@
           </svg>
         </button>
       </div>
-      <p class="mode-hint" id="mode-hint">30-second breathing pause before a blocked site.</p>
     </div>
 
     <div class="divider"></div>
 
     <!-- ─── Profile switcher ────────────────────────────────────────── -->
+    <!-- Switching only — creating/deleting profiles is dashboard-only now
+         (the extension has no blocklist-editing UI of its own either, so
+         there was no reason a new, empty profile could be created from
+         here). -->
     <div class="profiles-section">
       <div class="profiles-header">
         <span class="profiles-label">Profile</span>
-        <!-- Starts hidden, shown by renderProfilePills() only for premium
-             users — avoids a flash of an actionable button before premium
-             status resolves. -->
-        <button class="btn-add-profile hidden" id="add-profile-btn" title="New profile">+</button>
       </div>
 
       <!-- Pills rendered by popup.js -->
       <div class="profile-pills" id="profile-pills">
         <span class="profile-pill-skeleton"></span>
       </div>
-
-      <!-- Inline new-profile input (hidden by default) -->
-      <div class="new-profile-row hidden" id="new-profile-row">
-        <input class="field field-sm" type="text" id="new-profile-input" placeholder="Profile name…" maxlength="40">
-        <button class="btn-confirm" id="new-profile-confirm">Add</button>
-        <button class="btn-ghost btn-cancel" id="new-profile-cancel">Cancel</button>
-      </div>
     </div>
-
-    <div class="divider"></div>
-
-    <!-- Link to web dashboard -->
-    <a class="btn-primary" href="" target="_blank" id="manage-link">
-      Manage blocklist →
-    </a>
-
-    <p class="footer-hint">Blocklist syncs every minute</p>
   </div>
 
   <!-- ─── Strict → Friction confirmation (breathing hold) ───────────────── -->
@@ -103,7 +88,6 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-        <span class="brand-name">Please Don't Scroll</span>
       </div>
     </div>
 
@@ -131,7 +115,6 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-        <span class="brand-name">Please Don't Scroll</span>
       </div>
     </div>
 
@@ -158,7 +141,6 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-        <span class="brand-name">Focus</span>
       </div>
     </div>
 

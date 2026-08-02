@@ -4,10 +4,10 @@
 
 import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import * as Auth from '../../core/auth/session.js';
-import { fetchProfiles, createProfile } from '../../core/sync/profiles.js';
+import { fetchProfiles } from '../../core/sync/profiles.js';
 import { isIndefinitePause } from '../../core/sync/userSettings.js';
 import { DASHBOARD_URL, PRICING_URL } from '../../core/config.js';
-import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../../core/validation.js';
+import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '../../core/validation.js';
 
 // ─── Session persistence (adds background notification on top of /core) ──────
 
@@ -66,7 +66,7 @@ function renderProfilePills(profiles) {
   if (profiles.length === 0) {
     const empty = document.createElement('span');
     empty.className = 'profiles-empty';
-    empty.textContent = 'No profiles yet — add one below.';
+    empty.textContent = 'No profiles found.';
     container.appendChild(empty);
     return;
   }
@@ -92,8 +92,6 @@ function renderProfilePills(profiles) {
 
     container.appendChild(pill);
   });
-
-  document.getElementById('add-profile-btn').classList.toggle('hidden', !isPremium);
 }
 
 /**
@@ -123,12 +121,14 @@ async function handleSwitchProfile(profileId) {
 }
 
 // ─── Mode toggle ────────────────────────────────────────────────────────────
-
-const MODE_HINTS = {
-  friction: 'Breathe for 30 seconds to unblock websites.',
-  strict: 'No bypassing. Switch to Friction mode to unblock.',
-};
-
+// Persistent descriptive text under the toggle (what each mode does, why
+// Strict is locked) was removed per the founder's request — too much
+// standing text in a popup opened many times a day, and the mechanic is
+// self-explanatory once actually experienced (the breathing screen, the
+// no-bypass screen). The one piece kept: why Strict is locked for a free
+// account, since that's not obvious just from the lock icon — moved to a
+// hover title on the button itself (zero visual weight at rest) instead
+// of a persistent line of text.
 const MODE_HINT_LOCKED = 'Strict Mode is a Focus Pro feature.';
 
 // Set from GET_STATE — see refreshStatRow(). Strict Mode is gated
@@ -137,8 +137,8 @@ const MODE_HINT_LOCKED = 'Strict Mode is a Focus Pro feature.';
 let isPremium = false;
 
 /**
- * Reflects the given mode in the toggle buttons and hint text, plus the
- * Strict Mode lock icon based on the last-known isPremium value.
+ * Reflects the given mode in the toggle buttons, plus the Strict Mode
+ * lock icon/tooltip based on the last-known isPremium value.
  * @param {'friction' | 'strict'} mode
  */
 function renderModeToggle(mode) {
@@ -146,10 +146,10 @@ function renderModeToggle(mode) {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  document.getElementById('mode-strict-btn').classList.toggle('locked', !isPremium);
+  const strictBtn = document.getElementById('mode-strict-btn');
+  strictBtn.classList.toggle('locked', !isPremium);
+  strictBtn.title = isPremium ? '' : MODE_HINT_LOCKED;
   document.getElementById('strict-lock-icon').classList.toggle('hidden', isPremium);
-
-  document.getElementById('mode-hint').textContent = MODE_HINTS[mode] ?? MODE_HINTS.friction;
 }
 
 /**
@@ -409,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btn.classList.contains('active')) return;
 
       if (btn.dataset.mode === 'strict' && !isPremium) {
-        document.getElementById('mode-hint').textContent = MODE_HINT_LOCKED;
         chrome.tabs.create({ url: PRICING_URL });
         return;
       }
@@ -424,55 +423,4 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('confirm-cancel-btn').addEventListener('click', cancelFrictionConfirm);
-
-  // ── Add profile button ──────────────────────────────────────────────────────
-  document.getElementById('add-profile-btn').addEventListener('click', () => {
-    document.getElementById('new-profile-row').classList.remove('hidden');
-    document.getElementById('new-profile-input').focus();
-  });
-
-  document.getElementById('new-profile-cancel').addEventListener('click', () => {
-    document.getElementById('new-profile-row').classList.add('hidden');
-    document.getElementById('new-profile-input').value = '';
-  });
-
-  document.getElementById('new-profile-confirm').addEventListener('click', async () => {
-    const input      = document.getElementById('new-profile-input');
-    const name       = input.value.trim();
-    const confirmBtn = document.getElementById('new-profile-confirm');
-
-    if (!isValidProfileName(name)) return;
-
-    const accessToken = await getValidAccessToken();
-    if (!accessToken) return;
-
-    const session = await Auth.getStoredSession(chromeStorageAdapter);
-
-    confirmBtn.textContent = '…';
-    confirmBtn.disabled    = true;
-
-    const newProfile = await createProfile(accessToken, session.user.id, name);
-
-    confirmBtn.textContent = 'Add';
-    confirmBtn.disabled    = false;
-
-    if (!newProfile) {
-      // Silently fail — profile creation error is uncommon and not worth a full error state.
-      input.value = '';
-      document.getElementById('new-profile-row').classList.add('hidden');
-      return;
-    }
-
-    input.value = '';
-    document.getElementById('new-profile-row').classList.add('hidden');
-
-    // Re-render pill list to include the new profile.
-    renderProfilePills(await fetchProfiles(accessToken));
-  });
-
-  // Allow pressing Enter in the new-profile input to confirm.
-  document.getElementById('new-profile-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('new-profile-confirm').click();
-    if (e.key === 'Escape') document.getElementById('new-profile-cancel').click();
-  });
 });

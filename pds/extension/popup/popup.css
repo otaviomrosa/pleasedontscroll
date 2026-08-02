@@ -10,6 +10,7 @@
   --toggle-off:  #e5e5ea;
   --toggle-on:   #111111;
   --error:       #c0392b;
+  --friction:    #4a90a4;
 
   /* Status dot colours */
   --dot-active:  #2d6a4f;
@@ -67,14 +68,6 @@ body {
   opacity: 0.8;
 }
 
-.brand-name {
-  font-family: var(--font-ui);
-  font-weight: 500;
-  font-size: 1.05rem;
-  color: var(--text);
-  letter-spacing: -0.01em;
-}
-
 /* ─── Divider ────────────────────────────────────────────────────────────────── */
 .divider {
   height: 1px;
@@ -112,11 +105,38 @@ body {
 }
 
 /* ─── Stat row ───────────────────────────────────────────────────────────────── */
+/* "Manage blocklist" landed here after two earlier spots didn't work out
+   — see popup.js/docs/ARCHITECTURE.md history: a full-width block button read too
+   heavy, and its own standalone row at the bottom (even lightened to a
+   plain link) still left the popup feeling like two oddly-spaced
+   sections. This row already had real unused trailing width (a short
+   serif number + "sites in this profile" rarely filled 280px), and
+   unlike .status-row's label (which switches between three different-
+   length strings — "Paused", "Blocking active", "No sites blocked yet")
+   this row's text is constant, so fitting a link next to it doesn't risk
+   breaking under a worst-case dynamic string. justify-content:
+   space-between pushes .stat-manage-link to the far right; .stat-main
+   groups the value+desc pair so they keep their own baseline-aligned
+   relationship independent of the link. */
 .stat-row {
+  display: flex;
+  /* center, not baseline — .stat-manage-link is a filled pill button now
+     (padding + its own box), not plain inline text, so baseline-aligning
+     it against .stat-main's text baseline made its padded bottom edge
+     hang visibly lower than "sites in this profile" next to it. center
+     treats the button as its own block and centers it against the whole
+     row's height instead — back to the original approach, but now
+     correct *because* this is a real button, not the plain-text version
+     center was wrong for earlier. */
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.stat-main {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin-bottom: 14px;
 }
 
 .stat-value {
@@ -133,6 +153,41 @@ body {
   color: var(--text-muted);
   font-weight: 400;
 }
+
+/* Shortened from "Manage blocklist" to fit this tighter space — keeps
+   the object ("Blocklist") rather than the verb, unlike the header-nav
+   idea that was rejected partly for losing that verb; this is a
+   different tradeoff since the row's own big number + "sites in this
+   profile" already make the blocklist context obvious without it.
+   Styled as a small pill button, not plain text — a plain link still
+   read "off" here per the founder even after the baseline-alignment fix.
+   Reuses .profile-pill.active's shape language (solid black fill, white
+   text, full pill radius) rather than .btn-primary's full-width block
+   (already rejected earlier for this exact element) or inventing a third
+   button style — this is small and auto-width like every other
+   interactive chip in the popup, just filled instead of outlined, which
+   reads as "the one action in this row," consistent with how .profile-pill
+   already marks its own active state the same way. */
+.stat-manage-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 8px;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--white);
+  background: var(--black);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stat-manage-link:hover  { opacity: 0.82; }
+.stat-manage-link:active { opacity: 0.68; }
 
 /* ─── Pause bar ──────────────────────────────────────────────────────────────── */
 .pause-bar {
@@ -336,7 +391,10 @@ body {
   padding: 3px;
   background: #f5f5f7;
   border-radius: var(--radius-btn);
-  margin-bottom: 8px;
+  /* Was 8px (tuned to sit close to .mode-hint, now removed) — bumped to
+     10px to match .profile-pills' gap before its own divider, now that
+     this is just trailing space before the next divider too. */
+  margin-bottom: 10px;
 }
 
 .mode-option {
@@ -365,9 +423,15 @@ body {
   top: -0.5px;
 }
 
-/* Friction — plain black, deliberately unflashy so Strict's red stands out */
+/* Friction — calm teal (--friction), not black. Black was the original,
+   deliberate choice (unflashy on purpose, so Strict's red stood out by
+   contrast alone) — tried as an experiment per the founder's request and
+   kept after review. Strict still reads as "the alarming one": red is a
+   more saturated, warmer, higher-alert color than this muted teal, so the
+   contrast the original black/red pairing relied on still holds, just
+   via color temperature and saturation instead of color-vs-no-color. */
 .mode-option[data-mode="friction"].active {
-  background: var(--black);
+  background: var(--friction);
   color: var(--white);
 }
 
@@ -383,13 +447,6 @@ body {
    clickable; clicking opens the pricing page instead of switching. Never
    combined with .active: background.js won't leave a non-premium account
    in Strict Mode. */
-
-.mode-hint {
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin: 0;
-}
 
 /* ─── Profile switcher ───────────────────────────────────────────────────────── */
 .profiles-section {
@@ -411,35 +468,16 @@ body {
   text-transform: uppercase;
 }
 
-/* The "+" button next to the label */
-.btn-add-profile {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.btn-add-profile:hover {
-  color: var(--text);
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
 /* Pill container — wraps so long lists don't break layout */
 .profile-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
+  /* This is now the last element in the popup — "Manage blocklist" moved
+     up into .stat-row (see .stat-manage-link) instead of trailing here,
+     so this margin is just closing space before .container's own padding
+     now, not a gap tuned for something that used to follow it. */
+  margin-bottom: 4px;
   min-height: 28px;
 }
 
@@ -498,42 +536,6 @@ body {
   50%       { opacity: 0.4; }
 }
 
-/* Inline new-profile row */
-.new-profile-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.field-sm {
-  flex: 1;
-  padding: 7px 10px;
-  font-size: 0.82rem;
-}
-
-/* Small confirm button */
-.btn-confirm {
-  background: var(--black);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-btn);
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
-  font-weight: 500;
-  padding: 7px 12px;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-}
-
-.btn-confirm:hover    { opacity: 0.82; }
-.btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.btn-cancel {
-  font-size: 0.75rem;
-  padding: 0;
-}
 
 /* ─── Utility ────────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }

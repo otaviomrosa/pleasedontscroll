@@ -42,16 +42,14 @@
     <div class="divider"></div>
 
     <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
-    <!-- Friction/Lock is a per-user setting, not a profile property —
-         any profile can run in either mode. Internally still
-         blocking_mode='strict' (data-mode, ids, etc. below) — "Lock Mode"
-         is a display-only rename, see docs/ARCHITECTURE.md. -->
+    <!-- Friction/Strict is a per-user setting, not a profile property —
+         any profile can run in either mode. -->
     <div class="mode-section">
       <span class="mode-label">Mode</span>
       <div class="mode-toggle" id="mode-toggle">
         <button class="mode-option" data-mode="friction" id="mode-friction-btn">Friction</button>
         <button class="mode-option" data-mode="strict" id="mode-strict-btn">
-          Lock
+          Strict
           <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
             <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
@@ -96,11 +94,11 @@
     <p class="footer-hint">Blocklist syncs every minute</p>
   </div>
 
-  <!-- ─── Lock → Friction confirmation (breathing hold) ───────────────── -->
-  <!-- Downgrading out of Lock Mode costs the same 30s breathing hold as
-       unlocking a blocked site — otherwise Lock Mode is one click from
+  <!-- ─── Strict → Friction confirmation (breathing hold) ───────────────── -->
+  <!-- Downgrading out of Strict Mode costs the same 30s breathing hold as
+       unlocking a blocked site — otherwise Strict Mode is one click from
        being undone and doesn't add anything. Switching the other way
-       (Friction → Lock) stays instant. -->
+       (Friction → Strict) stays instant. -->
   <div class="container hidden" id="view-confirm">
     <div class="header-row">
       <div class="brand-box">
@@ -111,7 +109,7 @@
 
     <div class="divider"></div>
 
-    <p class="confirm-label">Leaving Lock Mode</p>
+    <p class="confirm-label">Leaving Strict Mode</p>
 
     <div class="confirm-ring">
       <svg class="confirm-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
@@ -122,10 +120,10 @@
     </div>
 
     <p class="confirm-hint">
-      Are you sure about this? Remember why you activated Lock Mode.
+      Are you sure about this? Remember why you activated Strict Mode.
     </p>
 
-    <button class="btn-ghost" id="confirm-cancel-btn">Stay in Lock Mode</button>
+    <button class="btn-ghost" id="confirm-cancel-btn">Stay in Strict Mode</button>
   </div>
 
   <!-- ─── Unauthenticated view ───────────────────────────────────────── -->

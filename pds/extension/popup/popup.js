@@ -129,16 +129,16 @@ const MODE_HINTS = {
   strict: 'No bypassing. Switch to Friction mode to unblock.',
 };
 
-const MODE_HINT_LOCKED = 'Lock Mode is a Focus Pro feature.';
+const MODE_HINT_LOCKED = 'Strict Mode is a Focus Pro feature.';
 
-// Set from GET_STATE — see refreshStatRow(). Lock Mode is gated
+// Set from GET_STATE — see refreshStatRow(). Strict Mode is gated
 // server-side too (background.js re-checks before honoring the switch);
 // this only controls what the popup shows/allows, not the source of truth.
 let isPremium = false;
 
 /**
  * Reflects the given mode in the toggle buttons and hint text, plus the
- * Lock Mode lock icon based on the last-known isPremium value.
+ * Strict Mode lock icon based on the last-known isPremium value.
  * @param {'friction' | 'strict'} mode
  */
 function renderModeToggle(mode) {
@@ -162,17 +162,18 @@ async function handleSetMode(mode) {
   const response = await chrome.runtime.sendMessage({ type: 'SET_BLOCKING_MODE', mode });
   renderModeToggle(response?.ok ? response.blockingMode : (response?.blockingMode ?? mode));
 
-  // Switching into Lock Mode also clears any active pause server-side (see
-  // background/index.js's SET_BLOCKING_MODE handler) — refresh the status
-  // dot/pause bar so that shows up immediately in this same popup session,
-  // instead of only on the next time the popup happens to be reopened.
+  // Switching into Strict Mode also clears any active pause server-side
+  // (see background/index.js's SET_BLOCKING_MODE handler) — refresh the
+  // status dot/pause bar so that shows up immediately in this same popup
+  // session, instead of only on the next time the popup happens to be
+  // reopened.
   await refreshStatRow();
 }
 
-// ─── Lock → Friction confirmation (breathing hold) ───────────────────────
-// Leaving Lock Mode costs the same 30s hold as breathing through a
+// ─── Strict → Friction confirmation (breathing hold) ───────────────────────
+// Leaving Strict Mode costs the same 30s hold as breathing through a
 // blocked site — otherwise it's one click away from being pointless.
-// Switching the other way (Friction → Lock) stays instant.
+// Switching the other way (Friction → Strict) stays instant.
 
 const CONFIRM_SECONDS = 30;
 const CONFIRM_RING_CIRCUMFERENCE = 628.318; // 2π × r=100, matches the SVG

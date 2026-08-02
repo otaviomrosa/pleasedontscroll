@@ -1,7 +1,7 @@
-// blocked.js — Friction/Lock intercept screen controller
+// blocked.js — Friction/Strict intercept screen controller
 // Friction Mode: drives the 30-second countdown ring and hands off to
 // background.js via chrome.runtime.sendMessage when it completes.
-// Lock Mode: no countdown at all — just a message and a close button.
+// Strict Mode: no countdown at all — just a message and a close button.
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ if (siteNameEl && displayHost) {
 }
 
 if (modePillEl) {
-  modePillEl.textContent = mode === 'strict' ? 'Lock Mode' : 'Friction Mode';
+  modePillEl.textContent = mode === 'strict' ? 'Strict Mode' : 'Friction Mode';
   modePillEl.classList.toggle('strict', mode === 'strict');
 }
 
@@ -146,7 +146,7 @@ function startCountdown() {
 
 // Pauses/resumes the running interval on tab visibility changes — never
 // resets secondsLeft, just stops and continues it exactly where it left
-// off. Only relevant to Friction Mode; Lock Mode never starts the
+// off. Only relevant to Friction Mode; Strict Mode never starts the
 // countdown in the first place, so there's nothing here to pause.
 document.addEventListener('visibilitychange', () => {
   if (mode === 'strict') return;
@@ -169,7 +169,7 @@ document.getElementById('leaveBtn').addEventListener('click', () => {
 });
 
 // ─── Start everything ─────────────────────────────────────────────────────────
-// Lock Mode never runs the countdown flow at all — there is no bypass.
+// Strict Mode never runs the countdown flow at all — there is no bypass.
 // Only Friction Mode gets the timer.
 
 if (mode === 'strict') {

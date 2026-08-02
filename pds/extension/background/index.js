@@ -2,18 +2,24 @@
 // Owns tab interception and the in-memory blocklist. All auth/session and
 // Supabase query logic lives in /core — this file only adapts core calls to
 // chrome.tabs / chrome.storage and holds runtime state that's legitimately
-// specific to this context (the live blockedHosts set, pause timers).
+// specific to this context (the live blockedEntries array, pause timers).
 
 import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import { getValidAccessToken, getStoredSession } from '../../core/auth/session.js';
 import { fetchActiveProfile, switchProfile } from '../../core/sync/profiles.js';
 import { fetchBlockedUrls } from '../../core/sync/blockedUrls.js';
 import { fetchBlockingMode, setBlockingMode, fetchIsPremium, fetchPauseUntil, setPauseUntil } from '../../core/sync/userSettings.js';
-import { normalizeToHostname, isNavigableUrl, hostnameOf } from '../../core/blocklist/hostname.js';
+import { isNavigableUrl, parseBlocklistEntry, matchesBlockedEntry } from '../../core/blocklist/hostname.js';
 
 // ─── In-memory state ─────────────────────────────────────────────────────────
-// Blocked hostnames derived from the user's active profile's blocked_urls rows.
-let blockedHosts = new Set();
+// Parsed { hostname, pathPrefix } entries from the user's active profile's
+// blocked_urls rows — pathPrefix is null for a whole-domain entry, or a
+// normalized path ("/shorts") for a path-scoped one (see core/blocklist/
+// hostname.js's parseBlocklistEntry). A handful of entries per user makes a
+// plain array + matchesBlockedEntry()'s .some() check in
+// isCandidateForBlocking() below trivially cheap — no need for a
+// hostname-keyed Map just for a fast-path reject.
+let blockedEntries = [];
 
 // User-level pause (not per-profile) — epoch ms when the pause expires, or
 // null. Set from the dashboard or the Friction Mode breathing flow
@@ -65,7 +71,7 @@ const REFRESH_PERIOD_MINUTES = 1;
 
 /**
  * Resolves a valid access token, resolves the active profile, fetches its
- * blocklist, and rebuilds the in-memory blockedHosts Set.
+ * blocklist, and rebuilds the in-memory blockedEntries array.
  * Called on startup and on a timed interval. Refreshes the token itself if
  * it's expired — unlike the old REST calls, this doesn't depend on the popup
  * having been opened recently to stay fresh.
@@ -74,7 +80,7 @@ async function refreshBlocklist() {
   const accessToken = await getValidAccessToken(chromeStorageAdapter);
 
   if (!accessToken) {
-    blockedHosts.clear();
+    blockedEntries = [];
     activeProfile = null;
     isPremium = false;
     console.log('[PDS] No active session. Blocking disabled.');
@@ -101,7 +107,7 @@ async function refreshBlocklist() {
   pausedUntil = pauseIso ? new Date(pauseIso).getTime() : null;
 
   if (!profile) {
-    blockedHosts.clear();
+    blockedEntries = [];
     activeProfile = null;
     console.warn('[PDS] No active profile found. Blocking disabled.');
     return;
@@ -116,11 +122,11 @@ async function refreshBlocklist() {
     return;
   }
 
-  blockedHosts = new Set(rows.map((row) => normalizeToHostname(row.url)));
+  blockedEntries = rows.map((row) => parseBlocklistEntry(row.url));
 
   console.log(
-    `[PDS] Blocklist refreshed (profile: "${profile.name}"): ${blockedHosts.size} site(s).`,
-    [...blockedHosts],
+    `[PDS] Blocklist refreshed (profile: "${profile.name}"): ${blockedEntries.length} entr${blockedEntries.length === 1 ? 'y' : 'ies'}.`,
+    blockedEntries,
   );
 }
 
@@ -138,19 +144,19 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // ─── Tab interception logic ───────────────────────────────────────────────────
 
 /**
- * Whether the given URL's hostname is on the current blocklist at all —
- * a pure, fast, local Set lookup, independent of blocking_mode/pause. Used
- * only to decide whether a live mode/pause recheck (below) is worth doing;
- * the actual block/no-block decision is never made from this alone.
+ * Whether the given URL is on the current blocklist at all (hostname, and
+ * if the matching entry is path-scoped, the path too) — a pure, fast,
+ * local check independent of blocking_mode/pause. Used only to decide
+ * whether a live mode/pause recheck (below) is worth doing; the actual
+ * block/no-block decision is never made from this alone.
  *
  * @param {string} url - Full URL of the tab being navigated.
  * @returns {boolean}
  */
 function isCandidateForBlocking(url) {
   if (!isNavigableUrl(url)) return false;
-  if (blockedHosts.size === 0) return false;
-  const hostname = hostnameOf(url);
-  return hostname !== null && blockedHosts.has(hostname);
+  if (blockedEntries.length === 0) return false;
+  return blockedEntries.some((entry) => matchesBlockedEntry(url, entry));
 }
 
 /**
@@ -215,9 +221,14 @@ async function checkAndBlockTab(tabId, url) {
  * STATE_REFRESHED push that follows once a background refresh completes.
  */
 function buildStatePayload() {
+  // popup.html labels this "sites in this profile" — a whole-domain entry
+  // and a path-scoped entry for the same site (e.g. youtube.com plus
+  // youtube.com/shorts) should still read as one site, not two, so this
+  // counts unique hostnames rather than raw blockedEntries.length.
+  const uniqueHosts = new Set(blockedEntries.map((entry) => entry.hostname));
   return {
-    blockedCount:  blockedHosts.size,
-    blockedHosts:  [...blockedHosts],
+    blockedCount:  uniqueHosts.size,
+    blockedHosts:  [...uniqueHosts],
     isPaused:      pausedUntil !== null && Date.now() < pausedUntil,
     pauseUntil:    pausedUntil,
     activeProfile,
@@ -255,7 +266,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === 'LOGOUT') {
-    blockedHosts.clear();
+    blockedEntries = [];
     activeProfile = null;
     pausedUntil = null;
     blockingMode = 'friction';

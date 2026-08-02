@@ -1,0 +1,34 @@
+-- ============================================================
+-- PDS Migration 012 — Prevent duplicate blocklist entries
+-- Run this in the Supabase SQL Editor (Dashboard → SQL Editor).
+--
+-- No RLS policy change accompanies this migration — this doesn't add or
+-- alter a table's access rules, just a uniqueness constraint on top of the
+-- existing "Users manage own blocked_urls" policy from 001_initial_schema.sql.
+-- ============================================================
+
+-- ─── Enforce: no duplicate (profile, url) pairs ──────────────────────────────
+-- Nothing previously stopped the same exact string from being inserted
+-- twice for the same profile — rapid double-clicking a "block this site"
+-- button (the dashboard's quick-add row for common distracting sites in
+-- particular, added alongside this migration) could otherwise create
+-- multiple redundant rows for the same site. Enforcement lives at the
+-- database, same reasoning as every other guard in this file's siblings
+-- (007/009/010/011) — the client-side check (disabling the button while
+-- the request is in flight, and not rendering an "add" action at all for
+-- a site already known to be on the list) covers the common case, but
+-- isn't load-bearing on its own; this is.
+--
+-- Scoped to the exact string in `url`, not a normalized hostname — this
+-- table has always stored whatever the user typed (or, for the quick-add
+-- buttons, whatever canonical string that button uses) verbatim, not a
+-- normalized form; normalization only happens at match-time
+-- (core/blocklist/hostname.js's normalizeToHostname(), used by
+-- background.js when actually checking a tab's URL against the list). So
+-- "instagram.com" and "www.instagram.com" can still both exist as
+-- separate rows for the same profile after this migration — this only
+-- prevents the exact same string being inserted twice, which is the
+-- actual failure mode a rapid double-click produces (both clicks submit
+-- the identical string).
+ALTER TABLE blocked_urls
+  ADD CONSTRAINT blocked_urls_profile_url_unique UNIQUE (profile_id, url);

@@ -72,7 +72,7 @@
     }
 
     .public-nav-logo {
-      height: 26px;
+      height: 24px;
       width: auto;
       filter: invert(1);
       opacity: 0.9;
@@ -264,7 +264,7 @@
     }
 
     .nav-logo {
-      height: 26px;
+      height: 24px;
       width: auto;
       display: block;
       filter: invert(1);
@@ -300,13 +300,13 @@
     .pause-toggle-row {
       display: flex;
       align-items: center;
-      /* min-width: matches the switch's own 46px — without this, the
+      /* min-width: matches the switch's own 42px — without this, the
          pill's negative margin-left makes the flex layout think this row
          is much narrower than it visually is (the row's calculated width
          includes the child's negative margin, but the switch itself still
-         renders at its full 46px regardless), so #pause-label right after
+         renders at its full 42px regardless), so #pause-label right after
          it in .top-nav-left was starting underneath/behind the switch. */
-      min-width: 46px;
+      min-width: 42px;
       /* extra breathing room from the logo, on top of .top-nav-left's own
          gap (which also spaces this row from #pause-label after it —
          kept that one as-is, only this side needed more room) */
@@ -317,11 +317,11 @@
       position: relative;
       z-index: 2;
       flex-shrink: 0;
-      width: 46px;
-      height: 26px;
+      width: 42px;
+      height: 24px;
       background: var(--black);
       border: 1px solid var(--border);
-      border-radius: 13px;
+      border-radius: 12px;
       box-shadow: var(--shadow-card);
       padding: 0;
       margin: 0;
@@ -350,20 +350,20 @@
     /* top/left: 2px, not 3px — the switch's own 1px border eats into the
        interior box it's positioned within (absolutely positioned children
        are placed relative to the padding edge, inside the border), so with
-       a 1px border the true interior is 24×44px, not 26×46. 2px on all
-       sides is what actually centers a 20px knob in that.
+       a 1px border the true interior is 22×40px, not 24×42. 2px on all
+       sides is what actually centers an 18px knob in that.
        Default position is the right side (translateX), matching the
        default "blocking always on" state; .paused pulls it back to the left. */
     .pause-toggle-knob {
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: var(--white);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-      transform: translateX(20px);
+      transform: translateX(18px);
       transition: transform 0.25s ease;
     }
 
@@ -392,10 +392,10 @@
       align-items: center;
       flex-shrink: 0;
       width: 0;
-      height: 26px;
-      margin-left: -20px;
+      height: 24px;
+      margin-left: -18px;
       background: #f5f5f7;
-      border-radius: 13px;
+      border-radius: 12px;
       overflow: hidden;
       white-space: nowrap;
       transition: width 0.3s ease;
@@ -404,7 +404,7 @@
     .pause-durations {
       display: flex;
       align-items: center;
-      margin-left: 28px;
+      margin-left: 26px;
       padding-right: 10px;
     }
 
@@ -611,8 +611,8 @@
     /* ─── Section headers ──────────────────────────────────────────────── */
     .section-title {
       font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1.3rem;
+      font-weight: 500;
+      font-size: 1.4rem;
       color: var(--text);
       letter-spacing: -0.02em;
       margin: 0 0 20px;
@@ -885,7 +885,7 @@
     .quick-add-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 9px;
+      gap: 16px;
       margin: 14px 0 18px;
     }
 
@@ -894,71 +894,96 @@
        as .account-menu → .account-dropdown elsewhere in this file. */
     .quick-add-item { position: relative; }
 
-    /* Circle treatment matches .account-avatar elsewhere in this file —
-       reusing an already-established shape language instead of inventing
-       a new one for a row of favicon buttons. Depth comes from
-       --shadow-card (the same token every card/button in this file
-       already uses), not a border — a hairline border alone was nearly
-       invisible against the white card behind it, which is what made the
-       first pass read as faint, flat rings instead of buttons. */
+    /* No card/circle chrome at all now — just the bare glyph as the click
+       target. Went through a card-button treatment first (white circle,
+       --shadow-card depth, matching .account-avatar's shape language) but
+       the founder asked to drop the container entirely and let the icons
+       sit directly in the row. The button box itself stays (fixed size,
+       no visible fill/border/shadow) purely to keep a consistent
+       click/tap target and a stable anchor point for the options-menu
+       positioning and the has-sections chevron below. */
     .quick-add-chip {
       position: relative;
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: none;
-      background: var(--white);
-      box-shadow: var(--shadow-card);
+      background: none;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: box-shadow 0.15s, transform 0.15s;
+      transition: transform 0.15s;
     }
 
-    /* Small dot marking a chip that opens an options menu (YouTube,
+    /* Small chevron marking a chip that opens an options menu (YouTube,
        Facebook, Instagram) instead of adding immediately, so it reads as
        "more options here" rather than behaving identically to every other
-       chip with no visible difference. */
-    .quick-add-chip.has-sections::after {
-      content: '';
+       chip with no visible difference. A sibling of .quick-add-chip (not
+       a child/pseudo-element of it) since it sits below the chip's own
+       box, not inside it — positioned against .quick-add-item instead.
+       pointer-events: none so it's purely decorative; the chip itself
+       stays the only click target. Hidden at rest (opacity: 0) and only
+       fades in on hover — went through an always-visible-but-dimmed
+       version first (opacity: 0.5, smaller size) but the founder decided
+       to hide it entirely by default instead, for a cleaner row, and
+       accept that the affordance only reveals itself once someone's
+       actually hovering that chip. */
+    .quick-add-chip-arrow {
       position: absolute;
-      bottom: -1px;
-      right: -1px;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--text-muted);
-      border: 2px solid var(--card);
+      bottom: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      color: var(--text-muted);
+      opacity: 0;
+      pointer-events: none;
+      transition: color 0.15s, opacity 0.15s;
     }
 
-    .quick-add-chip:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
-      transform: translateY(-2px);
+    /* No shadow/lift to animate anymore — hover feedback is just a small
+       scale plus the icon (and, for a sectioned chip, its chevron fading
+       in) darkening — see .quick-add-chip svg below. `.menu-open` (set in
+       renderQuickAddChips()'s chip click handler while its options menu
+       is open) triggers the exact same look as :hover — otherwise, moving
+       the mouse down into the open menu to click a row would make the
+       trigger chip visually "let go" mid-interaction, which read as
+       inconsistent since the menu is clearly still open right below it. */
+    .quick-add-chip:not(.added):hover,
+    .quick-add-chip.menu-open {
+      transform: scale(1.1);
     }
 
+    .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow,
+    .quick-add-chip.menu-open ~ .quick-add-chip-arrow {
+      color: var(--text);
+      opacity: 1;
+    }
+
+    /* Brand mark is a plain gray outline — color set here via currentColor
+       rather than inline on the SVG, so it inherits the same
+       darken-on-hover treatment as everything else in this file driven by
+       color, not a separate rule per state. */
     .quick-add-chip svg {
       display: block;
+      color: var(--text-muted);
+      transition: color 0.15s;
+    }
+
+    .quick-add-chip:not(.added):hover svg,
+    .quick-add-chip.menu-open svg {
+      color: var(--text);
     }
 
     /* Already on the blocklist — informational, not a toggle. Clicking
        doesn't remove it; removing a site stays a deliberate action via
        the list below (or is unavailable at all in Strict Mode), on
        purpose — see docs/ARCHITECTURE.md on why adding and removing aren't
-       symmetric in this product. Shadow drops back to a flat border here
-       too, on purpose — losing the "lifted" depth is what visually reads
-       as inactive/already-done, on top of the dimmed opacity. */
+       symmetric in this product. */
     .quick-add-chip.added {
       cursor: default;
       opacity: 0.4;
-      box-shadow: none;
-      border: 1px solid var(--border);
-    }
-
-    .quick-add-chip.added:hover {
-      box-shadow: none;
-      transform: none;
     }
 
     /* Options menu for a sectioned chip (YouTube, Facebook, Instagram) —
@@ -966,10 +991,12 @@
        positioning idea, same white/border/shadow-card shape, same
        display:none + .open toggle. Centered under its trigger rather than
        right-aligned like .account-dropdown, since a chip can sit anywhere
-       in the row (not pinned to a page edge the way the nav avatar is). */
+       in the row (not pinned to a page edge the way the nav avatar is).
+       The extra top offset (16px, not a plain 8px) clears the
+       .quick-add-chip-arrow chevron sitting just below the chip. */
     .site-options-menu {
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 16px);
       left: 50%;
       transform: translateX(-50%);
       min-width: 190px;
@@ -2161,32 +2188,35 @@
     // founder). Marketplace and Reels under Facebook are fully
     // independent — each its own menu row, addable on its own, neither
     // implies or requires the other.
-    // `color` (each platform's official brand hex) and `icon` (a 24x24
-    // SVG path, drawn in white on that color background — see
-    // renderQuickAddChips()) come from Simple Icons (simpleicons.org, MIT
-    // licensed, exactly built for this "identify a real-world brand"
-    // use case). Fetched once and pasted in verbatim rather than loaded
-    // from a CDN at runtime — keeps this self-contained (no new external
-    // image dependency, no failure mode if that service is ever
-    // unreachable or ad-blocked) the same way the rest of this build-free
-    // codebase avoids runtime dependencies wherever a one-time copy works
-    // just as well.
+    // `icon` is raw inner <path> markup (not a single `d` string — some
+    // icons need more than one path) for a stroke-only, minimalist brand
+    // glyph — same visual language as the lock icon used elsewhere in this
+    // file (fill:none, stroke:currentColor, simple geometric strokes), not
+    // a faithful detailed reproduction of each platform's real logo. Came
+    // from Tabler Icons' "brand-*" outline set (tabler.io/icons, MIT
+    // licensed) — swapped in after an earlier pass used Simple Icons'
+    // exact, solid-fill brand marks (both as a colored badge and later as
+    // a gray outline of that same detailed path); the founder found both
+    // too visually heavy/busy next to the rest of this flat, minimal
+    // design system and asked for something closer to the lock icon's
+    // plain geometric style instead. Fetched once and pasted in verbatim
+    // rather than loaded from a CDN at runtime, same self-contained
+    // reasoning as everywhere else in this build-free codebase.
     const QUICK_ADD_SITES = [
-      { name: 'Instagram',    hostname: 'instagram.com', color: '#FF0069', icon: 'M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077', sections: [
+      { name: 'Instagram',    hostname: 'instagram.com', icon: '<path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" />', sections: [
         { label: 'Reels', path: '/reels' },
       ] },
-      { name: 'TikTok',       hostname: 'tiktok.com', color: '#000000', icon: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z' },
-      { name: 'YouTube',      hostname: 'youtube.com', color: '#FF0000', icon: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z', sections: [
+      { name: 'TikTok',       hostname: 'tiktok.com', icon: '<path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" />' },
+      { name: 'YouTube',      hostname: 'youtube.com', icon: '<path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" />', sections: [
         { label: 'Shorts', path: '/shorts' },
       ] },
-      { name: 'X (Twitter)',  hostname: 'x.com', color: '#000000', icon: 'M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z' },
-      { name: 'Facebook',     hostname: 'facebook.com', color: '#0866FF', icon: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z', sections: [
-        { label: 'Marketplace', path: '/marketplace' },
+      { name: 'X (Twitter)',  hostname: 'x.com', icon: '<path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />' },
+      { name: 'Facebook',     hostname: 'facebook.com', icon: '<path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />', sections: [
         { label: 'Reels', path: '/reels' },
+        { label: 'Marketplace', path: '/marketplace' },
       ] },
-      { name: 'Reddit',       hostname: 'reddit.com', color: '#FF4500', icon: 'M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.738 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0Zm4.388 3.199c1.104 0 1.999.895 1.999 1.999 0 1.105-.895 2-1.999 2-.946 0-1.739-.657-1.947-1.539v.002c-1.147.162-2.032 1.15-2.032 2.341v.007c1.776.067 3.4.567 4.686 1.363.473-.363 1.064-.58 1.707-.58 1.547 0 2.802 1.254 2.802 2.802 0 1.117-.655 2.081-1.601 2.531-.088 3.256-3.637 5.876-7.997 5.876-4.361 0-7.905-2.617-7.998-5.87-.954-.447-1.614-1.415-1.614-2.538 0-1.548 1.255-2.802 2.803-2.802.645 0 1.239.218 1.712.585 1.275-.79 2.881-1.291 4.64-1.365v-.01c0-1.663 1.263-3.034 2.88-3.207.188-.911.993-1.595 1.959-1.595Zm-8.085 8.376c-.784 0-1.459.78-1.506 1.797-.047 1.016.64 1.429 1.426 1.429.786 0 1.371-.369 1.418-1.385.047-1.017-.553-1.841-1.338-1.841Zm7.406 0c-.786 0-1.385.824-1.338 1.841.047 1.017.634 1.385 1.418 1.385.785 0 1.473-.413 1.426-1.429-.046-1.017-.721-1.797-1.506-1.797Zm-3.703 4.013c-.974 0-1.907.048-2.77.135-.147.015-.241.168-.183.305.483 1.154 1.622 1.964 2.953 1.964 1.33 0 2.47-.81 2.953-1.964.057-.137-.037-.29-.184-.305-.863-.087-1.795-.135-2.769-.135Z' },
-      { name: 'Twitch',       hostname: 'twitch.tv', color: '#9146FF', icon: 'M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z' },
-      { name: 'Snapchat',     hostname: 'snapchat.com', color: '#FFFC00', icon: 'M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z' },
+      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" />' },
+      { name: 'Twitch',       hostname: 'twitch.tv', icon: '<path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" />' },
     ];
 
     // Kept in sync with the currently-loaded profile's blocklist on every
@@ -2211,7 +2241,10 @@
     }
 
     function renderUrlList(items) {
-      currentBlocklistEntries = items.map((item) => parseBlocklistEntry(item.url));
+      // id is carried alongside the parsed hostname/pathPrefix (not just
+      // parseBlocklistEntry()'s own return shape) so handleBlockWholeSite()
+      // below can remove specific now-redundant rows by id.
+      currentBlocklistEntries = items.map((item) => ({ id: item.id, ...parseBlocklistEntry(item.url) }));
       renderQuickAddChips();
 
       const list = document.getElementById('url-list');
@@ -2313,8 +2346,10 @@
     //
     // A site with a `sections` array (YouTube, Facebook, Instagram) opens
     // a small options menu on click instead of adding immediately — the
-    // menu's first row is "Block all of {name}", equivalent to a plain
-    // chip's single-click behavior, plus one row per narrower section.
+    // menu's first row is "Block {name}" (e.g. "Block Instagram"),
+    // equivalent to a plain chip's single-click behavior, plus one row per
+    // narrower section ("Block Shorts", "Block Reels", etc — deliberately
+    // terse, no "only" suffix, to keep the menu compact).
     // This avoids needing a second, cramped hit target on a 34px circle
     // for a chevron; the whole chip is still one click target either way.
     // Once the whole domain is already blocked, though, every possible row
@@ -2339,31 +2374,41 @@
 
         const chip = document.createElement('button');
         chip.type = 'button';
-        chip.className = 'quick-add-chip'
-          + (hasSections ? ' has-sections' : (wholeDomainAdded ? ' added' : ''));
+        chip.className = 'quick-add-chip' + (wholeDomainAdded ? ' added' : '');
         chip.title = hasSections
           ? `${site.name} options`
-          : (wholeDomainAdded ? `${site.name} — already blocked` : `Block ${site.name}`);
+          : (wholeDomainAdded ? `${site.name} — blocked` : `Block ${site.name}`);
         chip.setAttribute('aria-label', chip.title);
 
-        // Outer chip stays the plain white circle (unchanged, same as the
-        // old favicon version) — the brand mark is a smaller colored
-        // circle sitting inside it, not the chip's own background. No
-        // network image load or fallback needed since the glyph is drawn
-        // inline; the 0.6 scale keeps each platform's glyph safely inside
-        // its circle without clipping (a plain 1:1 SVG path touches the
-        // edges of its 24x24 box, which would poke past a circular mask).
+        // No chip background/circle anymore (see .quick-add-chip's CSS
+        // comment) — just the bare glyph. Plain stroke icon — fill:none,
+        // stroke:currentColor (color set via the .quick-add-chip svg CSS
+        // rule, same currentColor pattern the lock icon elsewhere in this
+        // file uses), stroke-width/linecap/linejoin matching Tabler's own
+        // authored values so each glyph's curves render the way they were
+        // actually designed.
         chip.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="12" fill="${site.color}"/>
-            <g transform="translate(12 12) scale(0.6) translate(-12 -12)">
-              <path fill="#ffffff" d="${site.icon}"/>
-            </g>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            ${site.icon}
           </svg>
         `;
         item.appendChild(chip);
 
         if (hasSections) {
+          // Sits below the chip (not a corner badge on it) as the "more
+          // options here" hint — must come after `chip` in the DOM for
+          // the `.quick-add-chip:hover ~ .quick-add-chip-arrow` CSS
+          // sibling selector to darken it in step with the icon on hover.
+          const arrow = document.createElement('span');
+          arrow.className = 'quick-add-chip-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.innerHTML = `
+            <svg width="8" height="5" viewBox="0 0 8 5" fill="none">
+              <path d="M1 1l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `;
+          item.appendChild(arrow);
+
           const menu = document.createElement('div');
           menu.className = 'site-options-menu';
 
@@ -2372,8 +2417,8 @@
           const baseRow = document.createElement('button');
           baseRow.type = 'button';
           baseRow.className = 'site-options-menu-item';
-          baseRow.textContent = `Block all of ${site.name}`;
-          baseRow.addEventListener('click', () => handleQuickAdd(site.hostname, `all of ${site.name}`, baseRow));
+          baseRow.textContent = `Block ${site.name}`;
+          baseRow.addEventListener('click', () => handleBlockWholeSite(site, baseRow));
           menu.appendChild(baseRow);
 
           // Each section is independent — added on its own, shown as
@@ -2388,8 +2433,8 @@
             sectionRow.type = 'button';
             sectionRow.className = sectionAdded ? 'site-options-menu-item added' : 'site-options-menu-item';
             sectionRow.textContent = sectionAdded
-              ? `${section.label} — already blocked`
-              : `Block ${section.label} only`;
+              ? `${section.label} — blocked`
+              : `Block ${section.label}`;
             if (!sectionAdded) {
               sectionRow.addEventListener('click', () => handleQuickAdd(sectionUrl, `${site.name} ${section.label}`, sectionRow));
             }
@@ -2401,8 +2446,11 @@
           chip.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = menu.classList.contains('open');
-            document.querySelectorAll('.site-options-menu.open').forEach((el) => el.classList.remove('open'));
-            if (!isOpen) menu.classList.add('open');
+            closeAllSiteMenus();
+            if (!isOpen) {
+              menu.classList.add('open');
+              chip.classList.add('menu-open');
+            }
           });
         } else if (!wholeDomainAdded) {
           chip.addEventListener('click', () => handleQuickAdd(site.hostname, site.name, chip));
@@ -2412,13 +2460,20 @@
       }
     }
 
+    // Closes every open site-options-menu and clears the `.menu-open`
+    // look off whichever chip triggered it — kept together in one place
+    // so the two states (menu open, trigger chip "held" hover-looking)
+    // can never drift out of sync with each other.
+    function closeAllSiteMenus() {
+      document.querySelectorAll('.site-options-menu.open').forEach((el) => el.classList.remove('open'));
+      document.querySelectorAll('.quick-add-chip.menu-open').forEach((el) => el.classList.remove('menu-open'));
+    }
+
     // Closes any open site-options-menu on an outside click — same
     // toggle-open/close-on-outside-click shape as the account-dropdown
     // listener above, generalized to "close every open one" since more
     // than one sectioned chip's menu can exist in the row at a time.
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.site-options-menu.open').forEach((el) => el.classList.remove('open'));
-    });
+    document.addEventListener('click', closeAllSiteMenus);
 
     // Shared one-shot add used by both a plain chip's click (unsectioned
     // sites) and every row inside a sectioned chip's options menu — same
@@ -2443,6 +2498,52 @@
         triggerEl.disabled = false;
         showToast(`Could not add ${label}. Please try again.`, true);
         return;
+      }
+
+      loadBlocklist(selectedProfile.id);
+      pokeExtension();
+    }
+
+    // Used only by a sectioned chip's "Block the whole site" row — adds
+    // the bare hostname, then removes any existing path-scoped rows for
+    // that same hostname, since they're now redundant (the whole-domain
+    // entry already covers whatever they were scoping, e.g. having both
+    // "youtube.com" and "youtube.com/shorts" blocked is pointless once
+    // the whole domain covers Shorts too). Not shared with handleQuickAdd()
+    // — an unsectioned chip's single click or a section-only add ("Shorts
+    // only") should never trigger this cleanup, only this specific action.
+    async function handleBlockWholeSite(site, triggerEl) {
+      if (!selectedProfile || triggerEl.disabled) return;
+
+      triggerEl.disabled = true;
+
+      const accessToken = await currentAccessToken();
+      if (!accessToken) { triggerEl.disabled = false; return; }
+
+      const created = await addBlockedUrl(accessToken, {
+        profileId: selectedProfile.id,
+        userId: currentUser.id,
+        url: site.hostname,
+      });
+
+      if (!created) {
+        triggerEl.disabled = false;
+        showToast(`Could not add all of ${site.name}. Please try again.`, true);
+        return;
+      }
+
+      // Best-effort cleanup: a removal failing here doesn't undo the
+      // whole-site block that already succeeded (enforcement is already
+      // correct regardless), it just leaves a harmless redundant row
+      // behind. This can legitimately fail in Strict Mode, where removing
+      // a blocked site is rejected server-side (011_lock_mode_guards.sql)
+      // — not treated as an error here, since the add itself is what
+      // actually mattered and it already went through.
+      const redundant = currentBlocklistEntries.filter(
+        (entry) => entry.hostname === site.hostname && entry.pathPrefix !== null,
+      );
+      for (const entry of redundant) {
+        await removeBlockedUrl(accessToken, entry.id);
       }
 
       loadBlocklist(selectedProfile.id);

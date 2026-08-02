@@ -298,7 +298,6 @@
     }
 
     .pause-toggle-row {
-      position: relative; /* anchors #pause-strict-msg to the right of the switch */
       display: flex;
       align-items: center;
       /* min-width: matches the switch's own 46px — without this, the
@@ -448,23 +447,6 @@
       font-size: 0.78rem;
       color: var(--text-muted);
       white-space: nowrap;
-    }
-
-    /* Absolutely positioned relative to .pause-toggle-row (not part of
-       normal flow) so it appears cleanly to the right of the switch
-       without pushing anything below it down the page — it used to be a
-       block-level <p> under the whole nav row, which shifted every card
-       beneath it whenever Lock Mode blocked a pause attempt. */
-    .pause-strict-msg {
-      position: absolute;
-      left: calc(100% + 10px);
-      top: 50%;
-      transform: translateY(-50%);
-      margin: 0;
-      font-size: 0.78rem;
-      color: var(--error);
-      white-space: nowrap;
-      pointer-events: none;
     }
 
     /* ─── Account menu (same pattern duplicated on index.html and
@@ -876,13 +858,27 @@
       font-weight: 400;
     }
 
-    .url-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--dot-active);
+    .url-favicon {
+      width: 16px;
+      height: 16px;
       margin-right: 10px;
       flex-shrink: 0;
+      border-radius: 3px;
+    }
+
+    /* Shown in place of .url-favicon when the real one fails to load (not
+       every domain has one, or the icon service doesn't have it cached) —
+       a plain generic-globe glyph, same idea as Chrome's own default
+       favicon, not the site's real icon. */
+    .url-favicon-fallback {
+      width: 16px;
+      height: 16px;
+      margin-right: 10px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
     }
 
     .url-left {
@@ -1052,6 +1048,15 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* Rejection variant — solid red instead of black, same shape/motion.
+       Solid rather than the light red wash used on .error-msg/the remove
+       button's hover: those sit inside a white card, this floats as an
+       opaque overlay, so it follows the toast's own existing bold visual
+       language instead. */
+    .toast.error {
+      background: var(--error);
+    }
+
     /* ─── Utility ───────────────────────────────────────────────────────── */
     .hidden { display: none !important; }
   </style>
@@ -1202,7 +1207,6 @@
                 </button>
               </div>
             </div>
-            <p class="pause-strict-msg hidden" id="pause-strict-msg">Blocking can't be paused while in Lock Mode.</p>
           </div>
           <span class="pause-label hidden" id="pause-label"></span>
         </div>
@@ -1340,7 +1344,7 @@
     import { createPortalSession } from '../core/sync/billing.js';
     import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
-    import { isValidBlocklistUrl } from '../core/blocklist/hostname.js';
+    import { isValidBlocklistUrl, normalizeToHostname } from '../core/blocklist/hostname.js';
     import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../core/validation.js';
 
     // ─── State ─────────────────────────────────────────────────────────────────
@@ -1586,7 +1590,6 @@
       pill.style.width = '0px';
       pill.classList.remove('open');
       document.getElementById('pause-toggle').setAttribute('aria-expanded', 'false');
-      document.getElementById('pause-strict-msg').classList.add('hidden');
     }
 
     function shakePauseToggle() {
@@ -1594,7 +1597,7 @@
       toggle.classList.remove('shake'); // restart the animation if already mid-shake
       void toggle.offsetWidth; // force reflow so re-adding the class replays it
       toggle.classList.add('shake');
-      document.getElementById('pause-strict-msg').classList.remove('hidden');
+      showToast("Blocking can't be paused while in Lock Mode.", true);
       setTimeout(() => toggle.classList.remove('shake'), 400);
     }
 
@@ -1631,8 +1634,6 @@
         await refreshPauseUI();
         return;
       }
-
-      document.getElementById('pause-strict-msg').classList.add('hidden');
 
       // Fresh check, not the value from page load — mode may have changed
       // in the popup since.
@@ -1799,11 +1800,23 @@
 
     // ─── Toast ─────────────────────────────────────────────────────────────────
 
-    function showToast(msg, duration = 4000) {
+    const TOAST_DURATION_MS = 4000;
+
+    /**
+     * Floating, fixed-position notification — zero layout impact by design
+     * (doesn't participate in document flow), auto-dismisses after
+     * TOAST_DURATION_MS. isError swaps the default black styling for a red
+     * variant, used for "that action was rejected" messages (Lock Mode
+     * blocking a profile switch or site removal, "you need at least one
+     * profile," etc.) — as opposed to the default variant's neutral/success
+     * use (e.g. "Welcome to Focus Pro").
+     */
+    function showToast(msg, isError = false) {
       const el = document.getElementById('toast');
       el.textContent = msg;
+      el.classList.toggle('error', isError);
       el.classList.add('visible');
-      setTimeout(() => el.classList.remove('visible'), duration);
+      setTimeout(() => el.classList.remove('visible'), TOAST_DURATION_MS);
     }
 
     // ─── Error helpers ─────────────────────────────────────────────────────────
@@ -1891,7 +1904,7 @@
             tab.title = 'Switch to Friction Mode to change profiles';
             tab.addEventListener('click', () => {
               shakeElement(tab);
-              showError('profile-error', 'Switch to Friction Mode to change profiles.');
+              showToast('Switch to Friction Mode to change profiles.', true);
             });
           }
 
@@ -1971,14 +1984,14 @@
     async function handleDeleteProfile(profileId) {
       // Guard: do not delete the last profile.
       if (profiles.length <= 1) {
-        showToast('You need at least one profile.');
+        showToast('You need at least one profile.', true);
         return;
       }
 
       // Guard: do not delete the active profile without switching first.
       const target = profiles.find(p => p.id === profileId);
       if (target?.is_active) {
-        showToast('Switch to a different profile before deleting this one.');
+        showToast('Switch to a different profile before deleting this one.', true);
         return;
       }
 
@@ -2039,14 +2052,34 @@
         const left = document.createElement('div');
         left.className = 'url-left';
 
-        const dot = document.createElement('div');
-        dot.className = 'url-dot';
+        // DuckDuckGo's favicon service — plain <img>, no backend needed,
+        // chosen over Google's equivalent for brand fit (this product's
+        // whole pitch is not tracking you; pinging Google for every
+        // blocked site's icon sat oddly next to that). Falls back to a
+        // generic globe glyph — not the green .url-dot this replaced — for
+        // any domain the service doesn't have an icon for.
+        const favicon = document.createElement('img');
+        favicon.className = 'url-favicon';
+        favicon.src = `https://icons.duckduckgo.com/ip3/${normalizeToHostname(item.url)}.ico`;
+        favicon.alt = '';
+        favicon.addEventListener('error', () => {
+          const fallback = document.createElement('span');
+          fallback.className = 'url-favicon-fallback';
+          fallback.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+              <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.6"/>
+              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+          `;
+          favicon.replaceWith(fallback);
+        }, { once: true });
 
         const text = document.createElement('span');
         text.className = 'url-text';
         text.textContent = item.url;
 
-        left.appendChild(dot);
+        left.appendChild(favicon);
         left.appendChild(text);
 
         const del = document.createElement('button');
@@ -2069,7 +2102,7 @@
           `;
           del.addEventListener('click', () => {
             shakeElement(del);
-            showError('url-error', 'Switch to Friction Mode to remove sites.');
+            showToast('Switch to Friction Mode to remove sites.', true);
           });
         } else {
           del.textContent = 'Remove';

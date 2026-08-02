@@ -100,31 +100,66 @@ function onComplete() {
 }
 
 // ─── Countdown timer ──────────────────────────────────────────────────────────
+// The countdown only runs while this tab is actually the visible one.
+// setInterval keeps firing in a background tab regardless of focus — found
+// by actually hitting this: adding a site to the blocklist while it was
+// already open in a background tab let the 30s finish (and the 10-minute
+// pause get granted) without the tab ever being looked at. Friction Mode's
+// entire premise is that the user is actually present for it; a countdown
+// that completes itself while unwatched is a free bypass, not friction.
 
 let secondsLeft = COUNTDOWN_SECONDS;
 let countdownInterval = null;
 
+function tick() {
+  secondsLeft -= 1;
+
+  // Update the visible number.
+  if (countdownEl) {
+    countdownEl.textContent = secondsLeft;
+  }
+
+  // Drain the ring proportionally.
+  setRingProgress(secondsLeft / COUNTDOWN_SECONDS);
+
+  if (secondsLeft <= 0) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    onComplete();
+  }
+}
+
 function startCountdown() {
   // Prime the ring to full before the interval fires.
   setRingProgress(1);
-
-  countdownInterval = setInterval(() => {
-    secondsLeft -= 1;
-
-    // Update the visible number.
-    if (countdownEl) {
-      countdownEl.textContent = secondsLeft;
-    }
-
-    // Drain the ring proportionally.
-    setRingProgress(secondsLeft / COUNTDOWN_SECONDS);
-
-    if (secondsLeft <= 0) {
-      clearInterval(countdownInterval);
-      onComplete();
-    }
-  }, 1000);
+  // Only actually start ticking if the tab is visible right now — if this
+  // page itself loaded in the background (chrome.tabs.update() redirects a
+  // tab without necessarily focusing it), starting unconditionally here
+  // would tick the countdown down before the user ever saw it, the exact
+  // bug the visibilitychange listener below exists to prevent. Leaving
+  // countdownInterval null lets that listener start it the first time the
+  // tab actually becomes visible instead.
+  if (document.visibilityState === 'visible') {
+    countdownInterval = setInterval(tick, 1000);
+  }
 }
+
+// Pauses/resumes the running interval on tab visibility changes — never
+// resets secondsLeft, just stops and continues it exactly where it left
+// off. Only relevant to Friction Mode; Lock Mode never starts the
+// countdown in the first place, so there's nothing here to pause.
+document.addEventListener('visibilitychange', () => {
+  if (mode === 'strict') return;
+
+  if (document.visibilityState === 'visible') {
+    if (countdownInterval === null && secondsLeft > 0) {
+      countdownInterval = setInterval(tick, 1000);
+    }
+  } else if (countdownInterval !== null) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+});
 
 // ─── Leave button ─────────────────────────────────────────────────────────────
 

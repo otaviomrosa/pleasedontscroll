@@ -176,7 +176,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  margin-top: 8px;
+  margin-top: 0px;
   font-family: var(--font-ui);
   font-size: 0.76rem;
   font-weight: 500;

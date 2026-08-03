@@ -523,6 +523,16 @@
 
     /* ─── Settings disclosure (top-level Settings card, and the nested
        Change password sub-section within it) ─────────────────────────── */
+    /* .card's default 28px felt like an oversized, mostly-empty box
+       around this much shorter collapsed content (just the header row),
+       so both top and bottom are trimmed to 20px. Horizontal padding
+       stays the inherited 28px so the card's left/right edges still line
+       up with every other card. */
+    #settings-card {
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
     .settings-header {
       display: flex;
       align-items: center;
@@ -536,24 +546,25 @@
       text-align: left;
     }
 
-    /* Title + subtitle stack (Settings / user@email.com), not inline —
-       reads as a normal list-header pattern instead of a cramped single
-       line, and the chevron centers against the whole two-line block. */
+    /* "Settings" + email inline, not stacked — the email sits directly to
+       the right of the label, both left of the chevron. min-width: 0 on
+       both the group and the email itself is what lets the email actually
+       ellipsis-truncate instead of overflowing/pushing the chevron out. */
     .settings-header-title {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0; /* lets the email ellipsis-truncate instead of overflowing */
-      overflow: hidden;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
     }
 
     .settings-header-email {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 400;
       color: var(--text-muted);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
     }
 
     .settings-body {
@@ -610,21 +621,29 @@
 
     /* ─── Section headers ──────────────────────────────────────────────── */
     .section-title {
-      font-family: var(--font-serif);
-      font-weight: 400;
+      font-family: var(--font-ui);
+      /* 500 is the heaviest weight DM Sans is actually loaded at (see the
+       * Google Fonts <link> in <head> — only 300/400/500 are requested) —
+       * needed here since a sans-serif heading at the old serif's 400
+       * read as too plain/light to carry a section title on its own. */
+      font-weight: 500;
       font-size: 1.4rem;
       color: var(--text);
       letter-spacing: -0.02em;
       margin: 0 0 20px;
     }
 
+    /* No margin of its own — both instances get their spacing from their
+       parent instead: the Profiles instance from #profiles-card's own
+       flex gap, the Settings instance sits flush against its email
+       subtitle by design. */
     .section-label {
       font-size: 0.72rem;
       font-weight: 500;
       letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin: 0 0 12px;
+      margin: 0;
     }
 
     /* ─── Card ─────────────────────────────────────────────────────────── */
@@ -635,6 +654,46 @@
       box-shadow: var(--shadow-card);
       border: 1px solid var(--border);
       margin-bottom: 20px;
+    }
+
+    /* Profiles + Blocklist is the tallest, densest card on the page
+       (tabs, inputs, quick-add row, url list) — .card's default 28px felt
+       cramped against that much content once the last url-item's own
+       bottom padding was removed (see .url-item:last-child below), so
+       this card gets more top/bottom breathing room than the shared
+       default. #settings-card goes the other way for the same reason
+       (much shorter content, see below). */
+    /* flex column + gap instead of per-element margins: every direct
+       child (including the conditionally-hidden ones — the add-profile
+       form, both error messages) gets spaced by the container, not by
+       margins declared on the children themselves. A hidden child (still
+       display:none when inactive) contributes no gap on either side
+       automatically — no :last-child/:first-child patch ever needed here
+       again, no matter what gets added, removed, or reordered later.
+       16px is the base rhythm; a couple of children add their own
+       margin-top on top of it (flex item margins add to gap, they don't
+       collapse with it) where a bigger break reads better — see
+       .url-input-row and .quick-add-row below. */
+    /* padding-bottom is smaller than padding-top (24 vs 30) — .sync-hint
+       is unconditionally the last thing in this card now, so this is
+       really just "the gap below the sync hint," and 32px (tuned back
+       when a blocklist row was the last thing here) read as too much
+       under a small muted caption. */
+    #profiles-card {
+      padding-top: 30px;
+      padding-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* .error-msg's shared 8px top margin (used across every form in this
+       file — login, signup, password fields, etc.) would stack on top of
+       the 16px gap here rather than replacing it, same reasoning as
+       .new-profile-form above. Scoped to this card only — every other
+       .error-msg usage keeps its own margin untouched. */
+    #profiles-card .error-msg {
+      margin-top: 0;
     }
 
     /* ─── Profile tabs ─────────────────────────────────────────────────── */
@@ -752,11 +811,14 @@
     }
 
     /* New profile inline form */
+    /* No margin-top of its own — as a direct child of #profiles-card, it
+       already gets the container's 16px gap above it when visible (flex
+       item margins add on top of gap rather than collapsing with it, so
+       a margin here would double up, not just replace, that spacing). */
     .new-profile-form {
       display: none;
       align-items: center;
       gap: 8px;
-      margin-top: 12px;
     }
 
     .new-profile-form.visible { display: flex; }
@@ -800,7 +862,7 @@
     .danger-link:hover { color: var(--error); opacity: 0.8; }
 
     .danger-confirm {
-      margin: 0;
+      margin: 0 0 8px;
       padding: 14px;
       background: rgba(192, 57, 43, 0.06);
       border: 1px solid rgba(192, 57, 43, 0.22);
@@ -825,7 +887,10 @@
     .url-input-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 20px;
+      /* on top of #profiles-card's 16px gap, so this reads as a slightly
+         bigger step (the profile controls above are a different group
+         than the blocklist controls below) — 16 + 4 = 20px total. */
+      margin-top: 4px;
     }
 
     .url-input-row .field { flex: 1; margin: 0; }
@@ -850,7 +915,20 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .url-item:last-child { border-bottom: none; }
+    /* padding-bottom: 0 keeps this row from adding its own trailing
+       padding inside the list, on top of whatever #profiles-card's gap
+       already provides below .url-list — without this, the row's 11px
+       bottom padding stacked on top of that too. */
+    .url-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    /* No margin — #profiles-card's own 16px gap already separates this
+       from the list above it, and it's the last child, so the card's own
+       bottom padding handles the rest. */
+    .sync-hint {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
 
     .url-text {
       font-size: 0.88rem;
@@ -886,7 +964,10 @@
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
-      margin: 14px 0 18px;
+      /* same reasoning as .url-input-row's margin-top — a bigger step
+         than the base 16px gap (16 + 4 = 20px total) marking the move
+         from "add a site" into the quick-add shortcuts. */
+      margin-top: 4px;
     }
 
     /* Wraps each chip so the options menu (sectioned sites only) can be
@@ -915,6 +996,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      overflow: hidden;
       transition: transform 0.15s, box-shadow 0.15s;
     }
 
@@ -963,19 +1045,18 @@
       opacity: 1;
     }
 
-    /* Brand mark is a plain gray outline — color set here via currentColor
-       rather than inline on the SVG, so it inherits the same
-       darken-on-hover treatment as everything else in this file driven by
-       color, not a separate rule per state. */
+    /* Icon fades toward gray on hover via opacity — same mechanism
+       `.btn-sm.dark:hover` already uses (opacity, not an actual second
+       color value) — works the same regardless of the fill colors
+       baked into the SVG markup itself (see renderQuickAddChips()). */
     .quick-add-chip svg {
       display: block;
-      color: var(--text-muted);
-      transition: color 0.15s;
+      transition: opacity 0.15s;
     }
 
     .quick-add-chip:not(.added):hover svg,
     .quick-add-chip.menu-open svg {
-      color: var(--text);
+      opacity: 0.82;
     }
 
     /* Already on the blocklist — informational, not a toggle. Clicking
@@ -1047,14 +1128,22 @@
       min-width: 0;
     }
 
+    /* Icon button (X) now, not text ("Remove") — display:inline-flex
+       centers the SVG the same way .locked's lock icon already needed. */
     .btn-delete-url {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: none;
       border: none;
       font-size: 0.78rem;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
+      /* Symmetric padding — with the 12x12 icon this makes a 24x24 square
+         box, so border-radius: 50% renders an actual circle instead of an
+         oval (the old 4px/8px padding was tuned for "Remove" as text). */
+      padding: 6px;
+      border-radius: 50%;
       transition: color 0.15s, background 0.15s;
       flex-shrink: 0;
       margin-left: 8px;
@@ -1068,11 +1157,6 @@
     /* Strict Mode: the destructive red hover would signal "about to delete"
        for a button that can't actually delete anything right now — swap
        it for a neutral no-op hover instead. */
-    .btn-delete-url.locked {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
 
     .btn-delete-url.locked:hover {
       color: var(--text-muted);
@@ -1407,8 +1491,12 @@
         </div>
       </div>
 
-      <!-- Profiles card -->
-      <div class="card">
+      <!-- Profiles + Blocklist card — merged into one, per the founder's
+           request, for a more minimal page (was two separate cards, the
+           second with its own "{profile}'s Blocklist" heading — dropped
+           entirely; the blocklist content just follows the profile tabs
+           directly now, scoped to whichever profile is selected above it). -->
+      <div class="card" id="profiles-card">
         <p class="section-label">Profiles</p>
 
         <!-- Profile tabs (rendered by JS) -->
@@ -1425,11 +1513,6 @@
           <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
         </div>
         <p class="error-msg" id="profile-error"></p>
-      </div>
-
-      <!-- Blocklist card — scoped to selected profile -->
-      <div class="card">
-        <h2 class="section-title" id="blocklist-heading">Blocklist</h2>
 
         <div class="url-input-row">
           <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com">
@@ -1442,6 +1525,8 @@
         <ul class="url-list" id="url-list">
           <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
         </ul>
+
+        <p class="sync-hint">Blocklist syncs every minute.</p>
       </div>
 
       <!-- Settings card — reachable via the account menu's "Settings" link,
@@ -1451,7 +1536,7 @@
       <div class="card" id="settings-card">
         <button class="settings-header" id="settings-toggle" aria-expanded="false">
           <span class="settings-header-title">
-            <h2 class="section-title" style="margin: 0;">Settings</h2>
+            <h2 class="section-label">Settings</h2>
             <span class="settings-header-email" id="settings-email"></span>
           </span>
           <span class="chevron" id="settings-chevron">&#9662;</span>
@@ -2229,20 +2314,20 @@
     // rather than loaded from a CDN at runtime, same self-contained
     // reasoning as everywhere else in this build-free codebase.
     const QUICK_ADD_SITES = [
-      { name: 'Instagram',    hostname: 'instagram.com', icon: '<path d="M12.001 9C10.3436 9 9.00098 10.3431 9.00098 12C9.00098 13.6573 10.3441 15 12.001 15C13.6583 15 15.001 13.6569 15.001 12C15.001 10.3427 13.6579 9 12.001 9ZM12.001 7C14.7614 7 17.001 9.2371 17.001 12C17.001 14.7605 14.7639 17 12.001 17C9.24051 17 7.00098 14.7629 7.00098 12C7.00098 9.23953 9.23808 7 12.001 7ZM18.501 6.74915C18.501 7.43926 17.9402 7.99917 17.251 7.99917C16.5609 7.99917 16.001 7.4384 16.001 6.74915C16.001 6.0599 16.5617 5.5 17.251 5.5C17.9393 5.49913 18.501 6.0599 18.501 6.74915ZM12.001 4C9.5265 4 9.12318 4.00655 7.97227 4.0578C7.18815 4.09461 6.66253 4.20007 6.17416 4.38967C5.74016 4.55799 5.42709 4.75898 5.09352 5.09255C4.75867 5.4274 4.55804 5.73963 4.3904 6.17383C4.20036 6.66332 4.09493 7.18811 4.05878 7.97115C4.00703 9.0752 4.00098 9.46105 4.00098 12C4.00098 14.4745 4.00753 14.8778 4.05877 16.0286C4.0956 16.8124 4.2012 17.3388 4.39034 17.826C4.5591 18.2606 4.7605 18.5744 5.09246 18.9064C5.42863 19.2421 5.74179 19.4434 6.17187 19.6094C6.66619 19.8005 7.19148 19.9061 7.97212 19.9422C9.07618 19.9939 9.46203 20 12.001 20C14.4755 20 14.8788 19.9934 16.0296 19.9422C16.8117 19.9055 17.3385 19.7996 17.827 19.6106C18.2604 19.4423 18.5752 19.2402 18.9074 18.9085C19.2436 18.5718 19.4445 18.2594 19.6107 17.8283C19.8013 17.3358 19.9071 16.8098 19.9432 16.0289C19.9949 14.9248 20.001 14.5389 20.001 12C20.001 9.52552 19.9944 9.12221 19.9432 7.97137C19.9064 7.18906 19.8005 6.66149 19.6113 6.17318C19.4434 5.74038 19.2417 5.42635 18.9084 5.09255C18.573 4.75715 18.2616 4.55693 17.8271 4.38942C17.338 4.19954 16.8124 4.09396 16.0298 4.05781C14.9258 4.00605 14.5399 4 12.001 4ZM12.001 2C14.7176 2 15.0568 2.01 16.1235 2.06C17.1876 2.10917 17.9135 2.2775 18.551 2.525C19.2101 2.77917 19.7668 3.1225 20.3226 3.67833C20.8776 4.23417 21.221 4.7925 21.476 5.45C21.7226 6.08667 21.891 6.81333 21.941 7.8775C21.9885 8.94417 22.001 9.28333 22.001 12C22.001 14.7167 21.991 15.0558 21.941 16.1225C21.8918 17.1867 21.7226 17.9125 21.476 18.55C21.2218 19.2092 20.8776 19.7658 20.3226 20.3217C19.7668 20.8767 19.2076 21.22 18.551 21.475C17.9135 21.7217 17.1876 21.89 16.1235 21.94C15.0568 21.9875 14.7176 22 12.001 22C9.28431 22 8.94514 21.99 7.87848 21.94C6.81431 21.8908 6.08931 21.7217 5.45098 21.475C4.79264 21.2208 4.23514 20.8767 3.67931 20.3217C3.12348 19.7658 2.78098 19.2067 2.52598 18.55C2.27848 17.9125 2.11098 17.1867 2.06098 16.1225C2.01348 15.0558 2.00098 14.7167 2.00098 12C2.00098 9.28333 2.01098 8.94417 2.06098 7.8775C2.11014 6.8125 2.27848 6.0875 2.52598 5.45C2.78014 4.79167 3.12348 4.23417 3.67931 3.67833C4.23514 3.1225 4.79348 2.78 5.45098 2.525C6.08848 2.2775 6.81348 2.11 7.87848 2.06C8.94514 2.0125 9.28431 2 12.001 2Z" />', sections: [
+      { name: 'Instagram',    hostname: 'instagram.com', icon: '<path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" />', sections: [
         { label: 'Reels', path: '/reels' },
       ] },
-      { name: 'TikTok',       hostname: 'tiktok.com', icon: '<path d="M11.0004 2V8.41396C10.5947 8.33909 10.1768 8.3 9.75039 8.3C5.96724 8.3 2.90039 11.3668 2.90039 15.15C2.90039 18.9332 5.96724 22 9.75039 22C13.5335 22 16.6004 18.9332 16.6004 15.15V11.4136C17.6366 11.8539 18.7662 12.1 20.0005 12.1H21.0005V6.5H20.0005C18.0966 6.5 16.6004 4.96259 16.6004 3V2H11.0004ZM13.0004 4H14.688C15.0818 6.22009 16.7673 7.99607 19.0005 8.4091V10.0282C17.9624 9.87602 17.0253 9.48645 16.1567 8.905L14.6004 7.86327V15.15C14.6004 17.8286 12.429 20 9.75039 20C7.07181 20 4.90039 17.8286 4.90039 15.15C4.90039 12.4714 7.07181 10.3 9.75039 10.3C9.83431 10.3 9.91769 10.3021 10.0005 10.3063V11.9095C9.91795 11.9032 9.83454 11.9 9.75039 11.9C7.95547 11.9 6.50039 13.3551 6.50039 15.15C6.50039 16.9449 7.95547 18.4 9.75039 18.4C11.5453 18.4 13.0004 16.9449 13.0004 15.15C13.0004 11.4334 12.9992 7.71665 13.0004 4ZM8.50039 15.15C8.50039 14.4596 9.06003 13.9 9.75039 13.9C10.4407 13.9 11.0004 14.4596 11.0004 15.15C11.0004 15.8404 10.4407 16.4 9.75039 16.4C9.06003 16.4 8.50039 15.8404 8.50039 15.15Z" />' },
-      { name: 'YouTube',      hostname: 'youtube.com', icon: '<path d="M19.6069 6.99482C19.5307 6.69695 19.3152 6.47221 19.0684 6.40288C18.6299 6.28062 16.501 6 12.001 6C7.50098 6 5.37252 6.28073 4.93225 6.40323C4.68776 6.47123 4.4723 6.69593 4.3951 6.99482C4.2863 7.41923 4.00098 9.19595 4.00098 12C4.00098 14.804 4.2863 16.5808 4.3954 17.0064C4.47126 17.3031 4.68676 17.5278 4.93251 17.5968C5.37252 17.7193 7.50098 18 12.001 18C16.501 18 18.6299 17.7194 19.0697 17.5968C19.3142 17.5288 19.5297 17.3041 19.6069 17.0052C19.7157 16.5808 20.001 14.8 20.001 12C20.001 9.2 19.7157 7.41923 19.6069 6.99482ZM21.5442 6.49818C22.001 8.28 22.001 12 22.001 12C22.001 12 22.001 15.72 21.5442 17.5018C21.2897 18.4873 20.547 19.2618 19.6056 19.5236C17.8971 20 12.001 20 12.001 20C12.001 20 6.10837 20 4.39637 19.5236C3.45146 19.2582 2.70879 18.4836 2.45774 17.5018C2.00098 15.72 2.00098 12 2.00098 12C2.00098 12 2.00098 8.28 2.45774 6.49818C2.71227 5.51273 3.45495 4.73818 4.39637 4.47636C6.10837 4 12.001 4 12.001 4C12.001 4 17.8971 4 19.6056 4.47636C20.5505 4.74182 21.2932 5.51636 21.5442 6.49818ZM10.001 15.5V8.5L16.001 12L10.001 15.5Z" />', sections: [
+      { name: 'TikTok',       hostname: 'tiktok.com', icon: '<path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" />' },
+      { name: 'YouTube',      hostname: 'youtube.com', icon: '<path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" />', sections: [
         { label: 'Shorts', path: '/shorts' },
       ] },
-      { name: 'X (Twitter)',  hostname: 'x.com', icon: '<path d="M10.4883 14.651L15.25 21H22.25L14.3917 10.5223L20.9308 3H18.2808L13.1643 8.88578L8.75 3H1.75L9.26086 13.0145L2.31915 21H4.96917L10.4883 14.651ZM16.25 19L5.75 5H7.75L18.25 19H16.25Z" />' },
-      { name: 'Facebook',     hostname: 'facebook.com', icon: '<path d="M13 9H17.5L17 11H13V20H11V11H7V9H11V7.12777C11 5.34473 11.1857 4.69816 11.5343 4.04631C11.8829 3.39446 12.3945 2.88288 13.0463 2.53427C13.6982 2.18565 14.3447 2 16.1278 2C16.6498 2 17.1072 2.05 17.5 2.15V4H16.1278C14.8041 4 14.401 4.07784 13.9895 4.29789C13.6862 4.46011 13.4601 4.68619 13.2979 4.98951C13.0778 5.40096 13 5.80407 13 7.12777V9Z" />', sections: [
+      { name: 'X (Twitter)',  hostname: 'x.com', icon: '<path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />' },
+      { name: 'Facebook',     hostname: 'facebook.com', icon: '<path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />', sections: [
         { label: 'Reels', path: '/reels' },
         { label: 'Marketplace', path: '/marketplace' },
       ] },
-      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M11.0526 7.8154L11.8042 4.27941C12.0339 3.19898 13.0959 2.50929 14.1764 2.73894L17.3725 3.4183C17.8351 2.90546 18.5509 2.64644 19.275 2.80035C20.3554 3.03 21.0451 4.09204 20.8155 5.17247C20.5858 6.2529 19.5238 6.94259 18.4434 6.71294C17.7193 6.55903 17.1707 6.03124 16.9567 5.3746L13.7605 4.69523L13.0943 7.82978C14.8789 7.96683 16.6522 8.56079 18.2581 9.52961C19.0892 9.06763 20.0992 8.99337 21.007 9.36091C22.1731 9.833 22.9531 10.9459 22.9991 12.2031L22.9996 12.2241C23.0151 13.2277 22.559 14.1657 21.792 14.7742C21.7899 14.8178 21.7871 14.859 21.7836 14.8971C21.7836 18.8949 17.3341 21.9267 11.9852 21.9267C6.65232 21.9267 2.27693 18.9027 2.27987 14.9738C2.27523 14.9134 2.27162 14.853 2.26905 14.7926C1.46701 14.1873 0.984722 13.2277 1.00037 12.1962C1.01955 10.9317 1.78341 9.79777 2.94804 9.30491C3.85909 8.91936 4.881 8.98299 5.72371 9.44381C7.3578 8.46653 9.15777 7.91241 11.0526 7.8154ZM20.3385 13.341C20.7466 13.1382 21.003 12.7207 21.0001 12.2656C20.9789 11.8005 20.6887 11.3897 20.2565 11.2147C19.821 11.0384 19.3226 11.1343 18.9837 11.4597L18.3991 12.0207L17.729 11.5652C16.1137 10.4672 14.2771 9.8397 12.4995 9.80134L11.493 9.80123C9.61791 9.8295 7.84136 10.4002 6.25552 11.4757L5.59246 11.9254L5.00897 11.3764C4.66501 11.0528 4.16243 10.9627 3.7275 11.1468C3.29257 11.3308 3.0073 11.7543 3 12.2265C2.99298 12.6987 3.26526 13.1307 3.69441 13.3278L4.32738 13.6186L4.27399 14.3132C4.261 14.482 4.261 14.6516 4.27693 14.8971C4.27693 17.6071 7.63313 19.9267 11.9852 19.9267C16.3561 19.9267 19.7836 17.5913 19.7865 14.8205C19.7995 14.6516 19.7995 14.482 19.7865 14.3132L19.7348 13.6411L20.3385 13.341ZM6.95075 13.4999C6.95075 12.6715 7.62232 11.9999 8.45075 11.9999C9.27918 11.9999 9.95075 12.6715 9.95075 13.4999C9.95075 14.3283 9.27918 14.9999 8.45075 14.9999C8.05292 14.9999 7.67139 14.8419 7.39009 14.5606C7.10878 14.2793 6.95075 13.8977 6.95075 13.4999ZM13.9507 13.4999C13.9507 12.6715 14.6223 11.9999 15.4507 11.9999C16.2792 11.9999 16.9507 12.6715 16.9507 13.4999C16.9507 14.3283 16.2792 14.9999 15.4507 14.9999C15.0529 14.9999 14.6714 14.8419 14.3901 14.5606C14.1088 14.2793 13.9507 13.8977 13.9507 13.4999ZM11.9665 18.6028C10.5693 18.6028 9.19993 18.2329 8.08503 17.3928C7.94659 17.2241 7.95868 16.9779 8.11299 16.8236C8.2673 16.6693 8.51349 16.6572 8.68218 16.7956C9.62697 17.4886 10.805 17.7856 11.9507 17.7856C13.0965 17.7856 14.2813 17.5112 15.235 16.8271C15.3473 16.7176 15.5095 16.6763 15.6604 16.7188C15.8114 16.7613 15.9282 16.8811 15.9669 17.0331C16.0055 17.1851 15.9517 17.3346 15.8479 17.4556C15.1638 18.2531 13.3636 18.6028 11.9665 18.6028Z" />' },
-      { name: 'Twitch',       hostname: 'twitch.tv', icon: '<path d="M4.30098 3H21.001V14.7L16.301 19.4H12.401L9.90098 21.8H7.00098V19.4H3.00098V6.2L4.30098 3ZM5.00098 17.4H9.00098V19.8H9.09636L11.5964 17.4H15.4725L19.001 13.8716V5H5.00098V17.4ZM15.001 8H17.001V12.7H15.001V8ZM10.001 8H12.001V12.7H10.001V8Z" />' },
+      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="var(--black)" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="var(--black)" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" />' },
+      { name: 'Twitch',       hostname: 'twitch.tv', icon: '<path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" />' },
     ];
 
     // Kept in sync with the currently-loaded profile's blocklist on every
@@ -2255,10 +2340,6 @@
     let currentBlocklistEntries = [];
 
     async function loadBlocklist(profileId) {
-      const heading = document.getElementById('blocklist-heading');
-      const profile  = profiles.find(p => p.id === profileId);
-      heading.textContent = profile ? `${profile.name}'s Blocklist` : 'Blocklist';
-
       const accessToken = await currentAccessToken();
       if (!accessToken) return;
 
@@ -2351,7 +2432,13 @@
             showToast('Switch to Friction Mode to remove sites.', true);
           });
         } else {
-          del.textContent = 'Remove';
+          del.title = 'Remove';
+          del.setAttribute('aria-label', 'Remove');
+          del.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          `;
           del.addEventListener('click', () => handleDeleteUrl(item.id));
         }
 
@@ -2406,14 +2493,16 @@
           : (wholeDomainAdded ? `${site.name} — blocked` : `Block ${site.name}`);
         chip.setAttribute('aria-label', chip.title);
 
-        // No chip background/circle anymore (see .quick-add-chip's CSS
-        // comment) — just the bare glyph. Filled icon now, not stroked —
-        // fill:currentColor (color set via the .quick-add-chip svg CSS
-        // rule, same currentColor pattern the lock icon elsewhere in this
-        // file uses, just fill instead of stroke). No stroke-width/
-        // linecap/linejoin needed for a filled glyph.
+        // Tabler's brand icon set (tabler.io/icons, MIT licensed) — stroke
+        // based, not filled, specifically so line thickness is a real,
+        // tunable value (stroke-width) instead of being baked into solid
+        // path geometry the way the earlier Remix Icon fills were. Tabler
+        // draws these already inset from the 24x24 box's edges (e.g.
+        // Instagram's outer square spans 4-20, not 0-24), so unlike the
+        // filled logos before, no scale-down/recenter is needed to keep
+        // them from clipping against the round chip.
         chip.innerHTML = `
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--black)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             ${site.icon}
           </svg>
         `;

@@ -486,6 +486,14 @@ body {
 }
 
 /* Individual profile pill */
+/* max-width + ellipsis — a name made of wide characters (e.g. a string of
+   "W"s) can render far wider than its character count suggests even
+   within MAX_PROFILE_NAME_LENGTH, and white-space:nowrap alone just lets
+   that push the pill (and the whole flex row) wider than the 290px popup
+   instead of wrapping. Capped at 240px, most of the container's 250px
+   content width (290px body − 20px padding × 2), so one long name still
+   can't force the popup itself to overflow — the truncated name is still
+   readable via the native title tooltip popup.js sets on the pill. */
 .profile-pill {
   font-family: var(--font-ui);
   font-size: 0.78rem;
@@ -498,6 +506,9 @@ body {
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
   user-select: none;
 }
 

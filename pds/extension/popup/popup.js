@@ -82,6 +82,9 @@ function renderProfilePills(profiles) {
     pill.className = `profile-pill${profile.is_active ? ' active' : ''}${locked ? ' locked' : ''}`;
     pill.textContent = profile.name;
     pill.dataset.profileId = profile.id;
+    // .profile-pill truncates with an ellipsis past 140px (see popup.css),
+    // so the full name is still reachable via this native tooltip.
+    pill.title = profile.name;
 
     if (locked) {
       pill.title = 'Unlock more profiles with Focus Pro';

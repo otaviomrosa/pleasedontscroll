@@ -264,8 +264,8 @@
       width: 100vw;
       transform: translateX(-50%);
       background:
-        linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
-        url('assets/images/hero-painting.png') center 55% / cover no-repeat;
+        linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)),
+        url('assets/images/hero-painting.png') center 45% / cover no-repeat;
       z-index: -1;
       pointer-events: none;
     }
@@ -299,6 +299,19 @@
       color: var(--text-muted);
     }
 
+    /* States plainly what the product is ("browser extension") — nothing
+       on this page said that word anywhere before this. Sits between the
+       h1 and hero-sub: bolder/darker than hero-sub since it's doing the
+       clarity work, but far smaller than the h1 since it's not the
+       headline. */
+    .hero-tagline {
+      font-family: var(--font-ui);
+      font-size: clamp(1.15rem, 2vw, 1.4rem);
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 16px;
+    }
+
     .hero-sub {
       font-size: clamp(1rem, 1.6vw, 1.2rem);
       font-weight: 400;
@@ -316,9 +329,11 @@
     }
 
     .btn-primary {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       font-family: var(--font-ui);
-      font-size: 0.98rem;
+      font-size: 1.2rem;
       font-weight: 500;
       color: var(--white);
       background: var(--black);
@@ -327,6 +342,16 @@
       border-radius: var(--radius-btn);
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
       transition: opacity 0.18s, transform 0.18s;
+    }
+
+    /* The real Chrome mark (assets/images/chrome-logo.png), not the
+       hand-built SVG approximation tried first (three colored wedges + two
+       circles) — the founder supplied the actual asset. Full color, not
+       currentColor, since the actual brand mark's colors are the point
+       here (unlike the dashboard's quick-add chip icons, which
+       deliberately avoid exact brand color/detail). */
+    .btn-primary img {
+      flex-shrink: 0;
     }
 
     .btn-primary:hover {
@@ -751,16 +776,17 @@
 
     <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
-      <div class="hero-eyebrow">One blocklist, everywhere you use it</div>
+      <div class="hero-eyebrow">Now on Chrome • iPhone Coming Soon</div>
       <h1>Please Don't Scroll.</h1>
+      <p class="hero-tagline">The website blocker with two ways to stay focused</p>
       <p class="hero-sub">
-        Scrolling isn't a willpower problem. It's a designed habit loop. Please Don't
-        Scroll enforces real boundaries around the apps built to waste your time, for
-        people who know exactly what an hour actually costs them.
+        Pause before opening social media, or lock it completely. Choose the boundary that fits your day.
       </p>
       <div class="hero-actions">
-        <a href="dashboard.html" class="btn-primary">Get started free</a>
-        <a href="#features" class="hero-secondary-link">See how it works ↓</a>
+        <a href="dashboard.html" class="btn-primary">
+          <img src="assets/images/chrome-logo.png" alt="" width="20" height="20">
+          Add to Chrome
+        </a>
       </div>
     </section>
 

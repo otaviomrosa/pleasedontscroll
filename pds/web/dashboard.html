@@ -27,20 +27,31 @@
       --border-hover: rgba(0, 0, 0, 0.16);
       --error:        #c0392b;
       --dot-active:   #2d6a4f;
-      /* Settled palette: burgundy/wine ("Crimson Bordeaux") as the one
-         brand accent, used both for general interactive accents and for
+      /* Settled palette: a muted-then-brightened violet as the one brand
+         accent, used both for general interactive accents and for
          Pro-tier signaling — no separate --accent-teal here anymore
          (dashboard.html has no Friction/Strict mode indicator of its own,
          that toggle only lives in the popup, so there's no need for a
          second accent token the way popup.css/blocked.css still need
-         teal for Friction specifically). Naturalistic earth tones (sage,
-         terracotta, gold, the dark-green rounds) were explored and
-         dropped in favor of this. Used by .premium-badge,
-         .premium-badge-dot, .btn-upgrade, and .upgrade-banner's own
-         gradient/glow. Token name kept as --pro-gold for now. */
-      --pro-gold:      #b0203f;
-      --pro-gold-dim:  rgba(176, 32, 63, 0.1);
-      --pro-gold-glow: rgba(176, 32, 63, 0.22);
+         teal for Friction specifically). Went teal → gold → burgundy
+         ("Crimson Bordeaux") → royal blue → this: purple/violet, the
+         dominant "Pro tier" SaaS color archetype (Discord Nitro, Twitch
+         Prime, Grammarly Premium) — tests well for subscription
+         conversion specifically, without the urgency/alarm connotation
+         warmer colors (orange/red) carry, which would cut against this
+         product's "no manipulative dark patterns" positioning anyway.
+         Same value as index.html's own accent now. Strict Mode's own
+         indicator color (popup.css/blocked.css's --strict) deliberately
+         stayed on the burgundy value — a distinct meaning (an
+         alarm/lockout color), not a brand accent, so it didn't move with
+         this. Naturalistic earth tones (sage, terracotta, gold, the
+         dark-green rounds) were explored earlier and dropped too. Used by
+         .premium-badge, .premium-badge-dot, .btn-upgrade, and
+         .upgrade-banner's own gradient/glow. Token name kept as
+         --pro-gold for now. */
+      --pro-gold:      #7741c8;
+      --pro-gold-dim:  rgba(119, 65, 200, 0.1);
+      --pro-gold-glow: rgba(119, 65, 200, 0.22);
       --radius-card:  20px;
       --radius-btn:   12px;
       --radius-field: 10px;
@@ -1422,7 +1433,7 @@
       transform: translateY(-50%);
       width: 200px;
       height: 200px;
-      background: radial-gradient(circle at center, rgba(176, 32, 63, 0.4) 0%, transparent 70%);
+      background: radial-gradient(circle at center, rgba(119, 65, 200, 0.4) 0%, transparent 70%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -1455,13 +1466,13 @@
       text-decoration: none;
       transition: opacity 0.15s, box-shadow 0.15s;
       white-space: nowrap;
-      box-shadow: 0 4px 24px rgba(176, 32, 63, 0.45);
+      box-shadow: 0 4px 24px rgba(119, 65, 200, 0.45);
       position: relative;
     }
 
     .btn-upgrade:hover {
       opacity: 0.9;
-      box-shadow: 0 4px 28px rgba(176, 32, 63, 0.6);
+      box-shadow: 0 4px 28px rgba(119, 65, 200, 0.6);
     }
 
     /* ─── Toast ──────────────────────────────────────────────────────────── */
@@ -2825,14 +2836,35 @@
       pokeExtension();
     }
 
+    // Shared by any add-flow that just added a bare-hostname (whole-domain)
+    // entry — removes any existing path-scoped rows for that same
+    // hostname, since they're now redundant (the whole-domain entry
+    // already covers whatever they were scoping, e.g. having both
+    // "youtube.com" and "youtube.com/shorts" blocked is pointless once the
+    // whole domain covers Shorts too). Best-effort: a removal failing here
+    // doesn't undo the whole-site block that already succeeded
+    // (enforcement is already correct regardless), it just leaves a
+    // harmless redundant row behind. This does succeed in Strict Mode
+    // despite 011_lock_mode_guards.sql's general "no removal" rule —
+    // 014_lock_mode_redundant_cleanup_exception.sql carves out exactly
+    // this case (removing a row already fully covered by another
+    // whole-domain row on the same profile never reduces enforcement, so
+    // it isn't a bypass).
+    async function removeRedundantPathScopedEntries(accessToken, hostname) {
+      const redundant = currentBlocklistEntries.filter(
+        (entry) => entry.hostname === hostname && entry.pathPrefix !== null,
+      );
+      for (const entry of redundant) {
+        await removeBlockedUrl(accessToken, entry.id);
+      }
+    }
+
     // Used only by a sectioned chip's "Block the whole site" row — adds
-    // the bare hostname, then removes any existing path-scoped rows for
-    // that same hostname, since they're now redundant (the whole-domain
-    // entry already covers whatever they were scoping, e.g. having both
-    // "youtube.com" and "youtube.com/shorts" blocked is pointless once
-    // the whole domain covers Shorts too). Not shared with handleQuickAdd()
-    // — an unsectioned chip's single click or a section-only add ("Shorts
-    // only") should never trigger this cleanup, only this specific action.
+    // the bare hostname, then cleans up any now-redundant path-scoped rows
+    // via removeRedundantPathScopedEntries(). Not shared with
+    // handleQuickAdd() — an unsectioned chip's single click or a
+    // section-only add ("Shorts only") should never trigger this cleanup,
+    // only this specific action.
     async function handleBlockWholeSite(site, triggerEl) {
       if (!selectedProfile || triggerEl.disabled) return;
 
@@ -2853,23 +2885,7 @@
         return;
       }
 
-      // Best-effort cleanup: a removal failing here doesn't undo the
-      // whole-site block that already succeeded (enforcement is already
-      // correct regardless), it just leaves a harmless redundant row
-      // behind. This does succeed in Strict Mode despite
-      // 011_lock_mode_guards.sql's general "no removal" rule —
-      // 014_lock_mode_redundant_cleanup_exception.sql carves out exactly
-      // this case (removing a row already fully covered by another
-      // whole-domain row on the same profile never reduces enforcement,
-      // so it isn't a bypass) — but the disabled-triggerEl/toast pattern
-      // above already means a genuine failure here wouldn't be treated as
-      // an error anyway, since the add is what actually mattered.
-      const redundant = currentBlocklistEntries.filter(
-        (entry) => entry.hostname === site.hostname && entry.pathPrefix !== null,
-      );
-      for (const entry of redundant) {
-        await removeBlockedUrl(accessToken, entry.id);
-      }
+      await removeRedundantPathScopedEntries(accessToken, site.hostname);
 
       loadBlocklist(selectedProfile.id);
       pokeExtension();
@@ -2928,6 +2944,17 @@
       btn.disabled    = false;
 
       if (!created) { showError('url-error', 'Could not add that site. Please try again.'); return; }
+
+      // Same redundant-cleanup handleBlockWholeSite() does for the
+      // quick-add chips' "Block the whole site" row — a manually-typed
+      // bare domain (e.g. instagram.com) should also retire any
+      // path-scoped rows it now makes redundant (e.g. instagram.com/reels)
+      // instead of leaving them sitting there unreachable. Only applies
+      // when the typed entry itself is a bare domain — adding a
+      // path-scoped entry never makes anything else redundant.
+      if (parsedNewEntry.pathPrefix === null) {
+        await removeRedundantPathScopedEntries(accessToken, parsedNewEntry.hostname);
+      }
 
       input.value = '';
       loadBlocklist(selectedProfile.id);

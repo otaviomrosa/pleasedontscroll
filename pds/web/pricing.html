@@ -36,23 +36,32 @@
          plan" (the Pro plan card, its badge, its CTA button, its own
          feature checkmarks). Kept as two separate tokens for what they
          mean, even though they're now the same color.
-         EXPERIMENT — teal read as too cool/plain, gold read as cheap.
-         Both moved to the same saturated burgundy/wine ("Crimson
-         Bordeaux") tried for Pro-tier first and now extended everywhere.
-         Same values as index.html's/dashboard.html's own tokens, for
-         consistency across the site. */
-      --accent-teal:      #b0203f;
-      --accent-teal-dim:  rgba(176, 32, 63, 0.12);
-      --accent-teal-glow: rgba(176, 32, 63, 0.22);
-      --pro-gold:         #b0203f;
-      --pro-gold-dim:     rgba(176, 32, 63, 0.12);
-      --pro-gold-glow:    rgba(176, 32, 63, 0.22);
+         Went teal → gold → burgundy ("Crimson Bordeaux") → royal blue →
+         this: purple/violet, the dominant "Pro tier" SaaS color archetype
+         (Discord Nitro, Twitch Prime, Grammarly Premium) — tests well for
+         subscription conversion specifically, without the urgency/alarm
+         connotation warmer colors (orange/red) carry, which would cut
+         against this product's "no manipulative dark patterns"
+         positioning anyway. Same value as index.html's own accent now.
+         Strict Mode's own indicator color (popup.css/blocked.css's
+         --strict) deliberately stayed on the burgundy value — that's a
+         distinct meaning (an alarm/lockout color), not a brand accent, so
+         it didn't move with this. Glow alphas (--accent-teal-glow/
+         --pro-gold-glow/--shadow-pro's ring) were bumped 0.22 → 0.38,
+         0.18 → 0.32 at one point, matching index.html, then reverted back
+         to the original 0.22/0.18 here too. */
+      --accent-teal:      #7741c8;
+      --accent-teal-dim:  rgba(119, 65, 200, 0.12);
+      --accent-teal-glow: rgba(119, 65, 200, 0.22);
+      --pro-gold:         #7741c8;
+      --pro-gold-dim:     rgba(119, 65, 200, 0.12);
+      --pro-gold-glow:    rgba(119, 65, 200, 0.22);
 
       --radius-card:  24px;
       --radius-btn:   50px;
       --radius-tag:   8px;
       --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(176, 32, 63, 0.18);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(119, 65, 200, 0.18);
 
       --font-ui:      'DM Sans', -apple-system, sans-serif;
       --font-serif:   'Lora', serif;
@@ -224,10 +233,68 @@
       padding: 0 32px;
     }
 
+    /* ─── Hero + plan cards background band ─────────────────────────────── */
+    /* Same background-image trick as index.html's .hero — see that file's
+       own comment for the full reasoning (why ::before + the
+       left:50%/width:100vw/translateX(-50%) break-out is needed instead of
+       a plain background-image, since .pricing-top sits inside .page's
+       max-width:1100px column). Applied to a wrapper around BOTH .hero and
+       .plans-grid, not just .hero itself, so the image runs continuously
+       behind the plan cards too rather than stopping right after the
+       headline — the plan cards' own opaque backgrounds (white/black)
+       simply cover it where they sit, so it only actually shows through in
+       the surrounding negative space.
+       padding-bottom (not .plans-grid's own margin-bottom, see that rule's
+       own comment) — a child's bottom margin collapses straight through a
+       parent that has no border/padding of its own, which left
+       .pricing-top's real box 80px short of the "Full comparison"
+       divider (.section's border-top): the ::before background stopped
+       there instead of reaching the line, leaving a flat white gap that
+       had nothing to do with the image's resolution. Padding can't
+       collapse away like that. */
+    /* min-height: 100vh — without this, .pricing-top's height is just
+       whatever the hero + plan cards content needs, which on a tall/wide
+       monitor (e.g. a 2K 27") is shorter than the actual viewport, so the
+       top of "Full comparison" is already visible on load instead of the
+       background image filling the whole first screen. Flex + centering
+       keeps the hero/cards vertically centered in that taller box instead
+       of pinned to the top with a large gap opening up below them. */
+    .pricing-top {
+      position: relative;
+      padding-bottom: 80px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .pricing-top::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+        url('assets/images/hero-painting.png') center -90% / cover no-repeat;
+      z-index: -1;
+      pointer-events: none;
+    }
+
     /* ─── Hero ───────────────────────────────────────────────────────── */
     .hero {
       padding: 160px 0 80px;
       text-align: center;
+      /* Shifts the whole hero+cards group up within .pricing-top's
+         vertically-centered flex box, without touching padding-bottom's
+         own job of making the background reach the "Full comparison"
+         divider exactly (see .pricing-top's/.plans-grid's own comments) —
+         a negative margin on the first flex item moves the whole visual
+         group by that amount since it's still accounted for in the
+         centering math. */
+      margin-top: -40px;
     }
 
     .hero-eyebrow {
@@ -238,7 +305,7 @@
       text-transform: uppercase;
       color: var(--accent-teal);
       background: var(--accent-teal-dim);
-      border: 1px solid rgba(176, 32, 63, 0.2);
+      border: 1px solid rgba(119, 65, 200, 0.2);
       padding: 5px 14px;
       border-radius: var(--radius-btn);
       margin-bottom: 28px;
@@ -269,12 +336,19 @@
     }
 
     /* ─── Pricing cards ───────────────────────────────────────────────── */
+    /* Bottom spacing before "Full comparison" moved to .pricing-top's own
+       padding-bottom instead of a margin here — see that rule's comment;
+       a margin on the last child inside an unbordered/unpadded parent
+       collapses straight through it. */
     .plans-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
       max-width: 860px;
-      margin: 0 auto 80px;
+      /* Negative top margin pulls the cards up slightly, tightening the
+         gap under .hero and shifting the cards' weight higher within
+         .pricing-top's vertically-centered flex box. */
+      margin: -24px auto 0;
       align-items: start;
     }
 
@@ -313,7 +387,7 @@
       right: -60px;
       width: 320px;
       height: 320px;
-      background: radial-gradient(circle at center, rgba(176, 32, 63, 0.18) 0%, transparent 65%);
+      background: radial-gradient(circle at center, rgba(119, 65, 200, 0.18) 0%, transparent 65%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -326,7 +400,7 @@
       left: 0;
       right: 0;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(176, 32, 63, 0.5), transparent);
+      background: linear-gradient(90deg, transparent, rgba(119, 65, 200, 0.5), transparent);
     }
 
     .plan-badge {
@@ -350,8 +424,8 @@
 
     .plan-badge.pro-badge {
       color: var(--pro-gold);
-      background: rgba(176, 32, 63, 0.15);
-      border: 1px solid rgba(176, 32, 63, 0.3);
+      background: rgba(119, 65, 200, 0.15);
+      border: 1px solid rgba(119, 65, 200, 0.3);
     }
 
     .plan-badge-dot {
@@ -461,7 +535,7 @@
     .btn-plan.pro-btn {
       background: var(--white);
       color: var(--black);
-      box-shadow: 0 4px 24px rgba(176, 32, 63, 0.25);
+      box-shadow: 0 4px 24px rgba(119, 65, 200, 0.25);
     }
 
     /* Divider inside card */
@@ -512,7 +586,7 @@
     }
 
     .plan-card.pro .plan-feature-icon.check {
-      background: rgba(176, 32, 63, 0.2);
+      background: rgba(119, 65, 200, 0.2);
       color: var(--pro-gold);
     }
 
@@ -598,7 +672,7 @@
       height: 22px;
       border-radius: 50%;
       font-size: 0.7rem;
-      background: rgba(176, 32, 63, 0.1);
+      background: rgba(119, 65, 200, 0.1);
       color: var(--accent-teal);
     }
 
@@ -885,6 +959,12 @@
 
   <div class="page">
 
+    <!-- ─── Hero + plan cards share one background image (see
+         .pricing-top::before) — wrapped together so the image runs
+         continuously from under the nav down to just above "Full
+         comparison," not just behind the hero text. ─────────────────── -->
+    <div class="pricing-top">
+
     <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
       <div class="hero-eyebrow">Simple, transparent pricing</div>
@@ -978,6 +1058,8 @@
       </div>
 
     </div>
+
+    </div><!-- /.pricing-top -->
 
     <!-- ─── Comparison table ──────────────────────────────────────────────── -->
     <section class="section">

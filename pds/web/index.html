@@ -18,13 +18,13 @@
   <style>
     /* ─── Design Tokens (matches dashboard.html / pricing.html) ─────────── */
     :root {
-      /* Muted from pure #000000 to match dashboard.html's brand-wide
-         change — --black and --text stay equal on purpose (a
+      /* Back to pure #000000, matching dashboard.html's/pricing.html's own
+         token — --black and --text stay equal on purpose (a
          consolidation, not a new value: one less near-black in the
          token set). */
-      --black:        #111111;
+      --black:        #000000;
       --white:        #ffffff;
-      --text:         #111111;
+      --text:         #000000;
       --text-muted:   #6e6e73;
       --text-faint:   #aeaeb2;
       --bg:           #ffffff;
@@ -36,22 +36,30 @@
          --pro-gold (Pro-tier signaling: the Pro feature card, the Pro
          plans-teaser card) — kept as two separate tokens for what they
          mean, even though they're now the same color.
-         EXPERIMENT — teal read as too cool/plain, gold read as cheap.
-         Both moved to the same saturated burgundy/wine ("Crimson
-         Bordeaux") tried for Pro-tier first and now extended everywhere.
-         Same values as dashboard.html's/pricing.html's own tokens, for
-         consistency across the site. */
-      --accent-teal:      #b0203f;
-      --accent-teal-dim:  rgba(176, 32, 63, 0.12);
-      --accent-teal-glow: rgba(176, 32, 63, 0.22);
-      --pro-gold:         #b0203f;
-      --pro-gold-dim:     rgba(176, 32, 63, 0.12);
-      --pro-gold-glow:    rgba(176, 32, 63, 0.22);
+         Went burgundy → royal blue → icy blue → two teal-cyan points on a
+         blue-to-teal hue-rotation strip → a muted violet (~264°, ~25%
+         saturation) → this: same violet hue, saturation raised to ~55%
+         (less muted, more vivid) — purple/violet is the dominant "Pro
+         tier" SaaS color archetype (Discord Nitro, Twitch Prime,
+         Grammarly Premium) and tests well for subscription conversion
+         specifically, without the urgency/alarm connotation warmer colors
+         (orange/red) carry. Same value extended to dashboard.html/
+         pricing.html too (their own --pro-gold/--accent-teal tokens).
+         Glow alphas (--accent-teal-glow/--pro-gold-glow/--shadow-pro's
+         ring) were bumped 0.22 → 0.38, 0.18 → 0.32 at one point, then
+         reverted back to the original 0.22/0.18 here — back to how it
+         started. */
+      --accent-teal:      #7741c8;
+      --accent-teal-dim:  rgba(119, 65, 200, 0.12);
+      --accent-teal-glow: rgba(119, 65, 200, 0.22);
+      --pro-gold:         #7741c8;
+      --pro-gold-dim:     rgba(119, 65, 200, 0.12);
+      --pro-gold-glow:    rgba(119, 65, 200, 0.22);
 
       --radius-card:  24px;
       --radius-btn:   50px;
       --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(176, 32, 63, 0.18);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(119, 65, 200, 0.18);
 
       --font-ui:      'DM Sans', -apple-system, sans-serif;
       --font-serif:   'Lora', serif;
@@ -223,9 +231,43 @@
     }
 
     /* ─── Hero ───────────────────────────────────────────────────────── */
+    /* EXPERIMENT — reintroducing a background image, scoped to just this
+       section (see docs/ARCHITECTURE.md §4: full-page gouache backgrounds were tried
+       and dropped for reading inconsistent between pages; this is a much
+       narrower version of that same idea, confined to the hero only). Not
+       a real decision yet.
+       .hero itself stays laid out normally (padding still clears the
+       fixed nav above it); position:relative just gives ::before a
+       containing block. ::before is what actually paints the image, full
+       viewport width via the left:50%/translateX(-50%)/width:100vw
+       "break out of a constrained parent" trick — .hero sits inside .page
+       (max-width:1100px), so a plain background-image on .hero itself
+       would only fill that narrower centered column, not bleed edge to
+       edge the way a hero background normally does. z-index:-1 keeps it
+       behind the hero's own text content without needing z-index on every
+       child. The white gradient wash keeps hero-sub/hero-eyebrow legible
+       regardless of the image's own colors, rather than depending on
+       every future image choice happening to contrast well with black
+       text — soften/remove it if a specific image ends up not needing it. */
     .hero {
       padding: 180px 0 100px;
       text-align: center;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),
+        url('assets/images/hero-painting.png') center 35% / cover no-repeat;
+      z-index: -1;
+      pointer-events: none;
     }
 
     .hero-eyebrow {
@@ -236,7 +278,7 @@
       text-transform: uppercase;
       color: var(--accent-teal);
       background: var(--accent-teal-dim);
-      border: 1px solid rgba(176, 32, 63, 0.2);
+      border: 1px solid rgba(119, 65, 200, 0.2);
       padding: 5px 14px;
       border-radius: var(--radius-btn);
       margin-bottom: 28px;

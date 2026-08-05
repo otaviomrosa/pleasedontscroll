@@ -429,10 +429,13 @@ body {
 }
 
 /* Friction — teal (--friction) again, see --friction's own comment for
-   the full back-and-forth. */
+   the full back-and-forth. Same glow shadow recipe as Strict below, just
+   in teal — was flat/no shadow, added for parity once the two were
+   compared side by side. */
 .mode-option[data-mode="friction"].active {
   background: var(--friction);
   color: var(--white);
+  box-shadow: 0 2px 10px rgba(74, 144, 164, 0.35);
 }
 
 /* Strict — burgundy now (see --strict's own comment) — deliberately more

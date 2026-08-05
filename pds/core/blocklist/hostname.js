@@ -41,7 +41,23 @@ export function pathnameOf(url) {
   }
 }
 
-const HOSTNAME_RE = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+// Each label capped at 30 chars (down from RFC 1035's actual 63-char
+// max) — this field is for a human to type a site like "instagram.com" by
+// hand, not to accept arbitrary auto-generated infrastructure hostnames,
+// and 63-char labels let obvious gibberish through: pasting the same
+// random string twice back to back (e.g. "aeiouaeiouaeiouaeiouaeiouaeiou.
+// comaeiouaeiouaeiouaeiouaeiouaeiou.com") parses as three RFC-legal labels
+// and passed this check before, even though nothing about it resembles a
+// real site. 30 chars is still generous for anything a person would
+// actually type.
+const HOSTNAME_RE = /^([a-z0-9]([a-z0-9-]{0,28}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+// Matches the maxlength set on dashboard.html's #url-input — keep these in
+// sync if either changes. Covers a hostname plus a path-scoped suffix
+// (e.g. "facebook.com/marketplace") with room to spare; also the mirrored
+// cap that keeps the blocklist row's ellipsis-truncation (.url-text) from
+// ever needing to handle something wildly longer than this.
+export const MAX_BLOCKLIST_URL_LENGTH = 100;
 
 /**
  * Whether a user-entered blocklist value looks like a real, addable
@@ -54,6 +70,7 @@ const HOSTNAME_RE = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
  */
 export function isValidBlocklistUrl(rawUrl) {
   if (typeof rawUrl !== 'string' || !rawUrl.trim()) return false;
+  if (rawUrl.trim().length > MAX_BLOCKLIST_URL_LENGTH) return false;
   return HOSTNAME_RE.test(normalizeToHostname(rawUrl));
 }
 

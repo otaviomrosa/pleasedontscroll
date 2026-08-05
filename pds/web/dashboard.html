@@ -1089,10 +1089,20 @@
       margin-top: 10px;
     }
 
+    /* Truncates with an ellipsis instead of wrapping/overflowing — a long
+       entry (near MAX_BLOCKLIST_URL_LENGTH) could otherwise push the row
+       wider than the card or wrap awkwardly against the delete button.
+       The full value is still reachable via the title tooltip set on this
+       element in renderUrlList() below. */
     .url-text {
       font-size: 0.82rem;
       color: var(--text);
       font-weight: 400;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .url-favicon {
@@ -1321,6 +1331,11 @@
     .url-left {
       display: flex;
       align-items: center;
+      /* flex: 1 — previously auto-width (hugging favicon+text), which let
+         a long entry push .url-item wider instead of truncating; growing
+         to fill the row is what makes .url-text's own min-width:0 +
+         ellipsis (below) actually have room to kick in. */
+      flex: 1;
       min-width: 0;
     }
 
@@ -1718,7 +1733,7 @@
         <p class="section-label">Blocklist</p>
 
         <div class="url-input-row">
-          <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com">
+          <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
           <button class="btn-sm dark" id="add-url-btn">Block site</button>
         </div>
         <p class="error-msg" id="url-error"></p>
@@ -2611,6 +2626,10 @@
         const text = document.createElement('span');
         text.className = 'url-text';
         text.textContent = item.url;
+        // .url-text truncates with an ellipsis past its available width
+        // (see its own CSS comment) — this keeps the full value reachable
+        // via native tooltip.
+        text.title = item.url;
 
         left.appendChild(favicon);
         left.appendChild(text);

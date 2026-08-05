@@ -186,6 +186,33 @@ test('isValidBlocklistUrl', async (t) => {
     assert.equal(isValidBlocklistUrl(undefined), false);
     assert.equal(isValidBlocklistUrl(null), false);
   });
+
+  await t.test('gibberish with an overlong label is rejected', () => {
+    // Regression: two copies of the same 34-char string pasted back to
+    // back with no separator parsed as three RFC-legal labels
+    // ("aseihf...oifa", "comaseihf...oifa", "com") and passed the old
+    // 63-char-per-label regex, even though nothing about it resembles a
+    // real site.
+    assert.equal(
+      isValidBlocklistUrl(
+        'ASEIHFASEIOHFASESOIFASHOIFASHOIFA.comASEIHFASEIOHFASESOIFASHOIFASHOIFA.com',
+      ),
+      false,
+    );
+  });
+
+  await t.test('a label over 30 chars is rejected', () => {
+    assert.equal(
+      isValidBlocklistUrl('some-really-long-subdomain-label-name.example.com'),
+      false,
+    );
+  });
+
+  await t.test('input over MAX_BLOCKLIST_URL_LENGTH is rejected even with otherwise-valid-shaped labels', () => {
+    const label = 'a'.repeat(20); // well under the 30-char per-label cap
+    const overlong = `${[label, label, label, label, label].join('.')}.com`; // 108 chars
+    assert.equal(isValidBlocklistUrl(overlong), false);
+  });
 });
 
 test('isOwnDomain', async (t) => {

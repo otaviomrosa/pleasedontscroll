@@ -2,15 +2,41 @@
 
 /* ─── Imports & tokens ──────────────────────────────────────────────────────── */
 :root {
+  /* Back to pure #000000, matching dashboard.html's own token —
+     --black, --text, and --toggle-on stay equal on purpose (a
+     consolidation, not three separate near-black values). */
   --black:       #000000;
   --white:       #ffffff;
-  --text:        #111111;
+  --text:        #000000;
   --text-muted:  #8e8e93;
   --border:      rgba(0, 0, 0, 0.07);
   --toggle-off:  #e5e5ea;
-  --toggle-on:   #111111;
+  --toggle-on:   #000000;
+  /* Generic error/danger red — auth-form validation errors use this
+     directly. Kept separate from --strict below (Strict Mode's own
+     indicator color): a mode indicator and a generic semantic color
+     shouldn't be forced to share one value just because they both
+     started out red. */
   --error:       #c0392b;
+  /* Settled palette: Strict Mode's own indicator color is now the same
+     saturated burgundy/wine ("Crimson Bordeaux") used as the brand accent
+     and Pro-tier color everywhere else (--pro-gold in dashboard.html/
+     index.html/pricing.html). Distinct enough from a general accent use
+     here — Strict Mode is never shown next to a Pro badge or brand-accent
+     element at the same time — that reusing the value doesn't collide.
+     Still clearly warmer/more saturated than --friction's teal, so the
+     calm-vs-alarm contrast the toggle depends on holds. */
+  --strict:      #b0203f;
+  /* Friction Mode's own indicator color — teal. Reserved for Friction
+     specifically now; there's no separate general "brand accent" token in
+     this file anymore (naturalistic earth tones — sage, terracotta, gold,
+     the dark-green rounds — were explored and dropped in favor of teal +
+     burgundy; .stat-manage-link/.profile-pill.active now just use
+     --black/--white directly, no accent token). */
   --friction:    #4a90a4;
+  --indigo:      #6366f1;
+  --indigo-dim:  rgba(99, 102, 241, 0.1);
+  --indigo-glow: rgba(99, 102, 241, 0.22);
 
   --radius-card: 22px;
   --radius-btn:  12px;
@@ -26,7 +52,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  width: 320px;
+  width: 290px;
   margin: 0;
   padding: 0;
   background: var(--white);
@@ -60,7 +86,9 @@ body {
   height: 20px;
   width: auto;
   filter: brightness(0);
-  opacity: 0.8;
+  /* brightness(0) forces any colored pixel to pure black regardless of
+     the source PNG's own color, which is now exactly --black (#000000) —
+     no opacity softening needed anymore. */
 }
 
 /* First version matched dashboard.html's #premium-badge exactly (pulsing
@@ -92,91 +120,78 @@ body {
   margin-bottom: 16px;
 }
 
-/* ─── Status row ─────────────────────────────────────────────────────────────── */
-.status-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 14px;
-}
-
-.status-label {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
 /* ─── Stat row ───────────────────────────────────────────────────────────────── */
-/* "Manage blocklist" landed here after two earlier spots didn't work out
-   — see popup.js/docs/ARCHITECTURE.md history: a full-width block button read too
-   heavy, and its own standalone row at the bottom (even lightened to a
-   plain link) still left the popup feeling like two oddly-spaced
-   sections. This row already had real unused trailing width (a short
-   serif number + "sites in this profile" rarely filled 280px), and
-   unlike .status-row's label (which switches between three different-
-   length strings — "Paused", "Blocking active", "No sites blocked yet")
-   this row's text is constant, so fitting a link next to it doesn't risk
-   breaking under a worst-case dynamic string. justify-content:
-   space-between pushes .stat-manage-link to the far right; .stat-main
-   groups the value+desc pair so they keep their own baseline-aligned
-   relationship independent of the link. */
+/* Consolidated from three separate pieces — a status label above, a big
+   standalone serif number below it, and a boxed amber pause callout below
+   that — into one plain text line (.stat-line) sharing a row with
+   "Manage blocklist". Whenever visible, this row is the last element in
+   the popup, so margin-bottom is closing space before .container's own
+   padding — dropped to 0 (was 4px, matching .profile-pills' old closing
+   value): now that the line itself is this small, even 4px on top of
+   .container's own 20px read as more trailing space than the row's own
+   visual weight justified. */
+/* margin-top: 20px collapses against .divider's own margin-bottom (16px)
+   — adjoining block margins collapse to the larger value, not the sum —
+   so this brings the gap above the row up to 20px, matching the 20px
+   below it (.container's own padding) exactly, rather than the 16px/20px
+   mismatch there was before. */
 .stat-row {
   display: flex;
-  /* center, not baseline — .stat-manage-link is a filled pill button now
-     (padding + its own box), not plain inline text, so baseline-aligning
-     it against .stat-main's text baseline made its padded bottom edge
-     hang visibly lower than "sites in this profile" next to it. center
-     treats the button as its own block and centers it against the whole
-     row's height instead — back to the original approach, but now
-     correct *because* this is a real button, not the plain-text version
-     center was wrong for earlier. */
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-top: 20px;
+  margin-bottom: 0;
 }
 
-.stat-main {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.stat-value {
-  font-family: var(--font-serif);
+/* Uppercase small-caps tried, then reverted — the original status/count/
+   pause text was never all-caps, so normal case matches that instead of
+   borrowing .mode-label/.profiles-label's label styling. Background box
+   brings back the old .pause-bar's boxed look (flat grayscale here
+   instead of the old serif-number's plain text, and the same amber tint
+   .pause-bar used, now for .paused specifically — see below) rather than
+   bare text with no container at all. */
+.stat-line {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  font-size: 0.78rem;
   font-weight: 400;
-  font-size: 2.4rem;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.stat-desc {
-  font-size: 0.8rem;
   color: var(--text-muted);
-  font-weight: 400;
+  background: #f5f5f7;
+  padding: 0 8px;
+  border-radius: 6px;
 }
 
-/* Shortened from "Manage blocklist" to fit this tighter space — keeps
-   the object ("Blocklist") rather than the verb, unlike the header-nav
-   idea that was rejected partly for losing that verb; this is a
-   different tradeoff since the row's own big number + "sites in this
-   profile" already make the blocklist context obvious without it.
-   Styled as a small pill button, not plain text — a plain link still
-   read "off" here per the founder even after the baseline-alignment fix.
-   Reuses .profile-pill.active's shape language (solid black fill, white
-   text, full pill radius) rather than .btn-primary's full-width block
-   (already rejected earlier for this exact element) or inventing a third
-   button style — this is small and auto-width like every other
-   interactive chip in the popup, just filled instead of outlined, which
-   reads as "the one action in this row," consistent with how .profile-pill
-   already marks its own active state the same way. */
+/* Paused state only — the one piece of the old three-way split worth
+   keeping visually distinct, since it means blocking is currently off,
+   not just routine info like a site count. Same amber background/border/
+   text colors the old .pause-bar callout used, just on this smaller
+   label-style box instead of a full-width bar. */
+.stat-line.paused {
+  color: #7d5a00;
+  background: #fdf6e3;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+/* Styled as a small pill button, not plain text — a plain link still
+   read "off" here per the founder even after an earlier baseline-
+   alignment fix. Solid black fill, white text, full pill radius —
+   this is a real action link (navigates to the blocklist), so it keeps
+   the filled/solid treatment buttons get, while .profile-pill.active is
+   a selection-state indicator, not a button — see its own comment. Not
+   .btn-primary's full-width block either (already rejected earlier for
+   this exact element) — this stays small and auto-width like every
+   other interactive chip in the popup. */
+/* height: 26px (matching .stat-line's own explicit height below) instead
+   of letting padding+line-height decide it — the two have different
+   font-sizes (0.76rem vs 0.78rem), so padding-based sizing alone doesn't
+   reliably land on the same height; an explicit height guarantees it,
+   same technique .profile-tab/.mode-option already use in this file. */
 .stat-manage-link {
   display: inline-flex;
   align-items: center;
+  height: 26px;
   gap: 3px;
-  margin-top: 0px;
   font-family: var(--font-ui);
   font-size: 0.76rem;
   font-weight: 500;
@@ -184,7 +199,7 @@ body {
   background: var(--black);
   text-decoration: none;
   white-space: nowrap;
-  padding: 6px 12px;
+  padding: 0 12px;
   border-radius: 20px;
   flex-shrink: 0;
   transition: opacity 0.2s ease;
@@ -192,20 +207,6 @@ body {
 
 .stat-manage-link:hover  { opacity: 0.82; }
 .stat-manage-link:active { opacity: 0.68; }
-
-/* ─── Pause bar ──────────────────────────────────────────────────────────────── */
-.pause-bar {
-  background: #fdf6e3;
-  border: 1px solid rgba(201, 168, 76, 0.3);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 14px;
-}
-
-.pause-label {
-  font-size: 0.78rem;
-  color: #7d5a00;
-}
 
 /* ─── Buttons ────────────────────────────────────────────────────────────────── */
 .btn-primary {
@@ -281,7 +282,7 @@ body {
 
 .confirm-ring__fill {
   fill: none;
-  stroke: var(--error);
+  stroke: var(--strict);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 628.318; /* 2π × r=100, matches the SVG viewBox/r */
@@ -427,23 +428,19 @@ body {
   top: -0.5px;
 }
 
-/* Friction — calm teal (--friction), not black. Black was the original,
-   deliberate choice (unflashy on purpose, so Strict's red stood out by
-   contrast alone) — tried as an experiment per the founder's request and
-   kept after review. Strict still reads as "the alarming one": red is a
-   more saturated, warmer, higher-alert color than this muted teal, so the
-   contrast the original black/red pairing relied on still holds, just
-   via color temperature and saturation instead of color-vs-no-color. */
+/* Friction — teal (--friction) again, see --friction's own comment for
+   the full back-and-forth. */
 .mode-option[data-mode="friction"].active {
   background: var(--friction);
   color: var(--white);
 }
 
-/* Strict — red, deliberately more alarming than the regular accent */
+/* Strict — burgundy now (see --strict's own comment) — deliberately more
+   alarming/saturated than Friction's teal. */
 .mode-option[data-mode="strict"].active {
-  background: var(--error);
+  background: var(--strict);
   color: var(--white);
-  box-shadow: 0 2px 10px rgba(192, 57, 43, 0.35);
+  box-shadow: 0 2px 10px rgba(176, 32, 63, 0.35);
 }
 
 /* Locked (not Focus Pro): the lock icon (toggled separately, see popup.js)
@@ -477,11 +474,11 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  /* This is now the last element in the popup — "Manage blocklist" moved
-     up into .stat-row (see .stat-manage-link) instead of trailing here,
-     so this margin is just closing space before .container's own padding
-     now, not a gap tuned for something that used to follow it. */
-  margin-bottom: 4px;
+  /* Gap before its own divider (Status block now follows) — matches
+     .mode-toggle's 10px, same convention. Was briefly 4px ("closing
+     space before .container's own padding") back when this was the last
+     element in the popup; no longer true now that Status moved below it. */
+  margin-bottom: 10px;
   min-height: 28px;
 }
 
@@ -506,7 +503,6 @@ body {
   color: var(--text);
 }
 
-/* Active pill — filled black */
 .profile-pill.active {
   background: var(--black);
   color: var(--white);

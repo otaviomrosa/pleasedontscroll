@@ -26,9 +26,14 @@ export function isValidPassword(password) {
   return typeof password === 'string' && password.length >= MIN_PASSWORD_LENGTH;
 }
 
-// Matches the maxlength="40" already set on both profile-name inputs
-// (dashboard.html, popup.html) — keep these in sync if either changes.
-export const MAX_PROFILE_NAME_LENGTH = 40;
+// Matches the maxlength="28" set on dashboard.html's profile-name input
+// (the only one — popup.html has no profile-creation UI of its own, see
+// docs/ARCHITECTURE.md) — keep these in sync if either changes. Lowered from 40:
+// the extension popup renders active/locked profiles as pills too
+// (.profile-pill), and a name near 40 characters could overflow the
+// popup's own width (290px, minus padding) — 28 is short enough to fit
+// comfortably as a single pill even at the popup's narrower width.
+export const MAX_PROFILE_NAME_LENGTH = 28;
 
 /** Non-empty (after trim) and within the length both inputs already cap at.
  * Rendered via textContent everywhere it's displayed, so this isn't an XSS

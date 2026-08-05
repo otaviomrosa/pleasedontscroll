@@ -15,9 +15,12 @@
   <style>
     /* ─── Design Tokens (matches index.html / pricing.html / dashboard.html) ──── */
     :root {
+      /* Back to pure #000000, matching dashboard.html's own token —
+         --black and --text stay equal on purpose (a consolidation, not a
+         new value: one less near-black in the token set). */
       --black:        #000000;
       --white:        #ffffff;
-      --text:         #111111;
+      --text:         #000000;
       --text-muted:   #6e6e73;
       --text-faint:   #aeaeb2;
       --bg:           #ffffff;
@@ -63,7 +66,6 @@
       height: 24px;
       width: auto;
       filter: invert(1);
-      opacity: 0.9;
       position: relative;
       top: 2px;
       transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);

@@ -10,9 +10,16 @@
   <style>
     /* ─── Tokens ───────────────────────────────────────────────────────── */
     :root {
+      /* Back to pure #000000 — went #000000 → #1a1a1a → #111111 →
+         #000000. --black and --text stay equal on purpose (a deliberate
+         consolidation, not a new value: one less near-black floating in
+         the token set) rather than reintroducing a second, separate dark
+         value. Cascades to every var(--black) consumer (.btn-primary,
+         .btn-sm.dark, .account-avatar, .pause-toggle, .toast)
+         automatically. */
       --black:        #000000;
       --white:        #ffffff;
-      --text:         #111111;
+      --text:         #000000;
       --text-muted:   #8e8e93;
       --bg:           #ffffff;
       --card:         #ffffff;
@@ -20,9 +27,20 @@
       --border-hover: rgba(0, 0, 0, 0.16);
       --error:        #c0392b;
       --dot-active:   #2d6a4f;
-      --indigo:       #6366f1;
-      --indigo-dim:   rgba(99, 102, 241, 0.1);
-      --indigo-glow:  rgba(99, 102, 241, 0.22);
+      /* Settled palette: burgundy/wine ("Crimson Bordeaux") as the one
+         brand accent, used both for general interactive accents and for
+         Pro-tier signaling — no separate --accent-teal here anymore
+         (dashboard.html has no Friction/Strict mode indicator of its own,
+         that toggle only lives in the popup, so there's no need for a
+         second accent token the way popup.css/blocked.css still need
+         teal for Friction specifically). Naturalistic earth tones (sage,
+         terracotta, gold, the dark-green rounds) were explored and
+         dropped in favor of this. Used by .premium-badge,
+         .premium-badge-dot, .btn-upgrade, and .upgrade-banner's own
+         gradient/glow. Token name kept as --pro-gold for now. */
+      --pro-gold:      #b0203f;
+      --pro-gold-dim:  rgba(176, 32, 63, 0.1);
+      --pro-gold-glow: rgba(176, 32, 63, 0.22);
       --radius-card:  20px;
       --radius-btn:   12px;
       --radius-field: 10px;
@@ -46,10 +64,18 @@
     }
 
     /* ─── Layout ───────────────────────────────────────────────────────── */
+    /* padding-top: 120px (was 48px, then 96px) — .top-nav-bar is
+       position: fixed now, out of normal document flow, so this has to
+       clear its rendered height itself instead of the nav naturally
+       pushing content down. Nav height is roughly 40px padding + the
+       account avatar's own 36px (the tallest thing in the bar) ≈ 76px;
+       120px leaves a more generous gap above the first card than just
+       clearing the bar would, per the founder's request for more space
+       here specifically. */
     .page-wrap {
       max-width: 680px;
       margin: 0 auto;
-      padding: 48px 24px 80px;
+      padding: 120px 24px 80px;
     }
 
     /* ─── Public nav (auth screen only — hidden with #auth-screen on login,
@@ -75,7 +101,10 @@
       height: 24px;
       width: auto;
       filter: invert(1);
-      opacity: 0.9;
+      /* invert(1) on a white source already lands on pure black, which is
+         now exactly --black (#000000) — no opacity softening needed to
+         approximate a muted target anymore, unlike when --black was
+         #111111/#1a1a1a. */
       position: relative;
       top: 2px;
       transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
@@ -251,11 +280,35 @@
     }
 
     /* ─── Top nav ──────────────────────────────────────────────────────── */
+    /* A real fixed/glass nav now, same treatment as .public-nav (the
+       auth-screen version of this same bar) and index.html's own .nav —
+       was just a plain in-flow row at the top of .page-wrap before. */
+    .top-nav-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 20px 40px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* No max-width/centering — logo and avatar sit at the true edges,
+       inset only by .top-nav-bar's own 20px 40px padding, same as
+       index.html's .nav (a max-width column was tried first so these
+       would line up with .page-wrap's card column below, but that's not
+       actually what was wanted — this should look identical to
+       index.html's nav, not a narrower dashboard-specific version of it).
+       No margin-bottom of its own anymore either — now that the bar is
+       fixed/out of flow, .page-wrap's own padding-top is what clears it
+       instead. */
     .top-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 40px;
     }
 
     .nav-logo-link {
@@ -263,13 +316,32 @@
       line-height: 0;
     }
 
+    /* height: 24px — reverted back to match index.html's own .nav-logo
+       (was shrunk to 22px, briefly 20px, as part of a whole-nav-row
+       resize experiment that's since been undone now that this is a real
+       fixed nav bar matching index.html's — see .top-nav-bar's own
+       comment). The pause toggle shell, account avatar, and premium
+       badge below were all reverted the same way.
+       top: 0px, not index.html's 3px — index.html's nav has nothing next
+       to the logo that needs pixel-precise cross-axis alignment with it
+       (relative positioning offsets the rendered image without moving the
+       flex box used for align-items:center, so top:3px here made the logo
+       visually sit 3px lower than the pause toggle next to it, which
+       flexbox still centered using the unshifted box). This is the
+       original optical correction value for that alignment, kept as its
+       own deliberate choice rather than copied from a context that
+       doesn't have the same constraint. */
     .nav-logo {
       height: 24px;
       width: auto;
       display: block;
       filter: invert(1);
+      /* invert(1) on the (light-colored) source PNG lands on pure black,
+         which is now exactly --black (#000000) — no opacity softening
+         needed to approximate a muted target anymore, unlike when
+         --black was #111111/#1a1a1a. */
       position: relative;
-      top: 0px; /* optical correction — the mark's visual weight sits high in its box */
+      top: 0px;
       transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
     }
 
@@ -313,6 +385,9 @@
       margin-left: 4px;
     }
 
+    /* Reverted back to its original 42×24/radius-12 size (was shrunk to
+       39×22/11, briefly 35×20/10, as part of the same whole-nav-row
+       resize experiment .nav-logo's own comment describes being undone). */
     .pause-toggle {
       position: relative;
       z-index: 2;
@@ -322,9 +397,8 @@
       background: var(--black);
       border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: var(--shadow-card);
       padding: 0;
-      margin: 0;
+      margin-left: 4px;
       cursor: pointer;
       transition: background 0.25s ease;
     }
@@ -347,11 +421,13 @@
        blocklist remove buttons while in Strict Mode). */
     .shake { animation: pause-shake 0.3s ease; }
 
-    /* top/left: 2px, not 3px — the switch's own 1px border eats into the
-       interior box it's positioned within (absolutely positioned children
-       are placed relative to the padding edge, inside the border), so with
-       a 1px border the true interior is 22×40px, not 24×42. 2px on all
-       sides is what actually centers an 18px knob in that.
+    /* Reverted back to the original geometry — 42×24 track, 1px border,
+       true interior 40×22px. 2px insets on all sides centers an 18px knob
+       in that (22 - 2*2 = 18). translateX(18px) is the actual travel
+       distance to the right edge — interior_width(40) - knob_width(18) -
+       2*inset(4) = 18 (coincidentally equal to the knob's own width at
+       this particular size — not a rule, it won't necessarily hold if
+       this shell is ever resized again).
        Default position is the right side (translateX), matching the
        default "blocking always on" state; .paused pulls it back to the left. */
     .pause-toggle-knob {
@@ -385,6 +461,10 @@
        rather than guessed here — a hardcoded value either clips the last
        button or leaves a visible gap of empty gray after it depending on
        actual rendered text width, so it's measured for real instead. */
+    /* height/border-radius match .pause-toggle's own reverted 24px/12px.
+       margin-left: -18px matches .pause-toggle-knob's reverted
+       translateX(18px) exactly — not a coincidence, the tuck distance is
+       deliberately kept equal to the knob's travel distance. */
     .pause-options-pill {
       position: relative;
       z-index: 1;
@@ -401,6 +481,8 @@
       transition: width 0.3s ease;
     }
 
+    /* margin-left: 26px — clears .pause-options-pill's tucked-under
+       portion, reverted back with the rest of this shell. */
     .pause-durations {
       display: flex;
       align-items: center;
@@ -455,15 +537,19 @@
        (#settings-card) rather than a link, since it's already here. ─── */
     .account-menu { position: relative; }
 
+    /* 36px / 0.85rem — matches index.html's own .account-avatar exactly
+       (this file's version had drifted through a couple of unrelated
+       resize experiments — 34px/0.82rem originally, then 31px/0.75rem —
+       neither of which actually matched index.html; this does). */
     .account-avatar {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: var(--black);
       color: var(--white);
       border: none;
       font-family: var(--font-ui);
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -527,8 +613,14 @@
        around this much shorter collapsed content (just the header row),
        so both top and bottom are trimmed to 20px. Horizontal padding
        stays the inherited 28px so the card's left/right edges still line
-       up with every other card. */
+       up with every other card.
+       scroll-margin-top: settings-link's #settings-card anchor scroll
+       (and the JS scrollIntoView() calls that do the same thing) would
+       otherwise land this card's top edge flush with the true viewport
+       top, which is now covered by the fixed .top-nav-bar — this tells
+       scrollIntoView to leave that much room above it instead. */
     #settings-card {
+      scroll-margin-top: 96px;
       padding-top: 20px;
       padding-bottom: 20px;
     }
@@ -605,8 +697,26 @@
 
     .settings-link-row:hover { opacity: 0.7; }
 
+    /* Same boxed treatment as .danger-confirm (Delete account's panel),
+       grayscale instead of red — but plain white, not a gray wash: unlike
+       .danger-confirm (text + buttons only), this box contains .field
+       inputs, which already have their own #f5f5f7 fill — a gray box
+       background nearly matched that fill and made the inputs visually
+       disappear into the box around them. White + the border alone is
+       enough to read as a distinct box against #settings-card's own
+       background. */
+    /* margin-top: 0 matches .danger-confirm's own top spacing exactly —
+       both boxes now sit flush against their trigger row the same way.
+       Plain white — the inputs inside (#password-body .field) keep
+       .field's own #f5f5f7 fill, so they still read as distinct from
+       this box without needing this box's own background to be tuned
+       around that relationship too. */
     .settings-subbody {
-      margin: 4px 0 12px;
+      margin: 0 0 12px;
+      padding: 14px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-field);
     }
 
 
@@ -633,9 +743,9 @@
       margin: 0 0 20px;
     }
 
-    /* No margin of its own — both instances get their spacing from their
-       parent instead: the Profiles instance from #profiles-card's own
-       flex gap, the Settings instance sits flush against its email
+    /* No margin of its own — every instance gets its spacing from its
+       parent instead: the Profiles and Blocklist instances from their own
+       card's flex gap, the Settings instance sits flush against its email
        subtitle by design. */
     .section-label {
       font-size: 0.72rem;
@@ -656,32 +766,35 @@
       margin-bottom: 20px;
     }
 
-    /* Profiles + Blocklist is the tallest, densest card on the page
-       (tabs, inputs, quick-add row, url list) — .card's default 28px felt
-       cramped against that much content once the last url-item's own
-       bottom padding was removed (see .url-item:last-child below), so
-       this card gets more top/bottom breathing room than the shared
-       default. #settings-card goes the other way for the same reason
-       (much shorter content, see below). */
     /* flex column + gap instead of per-element margins: every direct
        child (including the conditionally-hidden ones — the add-profile
-       form, both error messages) gets spaced by the container, not by
+       form, the error message) gets spaced by the container, not by
        margins declared on the children themselves. A hidden child (still
        display:none when inactive) contributes no gap on either side
-       automatically — no :last-child/:first-child patch ever needed here
-       again, no matter what gets added, removed, or reordered later.
-       16px is the base rhythm; a couple of children add their own
-       margin-top on top of it (flex item margins add to gap, they don't
-       collapse with it) where a bigger break reads better — see
-       .url-input-row and .quick-add-row below. */
-    /* padding-bottom is smaller than padding-top (24 vs 30) — .sync-hint
-       is unconditionally the last thing in this card now, so this is
-       really just "the gap below the sync hint," and 32px (tuned back
-       when a blocklist row was the last thing here) read as too much
-       under a small muted caption. */
+       automatically — no :last-child/:first-child patch ever needed here,
+       no matter what gets added, removed, or reordered later. Split back
+       into its own card (was merged with #blocklist-card for a while) —
+       shorter content now, so no need for the taller card's wider padding
+       .blocklist-card still uses; the shared .card default is enough. */
     #profiles-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Blocklist is the tallest, densest card on the page (input row,
+       quick-add row, url list) — .card's default 28px felt cramped
+       against that much content, so this one gets more top breathing room
+       than the shared default. #settings-card goes the other way for the
+       same reason (much shorter content, see below).
+       padding-bottom is smaller than padding-top (16 vs 30) — .sync-hint
+       is unconditionally the last thing in this card, so this is really
+       just "the gap below the sync hint," tightened alongside its own
+       negative margin-top so it sits closer to the bottom of the card
+       than the same breathing room every other section gets. */
+    #blocklist-card {
       padding-top: 30px;
-      padding-bottom: 24px;
+      padding-bottom: 16px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -689,10 +802,12 @@
 
     /* .error-msg's shared 8px top margin (used across every form in this
        file — login, signup, password fields, etc.) would stack on top of
-       the 16px gap here rather than replacing it, same reasoning as
-       .new-profile-form above. Scoped to this card only — every other
-       .error-msg usage keeps its own margin untouched. */
-    #profiles-card .error-msg {
+       these two cards' own 16px gap rather than replacing it, same
+       reasoning as .new-profile-form above. Scoped to just these two
+       cards — every other .error-msg usage keeps its own margin
+       untouched. */
+    #profiles-card .error-msg,
+    #blocklist-card .error-msg {
       margin-top: 0;
     }
 
@@ -876,69 +991,102 @@
       margin: 0 0 12px;
     }
 
-    /* ─── Divider ───────────────────────────────────────────────────────── */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 20px 0;
-    }
-
     /* ─── URL input row ─────────────────────────────────────────────────── */
     .url-input-row {
       display: flex;
       gap: 8px;
-      /* on top of #profiles-card's 16px gap, so this reads as a slightly
-         bigger step (the profile controls above are a different group
-         than the blocklist controls below) — 16 + 4 = 20px total. */
-      margin-top: 4px;
     }
 
-    .url-input-row .field { flex: 1; margin: 0; }
+    .url-input-row .field {
+      flex: 1;
+      margin: 0;
+      padding: 9px 14px;
+    }
 
-    .url-input-row .btn-sm { flex-shrink: 0; }
+    /* Matches the blocklist's own url-input-row field height (9px 14px,
+       vs .field's shared 11px 14px default) rather than the taller
+       standard used by every other form in this file. No background
+       override anymore — .field's own shared #f5f5f7 fill works here now
+       that .settings-subbody itself is a lighter #fafafb, not the same
+       #f5f5f7 the inputs would've blended into. */
+    #password-body .field {
+      padding: 9px 14px;
+    }
+
+    /* Scoped to just this button, not .btn-sm generally — shared with
+       other buttons (new-profile Add/Cancel, delete-account confirm)
+       that weren't asked to resize. font-size is back to .btn-sm's
+       original 0.82rem (briefly matched .field's 0.9rem, reverted per
+       request) — only the size reverted, the shorter box height/padding
+       match from earlier stays. Vertical padding stays smaller than
+       .field's above, so .field remains the taller sibling and stretch
+       expands this button to match it. */
+    .url-input-row .btn-sm {
+      flex-shrink: 0;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+    }
 
     /* ─── URL list ──────────────────────────────────────────────────────── */
+    /* margin-top: 6px restores the gap the old 32px .quick-add-chip box's
+       own bottom padding used to provide (see .quick-add-row's own
+       comment) — 16 (base gap) + 6 = 22px from the icons to here, same
+       as it visually was before the chip box was removed. */
+    /* Contained now — same flat #f5f5f7 fill and radius .field itself
+       uses, no border, so the list reads as its own defined surface
+       ("here's where the results live") rather than rows floating loose
+       in the card. padding: 8px top/bottom, 12px left/right — 8px is the
+       real, equal number on both axes, but the favicon is a flush-edge
+       image with no internal padding of its own (unlike the row's
+       vertically-centered content), so an 8px gap against it read as
+       visually smaller than the same 8px measured above the first row —
+       same optical effect as the favicon-vs-text margin question earlier
+       in this file's history. 12px compensates for that so the two
+       actually look equal, not just measure equal in the CSS. */
     .url-list {
       list-style: none;
-      margin: 0;
-      padding: 0;
+      margin: 6px 0 0;
+      padding: 8px 12px;
+      background: #f5f5f7;
+      border-radius: var(--radius-field);
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
 
+    /* No border-bottom between rows anymore — .url-list's own gap: 2px
+       plus its #f5f5f7 contained background (see its own comment) is
+       enough to separate rows without a divider line on top of that too. */
+    /* padding: 8px 0 (was 11px) — the real distance between adjacent rows'
+       visible content, since .url-list's own gap is just 2px; tightening
+       this is what actually pulls the rows closer together. */
     .url-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--border);
+      padding: 6px 0px 6px 6px;
     }
 
-    /* padding-bottom: 0 keeps this row from adding its own trailing
-       padding inside the list, on top of whatever #profiles-card's gap
-       already provides below .url-list — without this, the row's 11px
-       bottom padding stacked on top of that too. */
-    .url-item:last-child { border-bottom: none; padding-bottom: 0; }
-
-    /* No margin — #profiles-card's own 16px gap already separates this
-       from the list above it, and it's the last child, so the card's own
-       bottom padding handles the rest. */
+    /* Pulls this closer to .url-list above, reading as more attached to
+       the bottom of the list rather than floating with the same
+       breathing room every other section gets. #blocklist-card's own
+       padding-bottom was also tightened to match — see its own comment. */
     .sync-hint {
       font-size: 0.76rem;
       color: var(--text-muted);
       text-align: center;
+      margin-top: 10px;
     }
 
     .url-text {
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       color: var(--text);
       font-weight: 400;
     }
 
     .url-favicon {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       margin-right: 10px;
       flex-shrink: 0;
       border-radius: 3px;
@@ -949,8 +1097,8 @@
        a plain generic-globe glyph, same idea as Chrome's own default
        favicon, not the site's real icon. */
     .url-favicon-fallback {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       margin-right: 10px;
       flex-shrink: 0;
       display: inline-flex;
@@ -960,14 +1108,26 @@
     }
 
     /* ─── Quick-add row (common distracting sites) ────────────────────── */
+    /* .quick-add-chip lost its 32px box (20px icon centered inside, 6px
+       of invisible padding on all four sides — see its own comment), so
+       every direction that box's padding used to push things apart in
+       needed re-deriving, not just the horizontal gap between icons.
+       - gap: 22px — icon-to-icon used to be 10 (old chip gap) + 6 + 6
+         (each icon's own inset from its box edge) = 22px real spacing,
+         even though the CSS said 10.
+       - margin-top: -2px — box-top now equals icon-top exactly (no more
+         6px inset), so the -8px that used to land the box 8px below
+         .url-input-row (visually 8 + 6 = 14px to the icon itself) would
+         now put the icon only 8px away. -2px gives the same 16 + (-2) =
+         14px the icon always visually sat at.
+       - .url-list's own margin-top (below) restores the matching 6px on
+         the bottom side, for the same reason. */
     .quick-add-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
-      /* same reasoning as .url-input-row's margin-top — a bigger step
-         than the base 16px gap (16 + 4 = 20px total) marking the move
-         from "add a site" into the quick-add shortcuts. */
-      margin-top: 4px;
+      gap: 22px;
+      margin-top: -6px;
+      margin-left: 8px;
     }
 
     /* Wraps each chip so the options menu (sectioned sites only) can be
@@ -975,29 +1135,21 @@
        as .account-menu → .account-dropdown elsewhere in this file. */
     .quick-add-item { position: relative; }
 
-    /* No card/circle chrome at all now — just the bare glyph as the click
-       target. Went through a card-button treatment first (white circle,
-       --shadow-card depth, matching .account-avatar's shape language) but
-       the founder asked to drop the container entirely and let the icons
-       sit directly in the row. The button box itself stays (fixed size,
-       no visible fill/border/shadow) purely to keep a consistent
-       click/tap target and a stable anchor point for the options-menu
-       positioning and the has-sections chevron below. */
+    /* No box at all — a fixed-size circular button (white fill, no
+       border/shadow) was tried, but it was invisible against the card's
+       own white background anyway, so there was no actual "chip" to see,
+       just wasted invisible click area. Now the button is sized to its
+       content (the 20x20 svg) directly, no width/height/border-radius/
+       background of its own. */
     .quick-add-chip {
       position: relative;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
       border: none;
-      background: var(--white);
-      box-shadow: var(--shadow-card);
+      background: none;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      overflow: hidden;
-      transition: transform 0.15s, box-shadow 0.15s;
     }
 
     /* Small chevron marking a chip that opens an options menu (YouTube,
@@ -1013,50 +1165,62 @@
        to hide it entirely by default instead, for a cleaner row, and
        accept that the affordance only reveals itself once someone's
        actually hovering that chip. */
+    /* bottom: -10px centers this 5px-tall chevron in the 15px gap between
+       the icon's own bottom edge and .site-options-menu's top edge (see
+       its own top: calc(100% + 15px)) — (15 - 5) / 2 = 5px clearance on
+       each side, so the chevron's bottom edge lands at 5 + 5 = 10px.
+       Both values were recomputed together: .quick-add-chip no longer has
+       its own fixed-size box (see its own comment), so .quick-add-item's
+       height — what both this and the menu's "100%"/bottom position off
+       of — now matches the icon's real 20px height exactly, instead of
+       the old 32px box with the icon centered inside it. */
     .quick-add-chip-arrow {
       position: absolute;
-      bottom: -9px;
+      bottom: -10px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      color: var(--text-muted);
+      color: var(--black);
       opacity: 0;
       pointer-events: none;
-      transition: color 0.15s, opacity 0.15s;
+      transition: opacity 0.15s;
     }
 
-    /* No shadow/lift to animate anymore — hover feedback is just a small
-       scale plus the icon (and, for a sectioned chip, its chevron fading
-       in) darkening — see .quick-add-chip svg below. `.menu-open` (set in
+    /* No shadow/lift/outline/scale to animate — hover feedback is just
+       the icon (and, for a sectioned chip, its chevron fading in)
+       darkening — see .quick-add-chip svg below. `.menu-open` (set in
        renderQuickAddChips()'s chip click handler while its options menu
        is open) triggers the exact same look as :hover — otherwise, moving
        the mouse down into the open menu to click a row would make the
        trigger chip visually "let go" mid-interaction, which read as
        inconsistent since the menu is clearly still open right below it. */
-    .quick-add-chip:not(.added):hover,
-    .quick-add-chip.menu-open {
-      transform: scale(1.1);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
-    }
 
+    /* No color change here anymore — already var(--text-muted) at rest
+       (see .quick-add-chip-arrow above), so revealing it (opacity 0 -> 1)
+       is the only hover feedback needed; darkening it to var(--text) on
+       top of that read as less muted than the icon it sits under. */
     .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow,
     .quick-add-chip.menu-open ~ .quick-add-chip-arrow {
-      color: var(--text);
       opacity: 1;
     }
 
-    /* Icon fades toward gray on hover via opacity — same mechanism
-       `.btn-sm.dark:hover` already uses (opacity, not an actual second
-       color value) — works the same regardless of the fill colors
-       baked into the SVG markup itself (see renderQuickAddChips()). */
+    /* color: var(--text-muted) here, not baked into the SVG markup
+       directly — renderQuickAddChips() sets stroke="currentColor" (and
+       fill="currentColor" on Reddit's two dot paths) instead of a fixed
+       token, so this single color change on hover/menu-open flips every
+       line in the icon at once. var(--black) on hover, not white — same
+       "hover darkens toward black" feedback .profile-tab:hover uses, now
+       that there's no chip background behind the icon for a white line
+       to contrast against. */
     .quick-add-chip svg {
       display: block;
-      transition: opacity 0.15s;
+      color: var(--black);
+      transition: color 0.15s;
     }
 
     .quick-add-chip:not(.added):hover svg,
     .quick-add-chip.menu-open svg {
-      opacity: 0.82;
+      color: var(--black);
     }
 
     /* Already on the blocklist — informational, not a toggle. Clicking
@@ -1067,33 +1231,54 @@
     .quick-add-chip.added {
       cursor: default;
       opacity: 0.4;
-      box-shadow: none;
     }
 
     /* Options menu for a sectioned chip (YouTube, Facebook, Instagram) —
        modeled directly on .account-dropdown above: same absolute
-       positioning idea, same white/border/shadow-card shape, same
-       display:none + .open toggle. Centered under its trigger rather than
-       right-aligned like .account-dropdown, since a chip can sit anywhere
-       in the row (not pinned to a page edge the way the nav avatar is).
-       The extra top offset (16px, not a plain 8px) clears the
-       .quick-add-chip-arrow chevron sitting just below the chip. */
+       positioning idea, same white/border/shadow-card shape. Centered
+       under its trigger rather than right-aligned like .account-dropdown,
+       since a chip can sit anywhere in the row (not pinned to a page edge
+       the way the nav avatar is). top: calc(100% + 15px) — see
+       .quick-add-chip-arrow's own comment for the centering math this
+       and its 15px are tied to (the chevron sits centered in this exact
+       15px gap).
+       Grid-rows animation, not a display:none/.open toggle — display
+       can't be transitioned, so opening/closing used to be an instant
+       snap. grid-template-rows: 0fr -> 1fr smoothly animates to the
+       menu's actual content height (2-3 rows depending on the site)
+       without needing a guessed max-height or JS to measure it. The
+       outer element only handles that row-track animation; all the
+       visible chrome (background/border/shadow/padding) lives on
+       .site-options-menu-inner instead, so when the row track is 0fr the
+       menu is genuinely zero-height with nothing showing — not just
+       hidden content behind a still-visible bordered box. */
     .site-options-menu {
       position: absolute;
-      top: calc(100% + 12px);
+      top: calc(100% + 15px);
       left: 50%;
       transform: translateX(-50%);
-      min-width: 190px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-card);
-      padding: 6px;
-      display: none;
+      min-width: 160px;
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transition: grid-template-rows 0.22s ease, opacity 0.16s ease;
       z-index: 50;
     }
 
-    .site-options-menu.open { display: block; }
+    .site-options-menu.open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+
+    .site-options-menu-inner {
+      overflow: hidden;
+      min-height: 0;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      padding: 5px;
+    }
 
     .site-options-menu-item {
       display: block;
@@ -1102,10 +1287,10 @@
       background: none;
       border: none;
       font-family: var(--font-ui);
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       color: var(--text);
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 6px 8px;
+      border-radius: 7px;
       cursor: pointer;
       transition: background 0.15s;
       white-space: nowrap;
@@ -1176,6 +1361,10 @@
     }
 
     /* ─── Premium badge ─────────────────────────────────────────────────── */
+    /* Reverted back to its original size — no index.html equivalent
+       exists to match (this badge is dashboard-only), so this just undoes
+       the same resize-then-middle-ground experiment .nav-logo's own
+       comment describes for the rest of the nav row. */
     .premium-badge {
       display: inline-flex;
       align-items: center;
@@ -1184,9 +1373,9 @@
       font-weight: 600;
       letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--indigo);
-      background: var(--indigo-dim);
-      border: 1px solid rgba(99, 102, 241, 0.22);
+      color: var(--pro-gold);
+      background: var(--pro-gold-dim);
+      border: 1px solid var(--pro-gold-glow);
       padding: 3px 10px;
       border-radius: 24px;
       vertical-align: middle;
@@ -1197,7 +1386,7 @@
       width: 5px;
       height: 5px;
       border-radius: 50%;
-      background: var(--indigo);
+      background: var(--pro-gold);
       animation: pulse-badge 2.4s ease-in-out infinite;
     }
 
@@ -1207,19 +1396,17 @@
     }
 
     /* ─── Upgrade banner ─────────────────────────────────────────────────── */
-    /* Base was flat var(--black), with only the radial glow below hinting
-       at purple in one corner — the founder wanted the background itself
-       to carry more of the hue, not just a glow accent. A dark
-       indigo-tinted gradient instead of solid black, still dark enough to
-       read as "black" at a glance (this is still the "Pro plan card"
-       context docs/ARCHITECTURE.md's design system already allows the indigo accent
-       in, just leaning into it further here specifically). */
+    /* Back to flat var(--black) — the gold-tinted gradient (tried after an
+       earlier indigo-tinted version) put a second gold hue across the
+       whole banner, including the left side, competing with ::before's
+       own radial glow instead of leaving that as the only accent. Flat
+       black + the one corner glow is the original, simpler approach. */
     .upgrade-banner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      background: linear-gradient(135deg, #211d3d 0%, #08070d 100%);
+      background: var(--black);
       border-radius: var(--radius-card);
       padding: 20px 24px;
       margin-bottom: 20px;
@@ -1235,7 +1422,7 @@
       transform: translateY(-50%);
       width: 200px;
       height: 200px;
-      background: radial-gradient(circle at center, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+      background: radial-gradient(circle at center, rgba(176, 32, 63, 0.4) 0%, transparent 70%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -1255,18 +1442,11 @@
       margin-bottom: 2px;
     }
 
-    /* Solid indigo, not white-with-a-tinted-shadow — the old version only
-       hinted at purple through a faint box-shadow glow (0.25 alpha) behind
-       an otherwise plain white pill, which read as barely-there next to
-       the banner's own much stronger glow blob. This is exactly the "Pro
-       plan card" context docs/ARCHITECTURE.md's design system calls out as a
-       legitimate place for the indigo accent to actually show up, not
-       just tint a shadow. */
     .btn-upgrade {
       flex-shrink: 0;
       display: inline-block;
       padding: 9px 18px;
-      background: var(--indigo);
+      background: var(--pro-gold);
       color: var(--white);
       font-family: var(--font-ui);
       font-size: 0.82rem;
@@ -1275,13 +1455,13 @@
       text-decoration: none;
       transition: opacity 0.15s, box-shadow 0.15s;
       white-space: nowrap;
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.45);
+      box-shadow: 0 4px 24px rgba(176, 32, 63, 0.45);
       position: relative;
     }
 
     .btn-upgrade:hover {
       opacity: 0.9;
-      box-shadow: 0 4px 28px rgba(99, 102, 241, 0.6);
+      box-shadow: 0 4px 28px rgba(176, 32, 63, 0.6);
     }
 
     /* ─── Toast ──────────────────────────────────────────────────────────── */
@@ -1431,9 +1611,13 @@
 
   <!-- ─── App screen ────────────────────────────────────────────────────── -->
   <div id="app-screen" class="hidden">
-    <div class="page-wrap">
-
-      <!-- Top nav -->
+    <!-- Top nav — a real fixed/glass nav bar now, matching index.html's
+         .nav treatment (was a plain in-flow row inside .page-wrap before).
+         .top-nav-bar is the full-bleed fixed bar (background blur, border,
+         positioning); .top-nav itself is the inner content, constrained to
+         the same max-width as .page-wrap below so the logo/avatar line up
+         with the cards rather than sitting at the true viewport edges. -->
+    <div class="top-nav-bar">
       <div class="top-nav">
         <div class="top-nav-left">
           <a href="index.html" class="nav-logo-link">
@@ -1490,12 +1674,12 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Profiles + Blocklist card — merged into one, per the founder's
-           request, for a more minimal page (was two separate cards, the
-           second with its own "{profile}'s Blocklist" heading — dropped
-           entirely; the blocklist content just follows the profile tabs
-           directly now, scoped to whichever profile is selected above it). -->
+    <div class="page-wrap">
+
+      <!-- Profiles card — split back out from a merged Profiles+Blocklist
+           card into its own card again, per the founder's request. -->
       <div class="card" id="profiles-card">
         <p class="section-label">Profiles</p>
 
@@ -1508,11 +1692,19 @@
         <button class="btn-add-profile hidden" id="add-profile-btn">+ New profile</button>
 
         <div class="new-profile-form" id="new-profile-form">
-          <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="40">
+          <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="28">
           <button class="btn-sm dark" id="new-profile-confirm">Add</button>
           <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
         </div>
         <p class="error-msg" id="profile-error"></p>
+      </div>
+
+      <!-- Blocklist card — own card again (was merged into #profiles-card
+           for a while, with a divider marking the boundary between the
+           two sections; now that they're separate cards, the card
+           boundary itself does that job, so the divider is gone). -->
+      <div class="card" id="blocklist-card">
+        <p class="section-label">Blocklist</p>
 
         <div class="url-input-row">
           <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com">
@@ -2326,7 +2518,7 @@
         { label: 'Reels', path: '/reels' },
         { label: 'Marketplace', path: '/marketplace' },
       ] },
-      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="var(--black)" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="var(--black)" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" />' },
+      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" />' },
       { name: 'Twitch',       hostname: 'twitch.tv', icon: '<path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" />' },
     ];
 
@@ -2375,6 +2567,9 @@
       for (const item of items) {
         const li = document.createElement('li');
         li.className = 'url-item';
+        // Lets handleAddUrl() find and shake this specific row when the
+        // user tries to add a site that's already here.
+        li.dataset.urlId = item.id;
 
         const left = document.createElement('div');
         left.className = 'url-left';
@@ -2501,8 +2696,12 @@
         // Instagram's outer square spans 4-20, not 0-24), so unlike the
         // filled logos before, no scale-down/recenter is needed to keep
         // them from clipping against the round chip.
+        // currentColor, not a fixed token — .quick-add-chip svg's own CSS
+        // sets color: var(--text-muted) at rest (matching .profile-tab's
+        // unselected-pill text color) and color: var(--white) on hover/
+        // menu-open, so this one svg definition follows both states.
         chip.innerHTML = `
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--black)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             ${site.icon}
           </svg>
         `;
@@ -2526,6 +2725,14 @@
           const menu = document.createElement('div');
           menu.className = 'site-options-menu';
 
+          // Rows live in this inner wrapper, not directly in .menu — see
+          // .site-options-menu-inner's own comment for why the split
+          // exists (it's what makes the grid-rows open/close animation
+          // collapse to genuinely nothing, not just hidden content).
+          const menuInner = document.createElement('div');
+          menuInner.className = 'site-options-menu-inner';
+          menu.appendChild(menuInner);
+
           // wholeDomainAdded is always false here (hasSections already
           // excludes that case above), so this row is always actionable.
           const baseRow = document.createElement('button');
@@ -2533,7 +2740,7 @@
           baseRow.className = 'site-options-menu-item';
           baseRow.textContent = `Block ${site.name}`;
           baseRow.addEventListener('click', () => handleBlockWholeSite(site, baseRow));
-          menu.appendChild(baseRow);
+          menuInner.appendChild(baseRow);
 
           // Each section is independent — added on its own, shown as
           // "already blocked" on its own.
@@ -2552,7 +2759,7 @@
             if (!sectionAdded) {
               sectionRow.addEventListener('click', () => handleQuickAdd(sectionUrl, `${site.name} ${section.label}`, sectionRow));
             }
-            menu.appendChild(sectionRow);
+            menuInner.appendChild(sectionRow);
           }
 
           item.appendChild(menu);
@@ -2683,6 +2890,24 @@
 
       if (isOwnDomain(url)) {
         showError('url-error', "Can't block pleasedontscroll.com. That would lock you out of this dashboard.");
+        return;
+      }
+
+      // Checked against the already-loaded currentBlocklistEntries (same
+      // parsed hostname/pathPrefix comparison renderQuickAddChips() uses)
+      // rather than just letting the insert hit 012_blocked_urls_unique.sql's
+      // constraint and fail — that constraint is a exact-string safety net,
+      // not a great source of a specific error message, and this check also
+      // skips a pointless network round trip for the common case of
+      // re-typing something already blocked.
+      const parsedNewEntry = parseBlocklistEntry(url);
+      const existingDuplicate = currentBlocklistEntries.find(
+        (entry) => entry.hostname === parsedNewEntry.hostname && entry.pathPrefix === parsedNewEntry.pathPrefix,
+      );
+      if (existingDuplicate) {
+        showError('url-error', 'That site is already in your blocklist.');
+        const existingRow = document.querySelector(`.url-item[data-url-id="${existingDuplicate.id}"]`);
+        if (existingRow) shakeElement(existingRow);
         return;
       }
 

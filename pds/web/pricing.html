@@ -16,25 +16,43 @@
   <style>
     /* ─── Design Tokens ──────────────────────────────────────────────── */
     :root {
+      /* Back to pure #000000, matching dashboard.html's own token —
+         --black and --text stay equal on purpose (a consolidation, not a
+         new value: one less near-black in the token set). */
       --black:        #000000;
       --white:        #ffffff;
-      --text:         #111111;
+      --text:         #000000;
       --text-muted:   #6e6e73;
       --text-faint:   #aeaeb2;
       --bg:           #ffffff;
       --border:       rgba(0, 0, 0, 0.09);
       --border-mid:   rgba(0, 0, 0, 0.14);
 
-      /* The single accent — used sparingly on the Pro card only */
-      --indigo:       #6366f1;
-      --indigo-dim:   rgba(99, 102, 241, 0.12);
-      --indigo-glow:  rgba(99, 102, 241, 0.22);
+      /* --accent-teal covers general/neutral accents that aren't
+         specifically about the Pro plan (the hero eyebrow, the comparison
+         table's checkmarks — those appear in both the Free and Pro
+         columns, so they're not a Pro signal specifically); --pro-gold
+         covers everywhere this page is actually marking "this is the Pro
+         plan" (the Pro plan card, its badge, its CTA button, its own
+         feature checkmarks). Kept as two separate tokens for what they
+         mean, even though they're now the same color.
+         EXPERIMENT — teal read as too cool/plain, gold read as cheap.
+         Both moved to the same saturated burgundy/wine ("Crimson
+         Bordeaux") tried for Pro-tier first and now extended everywhere.
+         Same values as index.html's/dashboard.html's own tokens, for
+         consistency across the site. */
+      --accent-teal:      #b0203f;
+      --accent-teal-dim:  rgba(176, 32, 63, 0.12);
+      --accent-teal-glow: rgba(176, 32, 63, 0.22);
+      --pro-gold:         #b0203f;
+      --pro-gold-dim:     rgba(176, 32, 63, 0.12);
+      --pro-gold-glow:    rgba(176, 32, 63, 0.22);
 
       --radius-card:  24px;
       --radius-btn:   50px;
       --radius-tag:   8px;
       --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.18);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(176, 32, 63, 0.18);
 
       --font-ui:      'DM Sans', -apple-system, sans-serif;
       --font-serif:   'Lora', serif;
@@ -76,7 +94,6 @@
       height: 24px;
       width: auto;
       filter: invert(1);
-      opacity: 0.9;
       position: relative;
       top: 2px;
       transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
@@ -219,9 +236,9 @@
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--indigo);
-      background: var(--indigo-dim);
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      color: var(--accent-teal);
+      background: var(--accent-teal-dim);
+      border: 1px solid rgba(176, 32, 63, 0.2);
       padding: 5px 14px;
       border-radius: var(--radius-btn);
       margin-bottom: 28px;
@@ -280,7 +297,7 @@
     /* ── Pro card ── */
     .plan-card.pro {
       background: var(--black);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: var(--pro-gold-glow);
       box-shadow: var(--shadow-pro);
       position: relative;
       overflow: hidden;
@@ -288,7 +305,7 @@
       transform: translateY(-8px);
     }
 
-    /* Iridescent shimmer — a single faint indigo gradient sweep */
+    /* Iridescent shimmer — a single faint gold gradient sweep */
     .plan-card.pro::before {
       content: '';
       position: absolute;
@@ -296,7 +313,7 @@
       right: -60px;
       width: 320px;
       height: 320px;
-      background: radial-gradient(circle at center, rgba(99, 102, 241, 0.18) 0%, transparent 65%);
+      background: radial-gradient(circle at center, rgba(176, 32, 63, 0.18) 0%, transparent 65%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -309,7 +326,7 @@
       left: 0;
       right: 0;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+      background: linear-gradient(90deg, transparent, rgba(176, 32, 63, 0.5), transparent);
     }
 
     .plan-badge {
@@ -332,9 +349,9 @@
     }
 
     .plan-badge.pro-badge {
-      color: var(--indigo);
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--pro-gold);
+      background: rgba(176, 32, 63, 0.15);
+      border: 1px solid rgba(176, 32, 63, 0.3);
     }
 
     .plan-badge-dot {
@@ -444,7 +461,7 @@
     .btn-plan.pro-btn {
       background: var(--white);
       color: var(--black);
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
+      box-shadow: 0 4px 24px rgba(176, 32, 63, 0.25);
     }
 
     /* Divider inside card */
@@ -495,8 +512,8 @@
     }
 
     .plan-card.pro .plan-feature-icon.check {
-      background: rgba(99, 102, 241, 0.2);
-      color: var(--indigo);
+      background: rgba(176, 32, 63, 0.2);
+      color: var(--pro-gold);
     }
 
     /* ─── Comparison table ────────────────────────────────────────────── */
@@ -570,6 +587,9 @@
       margin-top: 2px;
     }
 
+    /* --accent-teal, not --pro-gold — this appears in both the Free and
+       Pro comparison-table columns (it just means "this row is included
+       here"), so it's a general "yes" indicator, not a Pro-specific one. */
     .check-yes {
       display: inline-flex;
       align-items: center;
@@ -578,8 +598,8 @@
       height: 22px;
       border-radius: 50%;
       font-size: 0.7rem;
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--indigo);
+      background: rgba(176, 32, 63, 0.1);
+      color: var(--accent-teal);
     }
 
     .check-partial {

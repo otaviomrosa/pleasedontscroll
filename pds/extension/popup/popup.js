@@ -96,7 +96,7 @@ function renderProfilePills(profiles) {
 
 /**
  * Sends SWITCH_PROFILE to the background service worker, then re-renders the
- * pill list and refreshes the blocked-count stat to reflect the new profile.
+ * pill list and refreshes the stat line to reflect the new profile.
  *
  * @param {string} profileId
  */
@@ -212,53 +212,51 @@ function cancelFrictionConfirm() {
 }
 
 /**
- * Renders the stat row (blocked count, status dot, pause bar, mode toggle)
- * from a state object — shared by refreshStatRow()'s own GET_STATE reply
- * and the STATE_REFRESHED push background.js sends once its live re-check
- * completes (see the onMessage listener below).
+ * Renders the stat line (blocked count / paused-until, plus the mode
+ * toggle) from a state object — shared by refreshStatRow()'s own
+ * GET_STATE reply and the STATE_REFRESHED push background.js sends once
+ * its live re-check completes (see the onMessage listener below).
  */
 function applyState(state) {
-  document.getElementById('blocked-count').textContent = state.blockedCount ?? '—';
   isPremium = state.isPremium === true;
   document.getElementById('pro-tag').classList.toggle('hidden', !isPremium);
   renderModeToggle(state.blockingMode ?? 'friction');
 
-  const label = document.getElementById('status-label');
+  const statLine = document.getElementById('stat-line');
 
-  if (state.isPaused) {
-    label.textContent = 'Paused';
-  } else if (state.blockedCount > 0) {
-    label.textContent = 'Blocking active';
-  } else {
-    label.textContent = 'No sites blocked yet';
-  }
-
-  const pauseBar = document.getElementById('pause-bar');
   if (state.isPaused && state.pauseUntil) {
-    pauseBar.classList.remove('hidden');
-    document.getElementById('pause-until-label').textContent =
-      isIndefinitePause(state.pauseUntil)
-        ? 'you resume it'
-        : new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // "Paused indefinitely" / "Paused until X" — was "Unblocked until X"
+    // (and "Unblocked until you resume it" for the indefinite case), but
+    // that indefinite phrasing was the single longest string .stat-line
+    // could ever show (30 chars) and was dictating the popup's minimum
+    // width on its own. This tops out at 22 chars ("Paused until 11:45
+    // PM") instead.
+    statLine.textContent = isIndefinitePause(state.pauseUntil)
+      ? 'Paused indefinitely'
+      : `Paused until ${new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    statLine.classList.add('paused');
+  } else if (state.blockedCount > 0) {
+    statLine.textContent = `${state.blockedCount} sites blocked`;
+    statLine.classList.remove('paused');
   } else {
-    pauseBar.classList.add('hidden');
+    statLine.textContent = 'No sites blocked yet';
+    statLine.classList.remove('paused');
   }
 }
 
 /**
- * Refreshes the blocked-count and status pill from the background state.
- * background.js answers GET_STATE instantly from its own cache (see its
- * comment in the message listener) rather than waiting on a live Supabase
- * re-check — that re-check happens after, in the background, and arrives
- * here as a STATE_REFRESHED push if anything actually changed.
+ * Refreshes the stat line from the background state. background.js
+ * answers GET_STATE instantly from its own cache (see its comment in the
+ * message listener) rather than waiting on a live Supabase re-check —
+ * that re-check happens after, in the background, and arrives here as a
+ * STATE_REFRESHED push if anything actually changed.
  */
 async function refreshStatRow() {
   try {
     const state = await chrome.runtime.sendMessage({ type: 'GET_STATE' });
     applyState(state);
   } catch {
-    document.getElementById('status-label').textContent = 'Syncing…';
-    document.getElementById('blocked-count').textContent = '…';
+    document.getElementById('stat-line').textContent = 'Syncing…';
   }
 }
 

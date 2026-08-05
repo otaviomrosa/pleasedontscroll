@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../core/validation.js';
+import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH, MAX_PROFILE_NAME_LENGTH } from '../core/validation.js';
 
 test('isValidEmail', async (t) => {
   await t.test('normal email is valid', () => {
@@ -63,12 +63,12 @@ test('isValidProfileName', async (t) => {
     assert.equal(isValidProfileName('   '), false);
   });
 
-  await t.test('name over 40 chars is invalid', () => {
-    assert.equal(isValidProfileName('a'.repeat(41)), false);
+  await t.test('name over max length is invalid', () => {
+    assert.equal(isValidProfileName('a'.repeat(MAX_PROFILE_NAME_LENGTH + 1)), false);
   });
 
-  await t.test('name at exactly 40 chars is valid', () => {
-    assert.equal(isValidProfileName('a'.repeat(40)), true);
+  await t.test('name at exactly max length is valid', () => {
+    assert.equal(isValidProfileName('a'.repeat(MAX_PROFILE_NAME_LENGTH)), true);
   });
 
   await t.test('non-string input is invalid', () => {

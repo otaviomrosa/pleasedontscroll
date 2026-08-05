@@ -25,27 +25,6 @@
 
     <div class="divider"></div>
 
-    <!-- Status pill -->
-    <div class="status-row">
-      <span class="status-label" id="status-label">Loading…</span>
-    </div>
-
-    <!-- Blocked sites count -->
-    <div class="stat-row">
-      <div class="stat-main">
-        <span class="stat-value" id="blocked-count">0</span>
-        <span class="stat-desc">sites in this profile</span>
-      </div>
-      <a class="stat-manage-link" href="" target="_blank" id="manage-link">Blocklist →</a>
-    </div>
-
-    <!-- Pause indicator (shown only when paused) -->
-    <div class="pause-bar hidden" id="pause-bar">
-      <span class="pause-label">Unblocked until <strong id="pause-until-label">—</strong></span>
-    </div>
-
-    <div class="divider"></div>
-
     <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
     <!-- Friction/Strict is a per-user setting, not a profile property —
          any profile can run in either mode. -->
@@ -79,6 +58,24 @@
       <div class="profile-pills" id="profile-pills">
         <span class="profile-pill-skeleton"></span>
       </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ─── Status block — moved to the bottom (was first): Mode and
+         Profile are the only two things you actually act on in this
+         popup, so they're reachable first now; this is glance-only info,
+         plus it lets "Blocklist →" land at the bottom as a clean closing
+         CTA instead of sitting mid-popup.
+         Consolidated from three separate pieces (a status label above, a
+         big standalone count number below it, a boxed pause callout below
+         that) into one line — .stat-line covers all three states ("N
+         sites blocked" / "No sites blocked yet" / "Paused until X"),
+         switching text and a .paused color modifier via applyState() in
+         popup.js. ──────────────────────────── -->
+    <div class="stat-row">
+      <span class="stat-line" id="stat-line">Loading…</span>
+      <a class="stat-manage-link" href="" target="_blank" id="manage-link">Blocklist →</a>
     </div>
   </div>
 

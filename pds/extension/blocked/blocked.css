@@ -2,16 +2,23 @@
 
 /* ─── Design tokens (matches web/index.html, pricing.html, dashboard.html) ────── */
 :root {
+  /* Back to pure #000000, matching dashboard.html's own token —
+     --black and --text stay equal on purpose (a consolidation, not a
+     new value). */
   --black:        #000000;
   --white:        #ffffff;
-  --text:         #111111;
+  --text:         #000000;
   --text-muted:   #8e8e93;
 
-  /* Strict Mode is the one saturated color on this page, deliberately —
-     Friction Mode stays neutral gray/black so Strict actually stands out.
-     Same red used for error states in popup.css / dashboard.html. */
-  --red:          #c0392b;
-  --red-dim:      rgba(192, 57, 43, 0.1);
+  /* Both modes get their own color, matching popup.css's mode toggle.
+     Settled palette: teal for Friction, burgundy/wine ("Crimson
+     Bordeaux") for Strict — same tokens/values as popup.css's own
+     --friction/--strict. Naturalistic earth tones (sage, terracotta)
+     were explored and dropped in favor of these. */
+  --friction:     #4a90a4;
+  --friction-dim: rgba(74, 144, 164, 0.1);
+  --strict:       #b0203f;
+  --strict-dim:   rgba(176, 32, 63, 0.1);
 
   --radius-btn:   50px;
 
@@ -72,11 +79,14 @@ body {
   height: 26px;
   width: auto;
   filter: invert(1);
-  opacity: 0.9;
   margin-bottom: 2rem;
 }
 
 /* ─── Mode pill ──────────────────────────────────────────────────────────────── */
+/* Base styling is Friction Mode's own look now (teal) — .strict
+   below overrides it for Strict Mode, same "base = friction, modifier =
+   strict" pattern blocked.js's classList.toggle('strict', ...) already
+   uses (it only ever adds/removes .strict, never a .friction class). */
 .mode-pill {
   display: inline-block;
   font-family: var(--font-ui);
@@ -84,18 +94,18 @@ body {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.09);
+  color: var(--friction);
+  background: var(--friction-dim);
+  border: 1px solid rgba(74, 144, 164, 0.3);
   padding: 6px 16px;
   border-radius: 100px;
   margin-bottom: 20px;
 }
 
 .mode-pill.strict {
-  color: var(--red);
-  background: var(--red-dim);
-  border-color: rgba(192, 57, 43, 0.3);
+  color: var(--strict);
+  background: var(--strict-dim);
+  border-color: rgba(176, 32, 63, 0.3);
 }
 
 /* ─── Title ──────────────────────────────────────────────────────────────────── */

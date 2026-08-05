@@ -18,7 +18,11 @@
   <style>
     /* ─── Design Tokens (matches dashboard.html / pricing.html) ─────────── */
     :root {
-      --black:        #000000;
+      /* Muted from pure #000000 to match dashboard.html's brand-wide
+         change — --black and --text stay equal on purpose (a
+         consolidation, not a new value: one less near-black in the
+         token set). */
+      --black:        #111111;
       --white:        #ffffff;
       --text:         #111111;
       --text-muted:   #6e6e73;
@@ -27,15 +31,27 @@
       --border:       rgba(0, 0, 0, 0.09);
       --border-mid:   rgba(0, 0, 0, 0.14);
 
-      /* The single accent — used sparingly, same as the Pro plan card */
-      --indigo:       #6366f1;
-      --indigo-dim:   rgba(99, 102, 241, 0.12);
-      --indigo-glow:  rgba(99, 102, 241, 0.22);
+      /* --accent-teal (general brand accent: hero eyebrow, section
+         eyebrows, the manifesto's closing line, the CTA band glow) and
+         --pro-gold (Pro-tier signaling: the Pro feature card, the Pro
+         plans-teaser card) — kept as two separate tokens for what they
+         mean, even though they're now the same color.
+         EXPERIMENT — teal read as too cool/plain, gold read as cheap.
+         Both moved to the same saturated burgundy/wine ("Crimson
+         Bordeaux") tried for Pro-tier first and now extended everywhere.
+         Same values as dashboard.html's/pricing.html's own tokens, for
+         consistency across the site. */
+      --accent-teal:      #b0203f;
+      --accent-teal-dim:  rgba(176, 32, 63, 0.12);
+      --accent-teal-glow: rgba(176, 32, 63, 0.22);
+      --pro-gold:         #b0203f;
+      --pro-gold-dim:     rgba(176, 32, 63, 0.12);
+      --pro-gold-glow:    rgba(176, 32, 63, 0.22);
 
       --radius-card:  24px;
       --radius-btn:   50px;
       --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.18);
+      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(176, 32, 63, 0.18);
 
       --font-ui:      'DM Sans', -apple-system, sans-serif;
       --font-serif:   'Lora', serif;
@@ -77,7 +93,7 @@
       height: 24px;
       width: auto;
       filter: invert(1);
-      opacity: 0.9;
+      opacity: 0.933;
       position: relative;
       top: 3px;
       transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
@@ -218,9 +234,9 @@
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--indigo);
-      background: var(--indigo-dim);
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      color: var(--accent-teal);
+      background: var(--accent-teal-dim);
+      border: 1px solid rgba(176, 32, 63, 0.2);
       padding: 5px 14px;
       border-radius: var(--radius-btn);
       margin-bottom: 28px;
@@ -301,7 +317,7 @@
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--indigo);
+      color: var(--accent-teal);
       margin-bottom: 16px;
       text-align: center;
     }
@@ -346,7 +362,7 @@
       margin-bottom: 20px;
     }
 
-    .feature-index.pro { color: var(--indigo); }
+    .feature-index.pro { color: var(--pro-gold); }
 
     .feature-title {
       font-family: var(--font-ui);
@@ -367,7 +383,7 @@
        on pricing.html, so the free/pro split is visible, not just labeled. */
     .feature-card.pro {
       background: var(--black);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: var(--pro-gold-glow);
       box-shadow: var(--shadow-pro);
       position: relative;
       overflow: hidden;
@@ -381,7 +397,7 @@
       right: -60px;
       width: 220px;
       height: 220px;
-      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      background: radial-gradient(circle at center, var(--pro-gold-glow) 0%, transparent 65%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -424,7 +440,7 @@
       font-family: var(--font-serif);
       font-style: italic;
       font-size: 1.15rem;
-      color: var(--indigo);
+      color: var(--accent-teal);
     }
 
     /* ─── Plans teaser ───────────────────────────────────────────────── */
@@ -452,7 +468,7 @@
 
     .teaser-card-pro {
       background: var(--black);
-      border-color: rgba(99, 102, 241, 0.25);
+      border-color: var(--pro-gold-glow);
       box-shadow: var(--shadow-pro);
       position: relative;
       overflow: hidden;
@@ -465,7 +481,7 @@
       right: -60px;
       width: 220px;
       height: 220px;
-      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      background: radial-gradient(circle at center, var(--pro-gold-glow) 0%, transparent 65%);
       pointer-events: none;
       border-radius: 50%;
     }
@@ -483,7 +499,7 @@
       margin-bottom: 12px;
     }
 
-    .teaser-card-pro .teaser-card-plan { color: var(--indigo); }
+    .teaser-card-pro .teaser-card-plan { color: var(--pro-gold); }
 
     .teaser-card-price {
       font-family: var(--font-serif);
@@ -573,7 +589,7 @@
       transform: translateX(-50%);
       width: 560px;
       height: 560px;
-      background: radial-gradient(circle at center, var(--indigo-glow) 0%, transparent 65%);
+      background: radial-gradient(circle at center, var(--accent-teal-glow) 0%, transparent 65%);
       pointer-events: none;
     }
 

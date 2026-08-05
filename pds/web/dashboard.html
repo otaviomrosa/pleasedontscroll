@@ -655,9 +655,14 @@
        ellipsis-truncate instead of overflowing/pushing the chevron out. */
     .settings-header-title {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 10px;
       min-width: 0;
+    }
+
+    .settings-header-dot {
+      color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .settings-header-email {
@@ -741,29 +746,35 @@
     .chevron.open { transform: rotate(180deg); }
 
     /* ─── Section headers ──────────────────────────────────────────────── */
+    /* Now actually applied — was previously dead CSS, styling a class
+       nothing used (the old card headings were all .section-label, a
+       small-uppercase-eyebrow style; that class is gone now too, nothing
+       references it anymore). Used by all three card headings — Profiles,
+       Blocklist, and Settings. */
     .section-title {
-      font-family: var(--font-ui);
-      /* 500 is the heaviest weight DM Sans is actually loaded at (see the
-       * Google Fonts <link> in <head> — only 300/400/500 are requested) —
-       * needed here since a sans-serif heading at the old serif's 400
-       * read as too plain/light to carry a section title on its own. */
-      font-weight: 500;
+      font-family: var(--font-serif);
+      /* Lora at weight 400 — a brief detour through weight 500 on this
+         same serif was already tried and reverted once before, with the
+         1.3rem→1.4rem font-size bump being the actual fix for
+         "too plain/light" instead of a heavier weight. */
+      font-weight: 400;
       font-size: 1.4rem;
+      /* Lora's default line-height leaves noticeably more space above the
+         cap-height than below it (typical serif ascender/descender
+         metrics) — with .settings-header-title's dot/email centered
+         against this element's full line box (align-items: center), that
+         asymmetry made them sit visibly lower than the actual "Settings"
+         glyphs, not truly centered against the text itself. Tightening to
+         1 makes the box track the visible letters closely enough that
+         center-alignment actually looks centered. */
+      line-height: 1;
       color: var(--text);
       letter-spacing: -0.02em;
-      margin: 0 0 20px;
-    }
-
-    /* No margin of its own — every instance gets its spacing from its
-       parent instead: the Profiles and Blocklist instances from their own
-       card's flex gap, the Settings instance sits flush against its email
-       subtitle by design. */
-    .section-label {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      /* No margin of its own — the Profiles/Blocklist cards space every
+         direct child via flex gap, and the Settings instance sits in a
+         center-aligned flex row with its email subtitle
+         (.settings-header-title's own gap), so a margin here would only
+         ever be redundant or fight another element's own spacing. */
       margin: 0;
     }
 
@@ -1707,7 +1718,7 @@
       <!-- Profiles card — split back out from a merged Profiles+Blocklist
            card into its own card again, per the founder's request. -->
       <div class="card" id="profiles-card">
-        <p class="section-label">Profiles</p>
+        <p class="section-title">Profiles</p>
 
         <!-- Profile tabs (rendered by JS) -->
         <div class="profile-tabs" id="profile-tabs"></div>
@@ -1730,7 +1741,7 @@
            two sections; now that they're separate cards, the card
            boundary itself does that job, so the divider is gone). -->
       <div class="card" id="blocklist-card">
-        <p class="section-label">Blocklist</p>
+        <p class="section-title">Blocklist</p>
 
         <div class="url-input-row">
           <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
@@ -1754,7 +1765,8 @@
       <div class="card" id="settings-card">
         <button class="settings-header" id="settings-toggle" aria-expanded="false">
           <span class="settings-header-title">
-            <h2 class="section-label">Settings</h2>
+            <h2 class="section-title">Settings</h2>
+            <span class="settings-header-dot">&bull;</span>
             <span class="settings-header-email" id="settings-email"></span>
           </span>
           <span class="chevron" id="settings-chevron">&#9662;</span>

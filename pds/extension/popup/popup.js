@@ -7,7 +7,7 @@ import * as Auth from '../../core/auth/session.js';
 import { fetchProfiles } from '../../core/sync/profiles.js';
 import { isIndefinitePause } from '../../core/sync/userSettings.js';
 import { DASHBOARD_URL, PRICING_URL } from '../../core/config.js';
-import { isValidEmail, isValidPassword, MIN_PASSWORD_LENGTH } from '../../core/validation.js';
+import { isValidEmail } from '../../core/validation.js';
 
 // ─── Session persistence (adds background notification on top of /core) ──────
 
@@ -29,11 +29,10 @@ async function getValidAccessToken() {
 
 const viewApp     = document.getElementById('view-app');
 const viewAuth    = document.getElementById('view-auth');
-const viewSignup  = document.getElementById('view-signup');
 const viewConfirm = document.getElementById('view-confirm');
 
 function showView(view) {
-  [viewApp, viewAuth, viewSignup, viewConfirm].forEach(v => {
+  [viewApp, viewAuth, viewConfirm].forEach(v => {
     v.style.display = 'none';
     v.classList.add('hidden');
   });
@@ -49,6 +48,15 @@ function setError(el, msg) {
 function clearError(el) {
   el.textContent = '';
   el.classList.add('hidden');
+}
+
+/** Same as setError, but for the resend-email result specifically —
+ * neutral-colored on success rather than alarm-red (see .auth-error.neutral
+ * in popup.css), still red on failure. */
+function setResendResult(el, msg, isError) {
+  el.textContent = msg;
+  el.classList.toggle('neutral', !isError);
+  el.classList.remove('hidden');
 }
 
 // ─── Profile pill rendering ───────────────────────────────────────────────────
@@ -306,11 +314,13 @@ document.addEventListener('DOMContentLoaded', () => {
   boot();
 
   // ── Login form ──────────────────────────────────────────────────────────────
-  const loginBtn  = document.getElementById('login-btn');
-  const authError = document.getElementById('auth-error');
+  const loginBtn    = document.getElementById('login-btn');
+  const authError   = document.getElementById('auth-error');
+  const authResend  = document.getElementById('auth-resend');
 
   loginBtn.addEventListener('click', async () => {
     clearError(authError);
+    authResend.classList.add('hidden');
     const email    = document.getElementById('email-input').value.trim();
     const password = document.getElementById('password-input').value;
 
@@ -327,10 +337,33 @@ document.addEventListener('DOMContentLoaded', () => {
     loginBtn.textContent = 'Sign in';
     loginBtn.disabled    = false;
 
-    if (error) { setError(authError, error); return; }
+    if (error) {
+      setError(authError, error);
+      // Only "email not confirmed" gets a resend offer — the one sign-in
+      // failure where we reliably know (from Supabase's own distinct
+      // error) that resending is the right next step, unlike a repeat
+      // signup attempt, which is deliberately ambiguous about whether the
+      // account already existed (see resendConfirmationEmail's own
+      // comment in core/auth/session.js).
+      if (error.toLowerCase().includes('confirm your email')) {
+        authResend.classList.remove('hidden');
+      }
+      return;
+    }
 
     await persistSession(session);
     await renderAppView(session.access_token);
+  });
+
+  document.getElementById('login-resend-link').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email-input').value.trim();
+    if (!isValidEmail(email)) return;
+
+    // DASHBOARD_URL — same reasoning as signup below, an email link can't
+    // reasonably target an unpublished extension popup.
+    const { ok, error } = await Auth.resendConfirmationEmail(email, DASHBOARD_URL);
+    setResendResult(authError, ok ? 'Confirmation email sent.' : (error || 'Could not resend. Please try again.'), !ok);
   });
 
   // ── Enter key on login fields ───────────────────────────────────────────────
@@ -340,59 +373,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Signup navigation ───────────────────────────────────────────────────────
+  // ── Signup / forgot password — both open the dashboard rather than an
+  // in-popup form. Account creation used to be a full second form here,
+  // duplicating the dashboard's own signup with no real benefit — one
+  // account-creation surface is enough, and it kept this file in sync with
+  // a second, independent auth flow that's since caused real bugs of its
+  // own (see the resend-confirmation and expired-link work above/in
+  // dashboard.html). Password reset was already dashboard-only for the
+  // same "an email link can't target an unpublished extension popup"
+  // reason signUp()'s redirectTo argument uses — this just makes the
+  // popup's own UI honest about that instead of having no forgot-password
+  // affordance at all. ──────────────────────────────────────────────────
+  // ?view=signup / ?view=forgot — tells dashboard.html's checkForViewParam()
+  // to land directly on that specific card instead of the default sign-in
+  // screen. Without this, both links opened the dashboard but always to
+  // plain sign-in, since boot() had no way to know the click meant
+  // "specifically show signup/forgot," not just "open the dashboard."
   document.getElementById('signup-link').addEventListener('click', (e) => {
     e.preventDefault();
-    showView(viewSignup);
+    chrome.tabs.create({ url: `${DASHBOARD_URL}?view=signup` });
   });
 
-  document.getElementById('back-to-login').addEventListener('click', (e) => {
+  document.getElementById('forgot-password-link').addEventListener('click', (e) => {
     e.preventDefault();
-    showView(viewAuth);
-  });
-
-  // ── Sign-up form ────────────────────────────────────────────────────────────
-  const signupBtn   = document.getElementById('signup-btn');
-  const signupError = document.getElementById('signup-error');
-
-  signupBtn.addEventListener('click', async () => {
-    clearError(signupError);
-    const email    = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-
-    if (!isValidEmail(email)) {
-      setError(signupError, 'Enter a valid email address.');
-      return;
-    }
-    if (!isValidPassword(password)) {
-      setError(signupError, `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
-      return;
-    }
-
-    signupBtn.textContent = 'Creating…';
-    signupBtn.disabled    = true;
-
-    // DASHBOARD_URL, not the extension's own chrome-extension:// origin —
-    // an email link can't reasonably target an unpublished extension popup,
-    // same reasoning "Change password"/password-reset are dashboard-only
-    // (see core/auth/session.js). Without this, the confirmation link falls
-    // back to Supabase's Site URL default instead.
-    const { session, error } = await Auth.signUp(email, password, DASHBOARD_URL);
-
-    signupBtn.textContent = 'Create account';
-    signupBtn.disabled    = false;
-
-    if (error) { setError(signupError, error); return; }
-
-    await persistSession(session);
-    await renderAppView(session.access_token);
-  });
-
-  // ── Enter key on signup fields ──────────────────────────────────────────────
-  ['signup-email', 'signup-password'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') signupBtn.click();
-    });
+    chrome.tabs.create({ url: `${DASHBOARD_URL}?view=forgot` });
   });
 
   // ── Logout ──────────────────────────────────────────────────────────────────

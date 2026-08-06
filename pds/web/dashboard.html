@@ -282,6 +282,18 @@
       margin: 8px 0 0;
     }
 
+    .auth-resend {
+      font-size: 0.8rem;
+      margin: 8px 0 0;
+    }
+
+    .auth-resend a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .auth-resend a:hover { color: var(--text); text-decoration: underline; }
+
     /* ─── Top nav ──────────────────────────────────────────────────────── */
     /* Back to a plain in-flow row at the top of .page-wrap — the fixed/
        glass nav bar treatment (matching index.html's .nav) was tried and
@@ -1497,6 +1509,11 @@
         <p class="auth-forgot"><a href="#" id="show-forgot">Forgot your password?</a></p>
 
         <p class="error-msg" id="auth-error"></p>
+        <!-- Shown only when sign-in fails specifically because the account
+             exists but hasn't confirmed its email yet (see friendlyAuthError's
+             "email not confirmed" case) — the one point where we reliably
+             know a resend is the right next step, not just a generic error. -->
+        <p class="auth-resend hidden" id="auth-resend"><a href="#" id="login-resend-link">Resend confirmation email</a></p>
 
         <button class="btn-primary" id="login-btn">Sign in</button>
 
@@ -1519,6 +1536,13 @@
         </div>
 
         <p class="error-msg" id="signup-error"></p>
+        <!-- Shown after any signup attempt that lands on "check your email"
+             — covers both a brand-new signup and a repeat attempt with an
+             already-registered-but-unconfirmed email, since Supabase's
+             signup response is deliberately ambiguous about which case it
+             is (anti-enumeration) and a repeat attempt doesn't reliably
+             resend on its own. -->
+        <p class="auth-resend hidden" id="signup-resend"><a href="#" id="signup-resend-link">Resend confirmation email</a></p>
 
         <button class="btn-primary" id="signup-btn">Create account</button>
 
@@ -1804,12 +1828,21 @@
     // ─── Auth ──────────────────────────────────────────────────────────────────
 
     async function boot() {
+      // An expired/invalid auth link takes priority over everything else
+      // below — checked first so it can't be mistaken for "no link at all"
+      // and silently fall through to a plain sign-in screen with no
+      // explanation. See its own comment for why this exists.
+      if (checkForExpiredAuthLink()) return;
       // A password-recovery link takes priority over any existing session
       // in this browser — someone clicking it wants to reset a password,
       // not land in whatever account happens to already be signed in here.
       if (completeRecoveryFlow()) return;
       // Same priority reasoning for a signup-confirmation link.
       if (await completeSignupConfirmation()) return;
+      // Same priority reasoning again for an explicit ?view= request (the
+      // extension popup's "Create an account"/"Forgot your password?"
+      // links land here — see checkForViewParam's own comment).
+      if (checkForViewParam()) return;
 
       const accessToken = await currentAccessToken();
       if (accessToken) {
@@ -1819,6 +1852,24 @@
       } else {
         showAuthScreen();
       }
+    }
+
+    // ─── Explicit view request (?view=signup / ?view=forgot) ──────────────────
+    // The extension popup no longer has its own signup/forgot-password forms
+    // (see popup.js) — both just open the dashboard instead. Without this,
+    // they landed on the plain sign-in screen every time, since boot() had
+    // no way to know the click meant "specifically show me signup/forgot,"
+    // not just "open the dashboard." Only handles the two views the popup
+    // actually links to; anything else is ignored (falls through to the
+    // normal sign-in/app screen below).
+    function checkForViewParam() {
+      const view = new URLSearchParams(window.location.search).get('view');
+      if (view !== 'signup' && view !== 'forgot') return false;
+
+      window.history.replaceState({}, '', window.location.pathname);
+      showAuthScreen();
+      showView(view === 'signup' ? 'signup-card' : 'forgot-card');
+      return true;
     }
 
     // ─── Password recovery ─────────────────────────────────────────────────────
@@ -1831,6 +1882,30 @@
 
     function parseHashParams() {
       return Object.fromEntries(new URLSearchParams(window.location.hash.replace(/^#/, '')));
+    }
+
+    // ─── Expired/invalid auth link ─────────────────────────────────────────────
+    // When a recovery or signup-confirmation link is expired or has already
+    // been used, Supabase's /verify redirects back here with an error in the
+    // hash instead of a session (#error=access_denied&error_code=otp_expired&
+    // error_description=...), not a type=recovery/type=signup + access_token
+    // pair. completeRecoveryFlow()/completeSignupConfirmation() below only
+    // ever check for the success shape, so this case fell through both of
+    // them silently and landed on a plain sign-in screen with zero
+    // explanation — found from a real report: the only way to tell what
+    // happened was to read the raw URL. There's no reliable way to tell from
+    // this error alone whether the original link was a signup or recovery
+    // one (Supabase's error redirect doesn't include type), so the message
+    // stays generic and points at both ways back in rather than guessing.
+    function checkForExpiredAuthLink() {
+      const { error } = parseHashParams();
+      if (!error) return false;
+
+      window.history.replaceState({}, '', window.location.pathname);
+      showAuthScreen();
+      showView('login-card');
+      showError('auth-error', 'That link has expired or has already been used. Sign in below, or use "Forgot your password?" / sign up again to request a new one.');
+      return true;
     }
 
     /** Returns true if a recovery link was detected and handled (reset-card shown). */
@@ -3015,6 +3090,7 @@
 
     document.getElementById('login-btn').addEventListener('click', async () => {
       hideError('auth-error');
+      document.getElementById('auth-resend').classList.add('hidden');
       const email    = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
       const btn      = document.getElementById('login-btn');
@@ -3032,15 +3108,37 @@
       btn.textContent = 'Sign in';
       btn.disabled    = false;
 
-      if (error) { showError('auth-error', error); return; }
+      if (error) {
+        showError('auth-error', error);
+        // Only "email not confirmed" gets a resend offer — this is the one
+        // sign-in failure where we reliably know (from Supabase's own
+        // distinct error, not a guess) that resending is the right next
+        // step, unlike a repeat signup attempt, which is deliberately
+        // ambiguous about whether the account already existed.
+        if (error.toLowerCase().includes('confirm your email')) {
+          document.getElementById('auth-resend').classList.remove('hidden');
+        }
+        return;
+      }
 
       await Auth.persistSession(webStorageAdapter, session);
       currentUser = session.user;
       showApp();
     });
 
+    document.getElementById('login-resend-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value.trim();
+      if (!isValidEmail(email)) return;
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { ok, error } = await Auth.resendConfirmationEmail(email, redirectTo);
+      showToast(ok ? 'Confirmation email sent.' : (error || 'Could not resend. Please try again.'), !ok);
+    });
+
     document.getElementById('signup-btn').addEventListener('click', async () => {
       hideError('signup-error');
+      document.getElementById('signup-resend').classList.add('hidden');
       const email    = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const btn      = document.getElementById('signup-btn');
@@ -3068,11 +3166,32 @@
       btn.textContent = 'Create account';
       btn.disabled    = false;
 
-      if (error) { showError('signup-error', error); return; }
+      if (error) {
+        showError('signup-error', error);
+        // "Check your email..." covers both a brand-new signup AND a repeat
+        // attempt with an already-registered-but-unconfirmed email — offer
+        // resend either way, since Supabase's response is deliberately
+        // ambiguous about which case it was (see resendConfirmationEmail's
+        // own comment).
+        if (error.toLowerCase().includes('check your email')) {
+          document.getElementById('signup-resend').classList.remove('hidden');
+        }
+        return;
+      }
 
       await Auth.persistSession(webStorageAdapter, session);
       currentUser = session.user;
       showApp();
+    });
+
+    document.getElementById('signup-resend-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value.trim();
+      if (!isValidEmail(email)) return;
+
+      const redirectTo = window.location.origin + window.location.pathname;
+      const { ok, error } = await Auth.resendConfirmationEmail(email, redirectTo);
+      showToast(ok ? 'Confirmation email sent.' : (error || 'Could not resend. Please try again.'), !ok);
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {

@@ -108,6 +108,31 @@ export async function signUp(email, password, redirectTo) {
 }
 
 /**
+ * Resends a signup confirmation email. Returns { ok, error }.
+ *
+ * Exists because re-calling signUp() with an email that's already
+ * registered but unconfirmed doesn't reliably send a new email — Supabase
+ * deliberately returns an ambiguous, success-shaped response for that case
+ * (same anti-enumeration reasoning as requestPasswordReset() not revealing
+ * whether an account exists), so a repeat signup attempt can silently do
+ * nothing. This calls Auth's dedicated /resend endpoint instead, which is
+ * the actual supported way to get a fresh link — found after a real report:
+ * signing up again with an old, never-confirmed email produced no new
+ * email, and the original link had since expired with no way back in.
+ *
+ * `redirectTo` behaves the same as signUp()'s — must be in the Supabase
+ * dashboard's Redirect URLs allowlist or it's silently ignored.
+ */
+export async function resendConfirmationEmail(email, redirectTo) {
+  const path = redirectTo
+    ? `/auth/v1/resend?redirect_to=${encodeURIComponent(redirectTo)}`
+    : '/auth/v1/resend';
+  const { res, data } = await authFetch(path, { email, type: 'signup' });
+  if (!res.ok) return { ok: false, error: friendlyAuthError(data) };
+  return { ok: true, error: null };
+}
+
+/**
  * Sends a password-recovery email. `redirectTo` must be an allowlisted
  * Redirect URL in Supabase Dashboard → Authentication → URL Configuration,
  * or Supabase silently ignores it. Clicking the emailed link lands the user

@@ -359,6 +359,39 @@ body {
   line-height: 1.4;
 }
 
+/* Reused to show the resend-email result too (success or failure) — .neutral
+   swaps the color off --error for the success case, since "confirmation
+   email sent" showing in alarm-red would read wrong. */
+.auth-error.neutral {
+  color: var(--text-muted);
+}
+
+/* Same values as dashboard.html's own .auth-forgot, for consistency. */
+.auth-forgot {
+  font-size: 0.78rem;
+  text-align: right;
+  margin: -4px 0 10px;
+}
+
+.auth-forgot a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.auth-forgot a:hover { color: var(--text); text-decoration: underline; }
+
+.auth-resend {
+  font-size: 0.78rem;
+  margin: 0 0 10px;
+}
+
+.auth-resend a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.auth-resend a:hover { color: var(--text); text-decoration: underline; }
+
 /* ─── Footer hint ────────────────────────────────────────────────────────────── */
 .footer-hint {
   font-size: 0.74rem;

@@ -129,37 +129,20 @@
       <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
     </div>
 
+    <!-- Same placement/style as dashboard.html's .auth-forgot — right under
+         the password field, right-aligned. Opens the dashboard rather than
+         an in-popup form — see popup.js's own comment. -->
+    <p class="auth-forgot"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
+
     <p class="auth-error hidden" id="auth-error"></p>
+    <!-- Shown only when sign-in fails specifically because the account
+         exists but hasn't confirmed its email yet — see popup.js's own
+         comment. -->
+    <p class="auth-resend hidden" id="auth-resend"><a href="#" id="login-resend-link">Resend confirmation email</a></p>
 
     <button class="btn-primary" id="login-btn">Sign in</button>
 
     <p class="footer-hint">No account? <a href="#" id="signup-link">Create an account</a></p>
-  </div>
-
-  <!-- ─── Sign-up sub-view (replaces auth form) ─────────────────────── -->
-  <div class="container hidden" id="view-signup">
-    <div class="header-row">
-      <div class="brand-box">
-        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <p class="auth-headline">Create your account.</p>
-
-    <div class="form-group">
-      <input class="field" type="email" id="signup-email" placeholder="Email" autocomplete="email">
-    </div>
-    <div class="form-group">
-      <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
-    </div>
-
-    <p class="auth-error hidden" id="signup-error"></p>
-
-    <button class="btn-primary" id="signup-btn">Create account</button>
-
-    <p class="footer-hint"><a href="#" id="back-to-login">Back to sign in</a></p>
   </div>
 
   <script type="module" src="popup.js"></script>

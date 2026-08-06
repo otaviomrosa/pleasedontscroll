@@ -955,6 +955,26 @@
   <script type="module">
     import { webStorageAdapter } from '../core/auth/storage.js'
     import * as Auth from '../core/auth/session.js'
+    import { DASHBOARD_URL } from '../core/config.js'
+
+    // ─── Defensive fallback for a stray recovery/signup/error hash ──────
+    // dashboard.html's completeRecoveryFlow()/completeSignupConfirmation()
+    // are the only code that knows how to read Supabase's
+    // #access_token=...&type=recovery|signup (or #error=...) hash — this
+    // page has no idea what to do with it. Found from two real reports
+    // (see TODO.md's password-recovery entry) where a recovery/signup link
+    // landed here instead of on /dashboard — most likely a Supabase
+    // Redirect URLs allowlist gap for the www. subdomain specifically —
+    // and the user was left on a normal-looking homepage with the tokens
+    // just sitting inertly in the URL, no indication anything was wrong.
+    // Forwarding to DASHBOARD_URL (not the current host) works regardless
+    // of whichever allowlist gap got us here in the first place — the hash
+    // is already in the browser at this point, so this hop is a plain
+    // client-side redirect, not another Supabase-mediated one that could
+    // hit the same mismatch again.
+    if (/(^|&)(access_token|error)=/.test(window.location.hash.replace(/^#/, ''))) {
+      window.location.replace(DASHBOARD_URL + window.location.hash)
+    }
 
     // ─── Account menu — shows the "Sign in" pill when logged out, or an
     // avatar + dropdown (Dashboard / Settings / Sign out) when logged in.

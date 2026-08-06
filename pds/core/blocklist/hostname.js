@@ -113,13 +113,24 @@ export function parseBlocklistEntry(rawUrl) {
 
 /**
  * Whether a live tab URL falls under a parsed blocklist entry — same
- * hostname, and (if the entry is path-scoped) the tab's path starts with
- * that prefix. A null pathPrefix matches any path under the hostname,
- * which is what makes a bare-domain entry block the whole site.
+ * hostname (or a subdomain of it — see below), and (if the entry is
+ * path-scoped) the tab's path starts with that prefix. A null pathPrefix
+ * matches any path under the hostname, which is what makes a bare-domain
+ * entry block the whole site.
+ *
+ * Subdomain-inclusive: blocking "pinterest.com" also blocks
+ * "br.pinterest.com", "m.pinterest.com", etc. — found as a real bypass:
+ * Pinterest (and plenty of other sites) redirect to a country-specific
+ * subdomain, which isn't the exact hostname a bare-domain entry stored, so
+ * the site quietly stopped being blocked after the redirect. Same
+ * endsWith('.' + hostname) pattern isOwnDomain() already uses to protect
+ * pleasedontscroll.com from being blocked — the leading dot is what keeps
+ * "notpinterest.com" from falsely matching "pinterest.com".
  */
 export function matchesBlockedEntry(url, entry) {
   const hostname = hostnameOf(url);
-  if (hostname === null || hostname !== entry.hostname) return false;
+  if (hostname === null) return false;
+  if (hostname !== entry.hostname && !hostname.endsWith(`.${entry.hostname}`)) return false;
   if (entry.pathPrefix === null) return true;
 
   const pathname = pathnameOf(url);

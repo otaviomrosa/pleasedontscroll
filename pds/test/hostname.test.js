@@ -145,6 +145,31 @@ test('matchesBlockedEntry', async (t) => {
     assert.equal(matchesBlockedEntry('https://vimeo.com/shorts', entry), false);
   });
 
+  await t.test('a whole-domain entry also matches subdomains', () => {
+    // Regression: Pinterest (and other sites) redirect to a
+    // country-specific subdomain (e.g. br.pinterest.com for Brazilian
+    // users), which isn't the exact hostname a bare "pinterest.com" entry
+    // stored — the site quietly stopped being blocked after the redirect.
+    const entry = { hostname: 'pinterest.com', pathPrefix: null };
+    assert.equal(matchesBlockedEntry('https://br.pinterest.com', entry), true);
+    assert.equal(matchesBlockedEntry('https://m.pinterest.com/pin/1', entry), true);
+  });
+
+  await t.test('a path-scoped entry also matches that path on a subdomain', () => {
+    const entry = { hostname: 'youtube.com', pathPrefix: '/shorts' };
+    assert.equal(matchesBlockedEntry('https://m.youtube.com/shorts/abc', entry), true);
+    assert.equal(matchesBlockedEntry('https://m.youtube.com/watch?v=1', entry), false);
+  });
+
+  await t.test('a similarly-named different domain does not falsely match as a subdomain', () => {
+    // The leading dot in the endsWith check is what prevents this —
+    // without it, "notpinterest.com" would incorrectly match a
+    // "pinterest.com" entry since the string literally ends with
+    // "pinterest.com".
+    const entry = { hostname: 'pinterest.com', pathPrefix: null };
+    assert.equal(matchesBlockedEntry('https://notpinterest.com', entry), false);
+  });
+
   await t.test('case-insensitive on path', () => {
     const entry = { hostname: 'youtube.com', pathPrefix: '/shorts' };
     assert.equal(matchesBlockedEntry('https://youtube.com/SHORTS', entry), true);

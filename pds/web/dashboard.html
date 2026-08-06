@@ -75,18 +75,10 @@
     }
 
     /* ─── Layout ───────────────────────────────────────────────────────── */
-    /* padding-top: 120px (was 48px, then 96px) — .top-nav-bar is
-       position: fixed now, out of normal document flow, so this has to
-       clear its rendered height itself instead of the nav naturally
-       pushing content down. Nav height is roughly 40px padding + the
-       account avatar's own 36px (the tallest thing in the bar) ≈ 76px;
-       120px leaves a more generous gap above the first card than just
-       clearing the bar would, per the founder's request for more space
-       here specifically. */
     .page-wrap {
       max-width: 680px;
       margin: 0 auto;
-      padding: 120px 24px 80px;
+      padding: 72px 24px 80px;
     }
 
     /* ─── Public nav (auth screen only — hidden with #auth-screen on login,
@@ -291,76 +283,15 @@
     }
 
     /* ─── Top nav ──────────────────────────────────────────────────────── */
-    /* A real fixed/glass nav now, same treatment as .public-nav (the
-       auth-screen version of this same bar) and index.html's own .nav —
-       was just a plain in-flow row at the top of .page-wrap before. */
-    .top-nav-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      padding: 20px 40px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    /* No max-width/centering — logo and avatar sit at the true edges,
-       inset only by .top-nav-bar's own 20px 40px padding, same as
-       index.html's .nav (a max-width column was tried first so these
-       would line up with .page-wrap's card column below, but that's not
-       actually what was wanted — this should look identical to
-       index.html's nav, not a narrower dashboard-specific version of it).
-       No margin-bottom of its own anymore either — now that the bar is
-       fixed/out of flow, .page-wrap's own padding-top is what clears it
-       instead. */
+    /* Back to a plain in-flow row at the top of .page-wrap — the fixed/
+       glass nav bar treatment (matching index.html's .nav) was tried and
+       reverted. No logo anymore either — just the pause toggle on the
+       left, premium badge + account avatar on the right. */
     .top-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-    }
-
-    .nav-logo-link {
-      display: block;
-      line-height: 0;
-    }
-
-    /* height: 24px — reverted back to match index.html's own .nav-logo
-       (was shrunk to 22px, briefly 20px, as part of a whole-nav-row
-       resize experiment that's since been undone now that this is a real
-       fixed nav bar matching index.html's — see .top-nav-bar's own
-       comment). The pause toggle shell, account avatar, and premium
-       badge below were all reverted the same way.
-       top: 0px, not index.html's 3px — index.html's nav has nothing next
-       to the logo that needs pixel-precise cross-axis alignment with it
-       (relative positioning offsets the rendered image without moving the
-       flex box used for align-items:center, so top:3px here made the logo
-       visually sit 3px lower than the pause toggle next to it, which
-       flexbox still centered using the unshifted box). This is the
-       original optical correction value for that alignment, kept as its
-       own deliberate choice rather than copied from a context that
-       doesn't have the same constraint. */
-    .nav-logo {
-      height: 24px;
-      width: auto;
-      display: block;
-      filter: invert(1);
-      /* invert(1) on the (light-colored) source PNG lands on pure black,
-         which is now exactly --black (#000000) — no opacity softening
-         needed to approximate a muted target anymore, unlike when
-         --black was #111111/#1a1a1a. */
-      position: relative;
-      top: 0px;
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
-       clean flip. Counter-clockwise; the cubic-bezier above gives a
-       slow-start/fast-middle/slow-end feel. */
-    .nav-logo:hover {
-      transform: rotate(-180deg);
+      margin-bottom: 16px;
     }
 
     /* ─── Pause blocking ──────────────────────────────────────────────────────
@@ -390,15 +321,11 @@
          renders at its full 42px regardless), so #pause-label right after
          it in .top-nav-left was starting underneath/behind the switch. */
       min-width: 42px;
-      /* extra breathing room from the logo, on top of .top-nav-left's own
-         gap (which also spaces this row from #pause-label after it —
-         kept that one as-is, only this side needed more room) */
-      margin-left: 4px;
     }
 
     /* Reverted back to its original 42×24/radius-12 size (was shrunk to
-       39×22/11, briefly 35×20/10, as part of the same whole-nav-row
-       resize experiment .nav-logo's own comment describes being undone). */
+       39×22/11, briefly 35×20/10, as part of a whole-nav-row resize
+       experiment that's since been undone). */
     .pause-toggle {
       position: relative;
       z-index: 2;
@@ -624,14 +551,8 @@
        around this much shorter collapsed content (just the header row),
        so both top and bottom are trimmed to 20px. Horizontal padding
        stays the inherited 28px so the card's left/right edges still line
-       up with every other card.
-       scroll-margin-top: settings-link's #settings-card anchor scroll
-       (and the JS scrollIntoView() calls that do the same thing) would
-       otherwise land this card's top edge flush with the true viewport
-       top, which is now covered by the fixed .top-nav-bar — this tells
-       scrollIntoView to leave that much room above it instead. */
+       up with every other card. */
     #settings-card {
-      scroll-margin-top: 96px;
       padding-top: 20px;
       padding-bottom: 20px;
     }
@@ -1400,8 +1321,8 @@
     /* ─── Premium badge ─────────────────────────────────────────────────── */
     /* Reverted back to its original size — no index.html equivalent
        exists to match (this badge is dashboard-only), so this just undoes
-       the same resize-then-middle-ground experiment .nav-logo's own
-       comment describes for the rest of the nav row. */
+       the same whole-nav-row resize experiment that touched the rest of
+       the row too. */
     .premium-badge {
       display: inline-flex;
       align-items: center;
@@ -1648,19 +1569,12 @@
 
   <!-- ─── App screen ────────────────────────────────────────────────────── -->
   <div id="app-screen" class="hidden">
-    <!-- Top nav — a real fixed/glass nav bar now, matching index.html's
-         .nav treatment (was a plain in-flow row inside .page-wrap before).
-         .top-nav-bar is the full-bleed fixed bar (background blur, border,
-         positioning); .top-nav itself is the inner content, constrained to
-         the same max-width as .page-wrap below so the logo/avatar line up
-         with the cards rather than sitting at the true viewport edges. -->
-    <div class="top-nav-bar">
+    <div class="page-wrap">
+
+      <!-- Top nav — plain in-flow row, no logo (the fixed/glass nav bar
+           treatment matching index.html's .nav was tried and reverted). -->
       <div class="top-nav">
         <div class="top-nav-left">
-          <a href="index.html" class="nav-logo-link">
-            <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-          </a>
-
           <!-- Pause blocking: Friction Mode only. Deliberately dashboard-only
                (not in the extension popup) so pausing costs a real trip, not
                a one-click escape — see docs/ARCHITECTURE.md §5 for the full mechanism.
@@ -1711,9 +1625,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="page-wrap">
 
       <!-- Profiles card — split back out from a merged Profiles+Blocklist
            card into its own card again, per the founder's request. -->

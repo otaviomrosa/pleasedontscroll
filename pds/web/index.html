@@ -249,13 +249,28 @@
        regardless of the image's own colors, rather than depending on
        every future image choice happening to contrast well with black
        text — soften/remove it if a specific image ends up not needing it. */
-    .hero {
-      padding: 180px 0 100px;
-      text-align: center;
+    /* ─── Hero + How it works background band ───────────────────────────── */
+    /* Same trick as pricing.html's .pricing-top — wraps .hero AND #features
+       so the background image runs continuously behind both, not just the
+       hero text, ending exactly where #manifesto begins (that section
+       keeps its own plain white background + top divider, unaffected).
+       min-height: 100vh so the image fills at least the first screen even
+       on a short/tall monitor — see pricing.html's own comment on why;
+       here it mostly only matters on unusually short viewports, since
+       hero + a 3-card grid is already taller than 100vh on most screens.
+       #features' own border-top divider is suppressed (see its own
+       override below) since a line cutting through the middle of one
+       continuous image would look like a mistake, not a real section
+       break. */
+    .index-top {
       position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .hero::before {
+    .index-top::before {
       content: '';
       position: absolute;
       top: 0;
@@ -264,10 +279,23 @@
       width: 100vw;
       transform: translateX(-50%);
       background:
-        linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)),
-        url('assets/images/hero-painting.png') center 45% / cover no-repeat;
+        linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
+        url('assets/images/hero-painting.png') center -100% / cover no-repeat;
       z-index: -1;
       pointer-events: none;
+    }
+
+    /* margin-top: -40px raises the hero's own content within .index-top's
+       centered flex layout — padding-bottom increased by that same 40px
+       (100px → 140px) so hero's total outer height in the flex calc is
+       unchanged, which keeps #features/the cards exactly where they were
+       instead of also shifting up with it (a plain negative margin alone
+       would've raised the whole group together, same technique used on
+       pricing.html's .hero, which is exactly the effect NOT wanted here). */
+    .hero {
+      padding: 180px 0 100px;
+      margin-top: 0px;
+      text-align: center;
     }
 
     .hero-eyebrow {
@@ -379,6 +407,16 @@
       padding: 88px 0;
     }
 
+    /* #features sits inside .index-top's continuous background image now
+       (see that class's own comment) — no divider line here, since a
+       border cutting through the middle of one image would read as a
+       mistake, not a real section break. #manifesto right after it keeps
+       its own border-top, marking the actual return to a plain white
+       background. */
+    #features {
+      border-top: none;
+    }
+
     .section-eyebrow {
       font-size: 0.72rem;
       font-weight: 600;
@@ -405,6 +443,11 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 20px;
+      /* Pulls the cards up now that the eyebrow/heading above them are
+         gone — #features' own 88px top padding (shared via section.block)
+         alone left them sitting lower than they need to, with no heading
+         to justify the extra space anymore. */
+      margin-top: -40px;
     }
 
     @media (max-width: 800px) {
@@ -774,11 +817,17 @@
 
   <div class="page">
 
+    <!-- ─── Hero + How it works share one background image (see
+         .index-top::before) — wrapped together so the image runs
+         continuously from under the nav down to exactly the 100vh mark,
+         not just behind the hero text. ─────────────────────────────── -->
+    <div class="index-top">
+
     <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
       <div class="hero-eyebrow">Now on Chrome • iPhone Coming Soon</div>
       <h1>Please Don't Scroll.</h1>
-      <p class="hero-tagline">The website blocker with two ways to stay focused</p>
+      <p class="hero-tagline">The website blocker that adapts to your day</p>
       <p class="hero-sub">
         Pause before opening social media, or lock it completely. Choose the boundary that fits your day.
       </p>
@@ -792,9 +841,6 @@
 
     <!-- ─── How it works ────────────────────────────────────────────────── -->
     <section class="block" id="features">
-      <p class="section-eyebrow">How it works</p>
-      <h2 class="section-heading">Two modes. Zero negotiation.</h2>
-
       <div class="features-grid">
         <div class="feature-card">
           <p class="feature-index">Free</p>
@@ -823,6 +869,8 @@
         </div>
       </div>
     </section>
+
+    </div><!-- /.index-top -->
 
     <!-- ─── Manifesto ───────────────────────────────────────────────────── -->
     <section class="block" id="manifesto">

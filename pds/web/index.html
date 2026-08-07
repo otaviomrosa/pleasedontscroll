@@ -80,7 +80,88 @@
       overflow-x: hidden;
     }
 
+    /* ─── Entrance animations ────────────────────────────────────────── */
+    /* Two separate mechanisms now, not one — the original single
+       IntersectionObserver-driven system (used for both "on load" and "on
+       scroll" content, on the theory that already-visible elements would
+       just fire almost instantly) turned out unreliable for the
+       above-the-fold case in practice: whether the hero/cards' initial
+       intersection check actually fires before first paint depends on
+       exact layout timing, and it wasn't consistently replaying the same
+       way on every load the founder tested. Content that's *always* in
+       the first viewport (hero text, the three feature cards) doesn't
+       need "did this scroll into view" logic at all, so it's a plain
+       @keyframes animation now — runs unconditionally on load, same
+       result every single refresh, and lets the delay/order be set
+       exactly (animation-delay per element) instead of relying on
+       transition-delay racing an observer callback. [data-reveal] +
+       IntersectionObserver (below) is kept for what it's actually suited
+       for: manifesto/teaser/CTA sections further down, genuinely outside
+       the first viewport, where "wait for an actual scroll" is the whole
+       point. */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(28px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Only used by .feature-card.pro below — same fade-up, but ending
+         at that card's own permanent translateY(-8px) lift instead of 0,
+         so the entrance doesn't flatten it back out once finished. */
+      @keyframes fade-in-up-lifted {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(-8px); }
+      }
+
+      /* 0.8s/0.15s-stagger read as rushed per the founder — slowed to a
+         1.4s animation and a 0.28s stagger, both roughly double, for a
+         calmer, more deliberate feel instead of a quick snap-in. */
+      .enter {
+        opacity: 0;
+        animation: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .feature-card.pro.enter { animation-name: fade-in-up-lifted; }
+
+      /* 0.5s before anything starts, then each hero element +0.28s after
+         the previous so they appear one at a time in reading order
+         (headline, tagline, sub, button) rather than all at once. The
+         three cards no longer continue that same one-at-a-time sequence —
+         they all share enter-5, appearing together as one group right
+         after the hero finishes. */
+      .enter-1 { animation-delay: 0.5s; }
+      .enter-2 { animation-delay: 0.78s; }
+      .enter-3 { animation-delay: 1.06s; }
+      .enter-4 { animation-delay: 1.34s; }
+      .enter-5 { animation-delay: 1.62s; }
+
+      /* ── Scroll-triggered reveal, for content below the first viewport ── */
+      /* Same slower 1.4s duration as .enter above, for the same reason. */
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .reveal.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* ─── Nav ────────────────────────────────────────────────────────── */
+    /* No blur/tint at the very top of the page — both ramp up gradually
+       as the user scrolls, driven by --nav-blur/--nav-bg-alpha custom
+       properties this page's own <script> below sets directly on .nav in
+       proportion to scroll position (see that script's own comment).
+       Deliberately not a CSS transition on backdrop-filter/background —
+       a transition would animate toward whatever the scroll handler last
+       set with its own easing/delay, fighting the continuous scroll-driven
+       updates instead of tracking them; the gradualness here comes from
+       how often the scroll handler itself updates these properties, not
+       from CSS easing. The var() fallbacks (0px/0) are what keep the nav
+       fully transparent and unblurred if JS never runs. */
     .nav {
       position: fixed;
       top: 0;
@@ -91,10 +172,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 20px 40px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, var(--nav-bg-alpha, 0));
+      backdrop-filter: blur(var(--nav-blur, 0px));
+      -webkit-backdrop-filter: blur(var(--nav-blur, 0px));
     }
 
     .nav-logo {
@@ -279,8 +359,8 @@
       width: 100vw;
       transform: translateX(-50%);
       background:
-        linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
-        url('assets/images/hero-painting.png') center -100% / cover no-repeat;
+        linear-gradient(rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0)),
+        url('assets/images/hero-painting.png') center 0% / cover no-repeat;
       z-index: -1;
       pointer-events: none;
     }
@@ -294,7 +374,7 @@
        pricing.html's .hero, which is exactly the effect NOT wanted here). */
     .hero {
       padding: 180px 0 100px;
-      margin-top: 0px;
+      margin-top: -100px;
       text-align: center;
     }
 
@@ -447,19 +527,32 @@
          gone — #features' own 88px top padding (shared via section.block)
          alone left them sitting lower than they need to, with no heading
          to justify the extra space anymore. */
-      margin-top: -40px;
+      margin-top: -100px;
     }
 
     @media (max-width: 800px) {
       .features-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
     }
 
+    /* Glassy, not flat white — these cards sit directly on top of
+       .index-top's hero-painting background image, which is exactly what
+       makes a real frosted-glass effect visible (backdrop-filter blurs
+       whatever's actually behind the card; on a plain white section
+       there'd be nothing there to blur). Semi-transparent white
+       (not opaque var(--white)) is what lets that blurred image show
+       through at all; the inset highlight is a subtle top sheen line, the
+       classic "glass has a lit top edge" cue. Both pro and non-pro cards
+       share this same glass base now — the pro card no longer gets a
+       solid black fill, only its own accent border/glow (see
+       .feature-card.pro below) on top of the same glass. */
     .feature-card {
-      background: var(--white);
-      border: 1px solid var(--border-mid);
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
       border-radius: var(--radius-card);
       padding: 32px 28px;
-      box-shadow: var(--shadow-card);
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
     .feature-index {
@@ -489,41 +582,29 @@
       margin: 0;
     }
 
-    /* Strict Mode card — same black/glow treatment as the Pro plan card
-       on pricing.html, so the free/pro split is visible, not just labeled. */
+    /* Strict Mode card — no longer the solid black fill the Pro plan card
+       on pricing.html uses; stays on the same glass base as the other two
+       (backdrop-filter inherited from .feature-card), just with an
+       accent-tinted glass edge standing in for what used to be a
+       color-block distinction. Background alpha and box-shadow now match
+       .feature-card exactly (0.55, --shadow-card) rather than a heavier
+       0.65/--shadow-pro pairing tried first — that heavier, more opaque
+       combination read as a solid lifted card with a shadow under it, not
+       glass, next to the airier side cards; matching their weight exactly
+       (border-color is the only thing still distinguishing this card) is
+       what actually makes it read as the same kind of glass, not just
+       technically using the same backdrop-filter property. box-shadow is
+       still repeated here (not just swapped in) alongside the same inset
+       sheen .feature-card sets, since box-shadow replaces rather than
+       merges with the base rule's value. A corner radial-glow ::before
+       (matching pricing.html's Pro card) was tried and dropped earlier —
+       too much purple on top of the tinted glass border/shadow already
+       doing that distinguishing work. */
     .feature-card.pro {
-      background: var(--black);
+      background: rgba(255, 255, 255, 0.55);
       border-color: var(--pro-gold-glow);
-      box-shadow: var(--shadow-pro);
-      position: relative;
-      overflow: hidden;
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       transform: translateY(-8px);
-    }
-
-    .feature-card.pro::before {
-      content: '';
-      position: absolute;
-      top: -60px;
-      right: -60px;
-      width: 220px;
-      height: 220px;
-      background: radial-gradient(circle at center, var(--pro-gold-glow) 0%, transparent 65%);
-      pointer-events: none;
-      border-radius: 50%;
-    }
-
-    .feature-card.pro .feature-index {
-      position: relative;
-    }
-
-    .feature-card.pro .feature-title {
-      color: var(--white);
-      position: relative;
-    }
-
-    .feature-card.pro .feature-copy {
-      color: rgba(255, 255, 255, 0.6);
-      position: relative;
     }
 
     /* ─── Manifesto ──────────────────────────────────────────────────── */
@@ -825,13 +906,13 @@
 
     <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
-      <div class="hero-eyebrow">Now on Chrome • iPhone Coming Soon</div>
-      <h1>Please Don't Scroll.</h1>
-      <p class="hero-tagline">The website blocker that adapts to your day</p>
-      <p class="hero-sub">
+      <!--<div class="hero-eyebrow">Now on Chrome • iPhone Coming Soon</div> -->
+      <h1 class="enter enter-1">Please Don't Scroll.</h1>
+      <p class="hero-tagline enter enter-2">The website blocker that adapts to your day</p>
+      <p class="hero-sub enter enter-3">
         Pause before opening social media, or lock it completely. Choose the boundary that fits your day.
       </p>
-      <div class="hero-actions">
+      <div class="hero-actions enter enter-4">
         <a href="dashboard.html" class="btn-primary">
           <img src="assets/images/chrome-logo.png" alt="" width="20" height="20">
           Add to Chrome
@@ -842,7 +923,7 @@
     <!-- ─── How it works ────────────────────────────────────────────────── -->
     <section class="block" id="features">
       <div class="features-grid">
-        <div class="feature-card">
+        <div class="feature-card enter enter-5">
           <p class="feature-index">Free</p>
           <h3 class="feature-title">Friction Mode</h3>
           <p class="feature-copy">
@@ -850,7 +931,7 @@
             interruption, not a tap-through. Enough to break the reflex, every time.
           </p>
         </div>
-        <div class="feature-card pro">
+        <div class="feature-card pro enter enter-5">
           <p class="feature-index pro">Pro</p>
           <h3 class="feature-title">Strict Mode</h3>
           <p class="feature-copy">
@@ -858,7 +939,7 @@
             locked, built for people who've decided negotiating with themselves isn't working.
           </p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card enter enter-5">
           <p class="feature-index">Free</p>
           <h3 class="feature-title">Built around your day</h3>
           <p class="feature-copy">
@@ -874,7 +955,7 @@
 
     <!-- ─── Manifesto ───────────────────────────────────────────────────── -->
     <section class="block" id="manifesto">
-      <div class="manifesto-inner">
+      <div class="manifesto-inner" data-reveal>
         <p><strong>Every feed you use runs on a variable reward loop, the same mechanism as a slot machine.</strong></p>
         <p>
           That's not a metaphor, it's the design brief. Teams of engineers are paid to
@@ -897,7 +978,7 @@
 
     <!-- ─── Plans teaser ────────────────────────────────────────────────── -->
     <section class="block">
-      <div class="plans-teaser-inner">
+      <div class="plans-teaser-inner" data-reveal>
         <p class="section-eyebrow">Pricing</p>
         <h2 class="section-heading">Built to be free.<br>Grown to be powerful.</h2>
 
@@ -930,7 +1011,7 @@
 
   <!-- ─── Closing CTA ─────────────────────────────────────────────────── -->
   <section class="cta-band">
-    <div class="cta-band-inner">
+    <div class="cta-band-inner" data-reveal>
       <h2>Stop negotiating with your own attention.</h2>
       <p>Start free with Friction Mode. Upgrade to Strict Mode when you're ready to remove the option to give in.</p>
       <a href="dashboard.html" class="btn-on-dark">Get started free</a>
@@ -1013,6 +1094,60 @@
     })
 
     initAccountMenu()
+
+    // ─── Entrance reveal ──────────────────────────────────────────────────
+    // Pairs with the [data-reveal]/.reveal/.in-view CSS (see the "Entrance
+    // reveal" comment near the top of this page's <style> block). The
+    // .reveal class itself is only added here, inside the same
+    // reduced-motion check the CSS uses — so a visitor with that
+    // preference set never has these elements hidden by JS in the first
+    // place, not even for a frame before this runs.
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
+      const revealEls = document.querySelectorAll('[data-reveal]')
+      revealEls.forEach((el) => el.classList.add('reveal'))
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          entry.target.classList.add('in-view')
+          revealObserver.unobserve(entry.target)
+        })
+      }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' })
+
+      revealEls.forEach((el) => revealObserver.observe(el))
+    }
+
+    // ─── Nav scroll blur ──────────────────────────────────────────────────
+    // Pairs with .nav's own --nav-blur/--nav-bg-alpha custom properties
+    // (see that rule's comment). Not gated behind prefers-reduced-motion
+    // like the entrance animations above — this isn't an autoplaying
+    // effect, it's a direct 1:1 response to the user's own scroll input,
+    // same category as the browser's native scrollbar. requestAnimationFrame
+    // throttles the update to once per frame regardless of how many
+    // 'scroll' events fire in between, which is what keeps this cheap on a
+    // property (backdrop-filter) that's genuinely expensive to repaint.
+    const navEl = document.querySelector('.nav')
+    const NAV_SCROLL_RANGE = 120  // px of scroll the ramp completes over
+    const NAV_MAX_BLUR = 20       // px — same value the nav used as a constant before
+    const NAV_MAX_BG_ALPHA = 0.82 // matches the frosted-white tint used elsewhere (e.g. the account dropdown)
+
+    function updateNavOnScroll() {
+      const progress = Math.min(window.scrollY / NAV_SCROLL_RANGE, 1)
+      navEl.style.setProperty('--nav-blur', `${(progress * NAV_MAX_BLUR).toFixed(2)}px`)
+      navEl.style.setProperty('--nav-bg-alpha', (progress * NAV_MAX_BG_ALPHA).toFixed(3))
+    }
+
+    let navScrollTicking = false
+    window.addEventListener('scroll', () => {
+      if (navScrollTicking) return
+      navScrollTicking = true
+      requestAnimationFrame(() => {
+        updateNavOnScroll()
+        navScrollTicking = false
+      })
+    }, { passive: true })
+
+    updateNavOnScroll()
   </script>
 </body>
 </html>

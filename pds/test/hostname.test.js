@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeToHostname, isNavigableUrl, hostnameOf, pathnameOf, isValidBlocklistUrl, isOwnDomain, parseBlocklistEntry, matchesBlockedEntry } from '../core/blocklist/hostname.js';
+import { normalizeToHostname, isNavigableUrl, hostnameOf, pathnameOf, isValidBlocklistUrl, isOwnDomain, parseBlocklistEntry, matchesBlockedEntry, entryCovers } from '../core/blocklist/hostname.js';
 
 test('normalizeToHostname', async (t) => {
   await t.test('bare domain', () => {
@@ -178,6 +178,61 @@ test('matchesBlockedEntry', async (t) => {
   await t.test('returns false for an unparseable url', () => {
     const entry = { hostname: 'youtube.com', pathPrefix: null };
     assert.equal(matchesBlockedEntry('not a url', entry), false);
+  });
+});
+
+test('entryCovers', async (t) => {
+  await t.test('a whole-domain entry covers a subdomain entry', () => {
+    const covering = { hostname: 'instagram.com', pathPrefix: null };
+    const candidate = { hostname: 'live.instagram.com', pathPrefix: null };
+    assert.equal(entryCovers(covering, candidate), true);
+  });
+
+  await t.test('a subdomain entry does not cover its own parent domain', () => {
+    const covering = { hostname: 'live.instagram.com', pathPrefix: null };
+    const candidate = { hostname: 'instagram.com', pathPrefix: null };
+    assert.equal(entryCovers(covering, candidate), false);
+  });
+
+  await t.test('an entry covers itself (exact duplicate)', () => {
+    const entry = { hostname: 'instagram.com', pathPrefix: null };
+    assert.equal(entryCovers(entry, entry), true);
+  });
+
+  await t.test('a whole-domain entry covers a path-scoped entry on a subdomain', () => {
+    const covering = { hostname: 'facebook.com', pathPrefix: null };
+    const candidate = { hostname: 'live.facebook.com', pathPrefix: '/reels' };
+    assert.equal(entryCovers(covering, candidate), true);
+  });
+
+  await t.test('a path-scoped entry does not cover a whole-domain entry on the same host', () => {
+    const covering = { hostname: 'facebook.com', pathPrefix: '/marketplace' };
+    const candidate = { hostname: 'facebook.com', pathPrefix: null };
+    assert.equal(entryCovers(covering, candidate), false);
+  });
+
+  await t.test('a path-scoped entry covers a narrower path on the same host', () => {
+    const covering = { hostname: 'youtube.com', pathPrefix: '/shorts' };
+    const candidate = { hostname: 'youtube.com', pathPrefix: '/shorts/abc123' };
+    assert.equal(entryCovers(covering, candidate), true);
+  });
+
+  await t.test('a path-scoped entry covers the same path prefix on a subdomain', () => {
+    const covering = { hostname: 'youtube.com', pathPrefix: '/shorts' };
+    const candidate = { hostname: 'm.youtube.com', pathPrefix: '/shorts/abc123' };
+    assert.equal(entryCovers(covering, candidate), true);
+  });
+
+  await t.test('unrelated hostnames never cover each other', () => {
+    const covering = { hostname: 'instagram.com', pathPrefix: null };
+    const candidate = { hostname: 'facebook.com', pathPrefix: null };
+    assert.equal(entryCovers(covering, candidate), false);
+  });
+
+  await t.test('a similarly-named different domain is not treated as a subdomain', () => {
+    const covering = { hostname: 'pinterest.com', pathPrefix: null };
+    const candidate = { hostname: 'notpinterest.com', pathPrefix: null };
+    assert.equal(entryCovers(covering, candidate), false);
   });
 });
 

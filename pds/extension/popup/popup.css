@@ -370,7 +370,7 @@ body {
 .auth-forgot {
   font-size: 0.78rem;
   text-align: right;
-  margin: -4px 0 10px;
+  margin: -6px 0 16px;
 }
 
 .auth-forgot a {

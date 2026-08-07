@@ -136,3 +136,22 @@ export function matchesBlockedEntry(url, entry) {
   const pathname = pathnameOf(url);
   return pathname !== null && pathname.toLowerCase().startsWith(entry.pathPrefix);
 }
+
+/**
+ * True if `covering` (a parsed blocklist entry) already makes `candidate`
+ * (another parsed blocklist entry) fully redundant — e.g. covering
+ * "instagram.com" makes candidate "live.instagram.com" redundant, same as
+ * it would make the live tab URL "https://live.instagram.com/" redundant.
+ * Reuses matchesBlockedEntry() rather than reimplementing the same
+ * hostname/path comparison a second time, by feeding it a synthetic URL
+ * representing the broadest thing candidate itself matches (its own
+ * hostname + its own path, or "/" for a bare-domain candidate).
+ *
+ * Used both directions in dashboard.html: reject adding a new entry
+ * that's already covered by an existing one, and clean up existing
+ * entries a newly-added, broader entry now makes redundant.
+ */
+export function entryCovers(covering, candidate) {
+  const candidateUrl = `https://${candidate.hostname}${candidate.pathPrefix ?? '/'}`;
+  return matchesBlockedEntry(candidateUrl, covering);
+}

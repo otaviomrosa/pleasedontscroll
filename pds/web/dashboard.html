@@ -1781,7 +1781,7 @@
     import { createPortalSession } from '../core/sync/billing.js';
     import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
-    import { isValidBlocklistUrl, isOwnDomain, normalizeToHostname, parseBlocklistEntry } from '../core/blocklist/hostname.js';
+    import { isValidBlocklistUrl, isOwnDomain, normalizeToHostname, parseBlocklistEntry, entryCovers } from '../core/blocklist/hostname.js';
     import { isValidEmail, isValidPassword, isValidProfileName, MIN_PASSWORD_LENGTH } from '../core/validation.js';
 
     // ─── State ─────────────────────────────────────────────────────────────────
@@ -2849,36 +2849,38 @@
         return;
       }
 
+      // A quick-add site can still make an existing, narrower entry
+      // redundant — e.g. clicking "Reddit" (bare reddit.com) after a user
+      // had previously typed "m.reddit.com" in manually.
+      await removeEntriesCoveredBy(accessToken, parseBlocklistEntry(url));
+
       loadBlocklist(selectedProfile.id);
       pokeExtension();
     }
 
-    // Shared by any add-flow that just added a bare-hostname (whole-domain)
-    // entry — removes any existing path-scoped rows for that same
-    // hostname, since they're now redundant (the whole-domain entry
-    // already covers whatever they were scoping, e.g. having both
-    // "youtube.com" and "youtube.com/shorts" blocked is pointless once the
-    // whole domain covers Shorts too). Best-effort: a removal failing here
-    // doesn't undo the whole-site block that already succeeded
-    // (enforcement is already correct regardless), it just leaves a
-    // harmless redundant row behind. This does succeed in Strict Mode
-    // despite 011_lock_mode_guards.sql's general "no removal" rule —
-    // 014_lock_mode_redundant_cleanup_exception.sql carves out exactly
-    // this case (removing a row already fully covered by another
-    // whole-domain row on the same profile never reduces enforcement, so
-    // it isn't a bypass).
-    async function removeRedundantPathScopedEntries(accessToken, hostname) {
-      const redundant = currentBlocklistEntries.filter(
-        (entry) => entry.hostname === hostname && entry.pathPrefix !== null,
-      );
+    // Shared by every add-flow — removes any existing row that the entry
+    // just added now makes fully redundant, via entryCovers() (not just a
+    // same-hostname path-scoped row: a bare "instagram.com" also retires
+    // an existing "live.instagram.com" row, since the whole-domain entry
+    // already covers that subdomain too). Best-effort: a removal failing
+    // here doesn't undo the block that already succeeded (enforcement is
+    // already correct regardless), it just leaves a harmless redundant row
+    // behind. This does succeed in Strict Mode despite
+    // 011_lock_mode_guards.sql's general "no removal" rule —
+    // 015_lock_mode_redundant_cleanup_subdomains.sql generalizes
+    // 014_lock_mode_redundant_cleanup_exception.sql's exception the same
+    // way: removing a row already fully covered by another row on the
+    // same profile never reduces enforcement, so it isn't a bypass.
+    async function removeEntriesCoveredBy(accessToken, coveringEntry) {
+      const redundant = currentBlocklistEntries.filter((entry) => entryCovers(coveringEntry, entry));
       for (const entry of redundant) {
         await removeBlockedUrl(accessToken, entry.id);
       }
     }
 
     // Used only by a sectioned chip's "Block the whole site" row — adds
-    // the bare hostname, then cleans up any now-redundant path-scoped rows
-    // via removeRedundantPathScopedEntries(). Not shared with
+    // the bare hostname, then cleans up any now-redundant rows (path-scoped
+    // or subdomain) via removeEntriesCoveredBy(). Not shared with
     // handleQuickAdd() — an unsectioned chip's single click or a
     // section-only add ("Shorts only") should never trigger this cleanup,
     // only this specific action.
@@ -2902,7 +2904,7 @@
         return;
       }
 
-      await removeRedundantPathScopedEntries(accessToken, site.hostname);
+      await removeEntriesCoveredBy(accessToken, { hostname: site.hostname, pathPrefix: null });
 
       loadBlocklist(selectedProfile.id);
       pokeExtension();
@@ -2944,6 +2946,20 @@
         return;
       }
 
+      // Broader than an exact-string duplicate: rejects e.g. typing
+      // "live.instagram.com" when "instagram.com" is already blocked —
+      // already fully redundant (see matchesBlockedEntry's subdomain-
+      // inclusive matching), so there's no reason to let it become its own
+      // row. Checked after, not instead of, existingDuplicate above so the
+      // exact-match case keeps its own more specific error message.
+      const coveringEntry = currentBlocklistEntries.find((entry) => entryCovers(entry, parsedNewEntry));
+      if (coveringEntry) {
+        showError('url-error', 'That site is already covered by an existing entry in your blocklist.');
+        const existingRow = document.querySelector(`.url-item[data-url-id="${coveringEntry.id}"]`);
+        if (existingRow) shakeElement(existingRow);
+        return;
+      }
+
       const btn = document.getElementById('add-url-btn');
       btn.textContent = '…';
       btn.disabled    = true;
@@ -2964,14 +2980,10 @@
 
       // Same redundant-cleanup handleBlockWholeSite() does for the
       // quick-add chips' "Block the whole site" row — a manually-typed
-      // bare domain (e.g. instagram.com) should also retire any
-      // path-scoped rows it now makes redundant (e.g. instagram.com/reels)
-      // instead of leaving them sitting there unreachable. Only applies
-      // when the typed entry itself is a bare domain — adding a
-      // path-scoped entry never makes anything else redundant.
-      if (parsedNewEntry.pathPrefix === null) {
-        await removeRedundantPathScopedEntries(accessToken, parsedNewEntry.hostname);
-      }
+      // entry (bare domain or path-scoped) should also retire any existing
+      // rows it now makes redundant (e.g. adding "instagram.com" retires
+      // an existing "live.instagram.com" row).
+      await removeEntriesCoveredBy(accessToken, parsedNewEntry);
 
       input.value = '';
       loadBlocklist(selectedProfile.id);

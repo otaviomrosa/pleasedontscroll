@@ -82,7 +82,68 @@
       overflow-x: hidden;
     }
 
+    /* ─── Entrance animations ────────────────────────────────────────── */
+    /* Same split as index.html's own "Entrance animations" block (see its
+       comment there for the full reasoning) — duplicated here rather than
+       shared, matching this codebase's existing no-shared-component-system
+       convention. Content always in the first viewport (hero, the two
+       plan cards — both inside .pricing-top's first-viewport layout) uses
+       a plain @keyframes animation that just runs on load, not an
+       IntersectionObserver — the observer-driven version of this wasn't
+       consistently replaying the same way on every refresh. [data-reveal]
+       + IntersectionObserver (kept below, wired up in this page's own
+       <script>) is reserved for what's actually below the fold: the
+       comparison table, quote, FAQ, and closing CTA. */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(28px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Only used by .plan-card.pro below — same fade-up, but ending at
+         that card's own permanent translateY(-8px) lift instead of 0. */
+      @keyframes fade-in-up-lifted {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(-8px); }
+      }
+
+      /* 0.8s/0.15s-stagger read as rushed per the founder — slowed to a
+         1.4s animation and a 0.28s stagger, both roughly double, for a
+         calmer, more deliberate feel instead of a quick snap-in. */
+      .enter {
+        opacity: 0;
+        animation: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .plan-card.pro.enter { animation-name: fade-in-up-lifted; }
+
+      /* 0.5s before anything starts, then each element +0.28s after the
+         previous — headline, sub, then the two plan cards in order. */
+      .enter-1 { animation-delay: 0.5s; }
+      .enter-2 { animation-delay: 0.78s; }
+      .enter-3 { animation-delay: 1.06s; }
+      .enter-4 { animation-delay: 1.34s; }
+
+      /* ── Scroll-triggered reveal, for content below the first viewport ── */
+      /* Same slower 1.4s duration as .enter above, for the same reason. */
+      .reveal {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .reveal.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* ─── Nav ────────────────────────────────────────────────────────── */
+    /* Same scroll-driven gradual blur as index.html — see that page's
+       identical .nav rule and its own <script> for the full reasoning
+       (duplicated here, not shared, matching this codebase's existing
+       no-shared-component-system convention). */
     .nav {
       position: fixed;
       top: 0;
@@ -93,10 +154,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 20px 40px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, var(--nav-bg-alpha, 0));
+      backdrop-filter: blur(var(--nav-blur, 0px));
+      -webkit-backdrop-filter: blur(var(--nav-blur, 0px));
     }
 
     .nav-logo {
@@ -277,8 +337,8 @@
       width: 100vw;
       transform: translateX(-50%);
       background:
-        linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
-        url('assets/images/pricing-painting.png') center -100% / cover no-repeat;
+        linear-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)),
+        url('assets/images/pricing-painting.png') center 00% / cover no-repeat;
       z-index: -1;
       pointer-events: none;
     }
@@ -322,7 +382,7 @@
     }
 
     .hero h1 em {
-      font-style: normal;
+      font-style: italic;
       color: var(--text-muted);
     }
 
@@ -360,47 +420,45 @@
     }
 
     /* ── Free card ── */
+    /* Glassy, not flat white — matches index.html's .feature-card recipe
+       exactly (same translucent-white + blur + inset-sheen approach), and
+       for the same reason it works there: .pricing-top's background image
+       runs behind these cards (see .pricing-top::before above), which is
+       what backdrop-filter actually has to blur for the effect to read as
+       real glass rather than just a lighter flat card. */
     .plan-card {
-      background: var(--white);
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
       border-radius: var(--radius-card);
-      border: 1px solid var(--border-mid);
+      border: 1px solid rgba(255, 255, 255, 0.6);
       padding: 36px 32px;
-      box-shadow: var(--shadow-card);
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
     /* ── Pro card ── */
+    /* Same glass tint as the free card now, not a dark/black variant —
+       no background declared here at all, so it's literally the same
+       rgba(255,255,255,0.55) value inherited from .plan-card above rather
+       than a second copy that could drift out of sync. The free/pro split
+       now reads through a single purple border, not a glow — the corner
+       radial glow and bottom shimmer (::before/::after) were removed, and
+       box-shadow no longer pulls in --shadow-pro's purple ring (that
+       token's still used elsewhere, e.g. index.html's Strict Mode card —
+       left alone, just not referenced here anymore); this card's shadow is
+       the same black drop-shadow --shadow-pro also carries, spelled out
+       directly, plus the same inset sheen the free card gets. The CTA
+       button (.btn-plan.pro-btn below) is solid black now too, not purple.
+       Every plan-name/price/tagline/feature-text override that used to
+       exist purely to keep white text readable on black is still gone —
+       they fall through to the same dark text the free card's text
+       already uses. position: relative/overflow: hidden are gone too —
+       both existed only to host and clip the now-removed pseudo-elements. */
     .plan-card.pro {
-      background: var(--black);
       border-color: var(--pro-gold-glow);
-      box-shadow: var(--shadow-pro);
-      position: relative;
-      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       /* Slightly elevated visually */
       transform: translateY(-8px);
-    }
-
-    /* Iridescent shimmer — a single faint gold gradient sweep */
-    .plan-card.pro::before {
-      content: '';
-      position: absolute;
-      top: -60px;
-      right: -60px;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle at center, rgba(119, 65, 200, 0.18) 0%, transparent 65%);
-      pointer-events: none;
-      border-radius: 50%;
-    }
-
-    /* Subtle bottom shimmer */
-    .plan-card.pro::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(119, 65, 200, 0.5), transparent);
     }
 
     .plan-badge {
@@ -450,16 +508,12 @@
       color: var(--text);
     }
 
-    .plan-card.pro .plan-name { color: var(--white); }
-
     .plan-tagline {
       font-size: 0.88rem;
       color: var(--text-muted);
       margin: 0 0 28px;
       line-height: 1.5;
     }
-
-    .plan-card.pro .plan-tagline { color: rgba(255, 255, 255, 0.5); }
 
     .plan-price {
       display: flex;
@@ -477,8 +531,6 @@
       color: var(--text);
     }
 
-    .plan-card.pro .plan-price-amount { color: var(--white); }
-
     .plan-price-currency {
       font-size: 1.25rem;
       font-weight: 400;
@@ -487,15 +539,11 @@
       margin-top: 8px;
     }
 
-    .plan-card.pro .plan-price-currency { color: rgba(255, 255, 255, 0.45); }
-
     .plan-price-period {
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 6px;
     }
-
-    .plan-card.pro .plan-price-period { color: rgba(255, 255, 255, 0.4); }
 
     /* CTA button on each card */
     .btn-plan {
@@ -526,16 +574,27 @@
       transform: none;
     }
 
-    .btn-plan.free-btn {
+    /* Went white pill → solid purple → solid black, each time per the
+       founder's own feedback — solid black still read too heavy next to
+       "Start for free"'s quiet gray-fill treatment, so pro-btn shares
+       free-btn's exact fill/text/border now rather than getting its own
+       color. */
+    .btn-plan.free-btn,
+    .btn-plan.pro-btn {
       background: rgba(0, 0, 0, 0.06);
       color: var(--text);
       border: 1px solid var(--border-mid);
     }
 
+    /* One small purple touch left on the CTA itself — everything else
+       about the two buttons is now identical, so this soft glow is the
+       only thing marking "Get Focus Pro" as the pro action at a glance.
+       Much fainter than the 0.45/0.6-alpha glow the solid-purple version
+       of this button had before — "slight" per the founder's own word for
+       it, sitting closer to the same quiet alpha the card's border/badge/
+       checkmark/divider purple accents already use. */
     .btn-plan.pro-btn {
-      background: var(--white);
-      color: var(--black);
-      box-shadow: 0 4px 24px rgba(119, 65, 200, 0.25);
+      box-shadow: 0 4px 20px rgba(119, 65, 200, 0.2);
     }
 
     /* Divider inside card */
@@ -545,7 +604,10 @@
       margin: 0 0 24px;
     }
 
-    .plan-card.pro .plan-divider { background: rgba(255, 255, 255, 0.08); }
+    /* Purple-tinted rather than the plain gray .plan-divider uses — one
+       more small, deliberate spot of the accent color inside the pro
+       card now that the card itself is no longer black. */
+    .plan-card.pro .plan-divider { background: rgba(119, 65, 200, 0.15); }
 
     /* Feature list */
     .plan-features {
@@ -565,8 +627,6 @@
       line-height: 1.45;
       color: var(--text-muted);
     }
-
-    .plan-card.pro .plan-feature { color: rgba(255, 255, 255, 0.6); }
 
     .plan-feature-icon {
       flex-shrink: 0;
@@ -967,9 +1027,8 @@
 
     <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
-      <div class="hero-eyebrow">Simple, transparent pricing</div>
-      <h1>Less distraction.<br><em>More free time.</em></h1>
-      <p class="hero-sub">
+      <h1 class="enter enter-1">Less distraction.<br><em>More free time.</em></h1>
+      <p class="hero-sub enter enter-2">
         Start free. Upgrade when you're ready for the full experience.
         No hidden fees, no tracking, no tricks.
       </p>
@@ -979,7 +1038,7 @@
     <div class="plans-grid">
 
       <!-- Free card -->
-      <div class="plan-card">
+      <div class="plan-card enter enter-3">
         <div class="plan-badge free-badge">Free forever</div>
         <h2 class="plan-name">Free</h2>
         <p class="plan-tagline">The essentials to break the scroll habit and reclaim your focus.</p>
@@ -1015,7 +1074,7 @@
       </div>
 
       <!-- Pro card -->
-      <div class="plan-card pro">
+      <div class="plan-card pro enter enter-4">
         <div class="plan-badge pro-badge">
           <span class="plan-badge-dot"></span>
           Focus Pro
@@ -1062,7 +1121,7 @@
     </div><!-- /.pricing-top -->
 
     <!-- ─── Comparison table ──────────────────────────────────────────────── -->
-    <section class="section">
+    <section class="section" data-reveal>
       <p class="section-label">Full comparison</p>
       <h2 class="section-title">What you get</h2>
 
@@ -1120,7 +1179,7 @@
     </section>
 
     <!-- ─── Quote ────────────────────────────────────────────────────────── -->
-    <section class="quote-section">
+    <section class="quote-section" data-reveal>
       <span class="quote-mark">&ldquo;</span>
       <p class="quote-text">
         My screen time report used to say 4 hours a day without fail. A month into using
@@ -1132,7 +1191,7 @@
     </section>
 
     <!-- ─── FAQ ──────────────────────────────────────────────────────────── -->
-    <section class="faq-section">
+    <section class="faq-section" data-reveal>
       <p class="section-label">Questions</p>
       <h2 class="section-title">Frequently asked</h2>
 
@@ -1179,7 +1238,7 @@
     </section>
 
     <!-- ─── Bottom CTA ────────────────────────────────────────────────────── -->
-    <section class="bottom-cta">
+    <section class="bottom-cta" data-reveal>
       <h2>Your attention is<br><span style="color: var(--text-muted)">worth defending.</span></h2>
       <p>Join thousands of people taking back their time.</p>
       <button class="btn-cta-primary" id="bottom-cta-btn">
@@ -1364,6 +1423,53 @@
     })
 
     initAccountMenu()
+
+    // ─── Entrance reveal ──────────────────────────────────────────────────
+    // Pairs with the [data-reveal]/.reveal/.in-view CSS (see the "Entrance
+    // reveal" comment near the top of this page's <style> block) — same
+    // code as index.html's own copy, see that page's comment for the full
+    // reasoning behind the reduced-motion check ordering.
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
+      const revealEls = document.querySelectorAll('[data-reveal]')
+      revealEls.forEach((el) => el.classList.add('reveal'))
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          entry.target.classList.add('in-view')
+          revealObserver.unobserve(entry.target)
+        })
+      }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' })
+
+      revealEls.forEach((el) => revealObserver.observe(el))
+    }
+
+    // ─── Nav scroll blur ──────────────────────────────────────────────────
+    // Same code as index.html's own copy — see that page's identical block
+    // for the full reasoning (not gated behind reduced-motion, since this
+    // is a direct 1:1 response to scroll input, not an autoplaying effect).
+    const navEl = document.querySelector('.nav')
+    const NAV_SCROLL_RANGE = 120
+    const NAV_MAX_BLUR = 20
+    const NAV_MAX_BG_ALPHA = 0.82
+
+    function updateNavOnScroll() {
+      const progress = Math.min(window.scrollY / NAV_SCROLL_RANGE, 1)
+      navEl.style.setProperty('--nav-blur', `${(progress * NAV_MAX_BLUR).toFixed(2)}px`)
+      navEl.style.setProperty('--nav-bg-alpha', (progress * NAV_MAX_BG_ALPHA).toFixed(3))
+    }
+
+    let navScrollTicking = false
+    window.addEventListener('scroll', () => {
+      if (navScrollTicking) return
+      navScrollTicking = true
+      requestAnimationFrame(() => {
+        updateNavOnScroll()
+        navScrollTicking = false
+      })
+    }, { passive: true })
+
+    updateNavOnScroll()
   </script>
 
 </body>

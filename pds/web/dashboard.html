@@ -7,62 +7,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
   <style>
-    /* ─── Tokens ───────────────────────────────────────────────────────── */
+    /* ─── Tokens (page-local only — brand colors/fonts/accents live in
+       tokens.css) ─────────────────────────────────────────────────────── */
+    /* Everything here is either app-density-specific (tighter radii/shadow
+       than the marketing pages' more spacious versions) or dashboard-only
+       (no equivalent on index.html/pricing.html at all) — see tokens.css's
+       own top comment for the full reasoning on what's shared vs. not. */
     :root {
-      /* Back to pure #000000 — went #000000 → #1a1a1a → #111111 →
-         #000000. --black and --text stay equal on purpose (a deliberate
-         consolidation, not a new value: one less near-black floating in
-         the token set) rather than reintroducing a second, separate dark
-         value. Cascades to every var(--black) consumer (.btn-primary,
-         .btn-sm.dark, .account-avatar, .pause-toggle, .toast)
-         automatically. */
-      --black:        #000000;
-      --white:        #ffffff;
-      --text:         #000000;
-      --text-muted:   #8e8e93;
-      --bg:           #ffffff;
       --card:         #ffffff;
-      --border:       rgba(0, 0, 0, 0.11);
       --border-hover: rgba(0, 0, 0, 0.16);
       --error:        #c0392b;
       --dot-active:   #2d6a4f;
-      /* Settled palette: a muted-then-brightened violet as the one brand
-         accent, used both for general interactive accents and for
-         Pro-tier signaling — no separate --accent-teal here anymore
-         (dashboard.html has no Friction/Strict mode indicator of its own,
-         that toggle only lives in the popup, so there's no need for a
-         second accent token the way popup.css/blocked.css still need
-         teal for Friction specifically). Went teal → gold → burgundy
-         ("Crimson Bordeaux") → royal blue → this: purple/violet, the
-         dominant "Pro tier" SaaS color archetype (Discord Nitro, Twitch
-         Prime, Grammarly Premium) — tests well for subscription
-         conversion specifically, without the urgency/alarm connotation
-         warmer colors (orange/red) carry, which would cut against this
-         product's "no manipulative dark patterns" positioning anyway.
-         Same value as index.html's own accent now. Strict Mode's own
-         indicator color (popup.css/blocked.css's --strict) deliberately
-         stayed on the burgundy value — a distinct meaning (an
-         alarm/lockout color), not a brand accent, so it didn't move with
-         this. Naturalistic earth tones (sage, terracotta, gold, the
-         dark-green rounds) were explored earlier and dropped too. Used by
-         .premium-badge, .premium-badge-dot, .btn-upgrade, and
-         .upgrade-banner's own gradient/glow. Token name kept as
-         --pro-gold for now. */
-      --pro-gold:      #7741c8;
-      --pro-gold-dim:  rgba(119, 65, 200, 0.1);
-      --pro-gold-glow: rgba(119, 65, 200, 0.22);
       --radius-card:  20px;
       --radius-btn:   12px;
       --radius-field: 10px;
       --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.07);
-      --font-ui:      'DM Sans', -apple-system, sans-serif;
-      --font-serif:   'Lora', serif;
     }
 
     /* ─── Reset ────────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 0;
@@ -225,19 +189,6 @@
 
     .btn-primary:hover    { opacity: 0.82; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-ghost {
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 0;
-      transition: color 0.15s;
-    }
-
-    .btn-ghost:hover { color: var(--text); }
 
     .auth-toggle {
       font-size: 0.82rem;
@@ -1343,9 +1294,9 @@
       font-weight: 600;
       letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--pro-gold);
-      background: var(--pro-gold-dim);
-      border: 1px solid var(--pro-gold-glow);
+      color: var(--accent-pro);
+      background: var(--accent-pro-dim);
+      border: 1px solid var(--accent-pro-glow);
       padding: 3px 10px;
       border-radius: 24px;
       vertical-align: middle;
@@ -1356,7 +1307,7 @@
       width: 5px;
       height: 5px;
       border-radius: 50%;
-      background: var(--pro-gold);
+      background: var(--accent-pro);
       animation: pulse-badge 2.4s ease-in-out infinite;
     }
 
@@ -1416,7 +1367,7 @@
       flex-shrink: 0;
       display: inline-block;
       padding: 9px 18px;
-      background: var(--pro-gold);
+      background: var(--accent-pro);
       color: var(--white);
       font-family: var(--font-ui);
       font-size: 0.82rem;

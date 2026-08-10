@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="tokens.css">
 
   <!-- ─── Stripe.js ─────────────────────────────────────────────────── -->
   <!-- Stripe.js is loaded for potential future use (Elements, etc.).    -->
@@ -15,24 +14,62 @@
   <script src="https://js.stripe.com/v3/" async></script>
 
   <style>
-    /* ─── Tokens (page-local only — brand colors/fonts/accents live in
-       tokens.css) ─────────────────────────────────────────────────────── */
-    /* --radius-card/--radius-btn/--shadow-card are marketing-page-spacious
-       values vs. dashboard.html's own tighter app-density versions — see
-       tokens.css's top comment. --shadow-pro isn't used by anything on
-       this page locally — kept only because index.html's Strict Mode card
-       still consumes the same value; duplicated per-file rather than
-       shared since it's the marketing pages specifically that need it,
-       not dashboard. (--radius-tag, previously defined here, was fully
-       unused — dropped.) */
+    /* ─── Design Tokens ──────────────────────────────────────────────── */
     :root {
+      /* Back to pure #000000, matching dashboard.html's own token —
+         --black and --text stay equal on purpose (a consolidation, not a
+         new value: one less near-black in the token set). */
+      --black:        #000000;
+      --white:        #ffffff;
+      --text:         #000000;
+      --text-muted:   #6e6e73;
+      --text-faint:   #aeaeb2;
+      --bg:           #ffffff;
+      --border:       rgba(0, 0, 0, 0.09);
+      --border-mid:   rgba(0, 0, 0, 0.14);
+
+      /* --accent-teal covers general/neutral accents that aren't
+         specifically about the Pro plan (the hero eyebrow, the comparison
+         table's checkmarks — those appear in both the Free and Pro
+         columns, so they're not a Pro signal specifically); --pro-gold
+         covers everywhere this page is actually marking "this is the Pro
+         plan" (the Pro plan card, its badge, its CTA button, its own
+         feature checkmarks). Kept as two separate tokens for what they
+         mean, even though they're now the same color.
+         Went teal → gold → burgundy ("Crimson Bordeaux") → royal blue →
+         this: purple/violet, the dominant "Pro tier" SaaS color archetype
+         (Discord Nitro, Twitch Prime, Grammarly Premium) — tests well for
+         subscription conversion specifically, without the urgency/alarm
+         connotation warmer colors (orange/red) carry, which would cut
+         against this product's "no manipulative dark patterns"
+         positioning anyway. Same value as index.html's own accent now.
+         Strict Mode's own indicator color (popup.css/blocked.css's
+         --strict) deliberately stayed on the burgundy value — that's a
+         distinct meaning (an alarm/lockout color), not a brand accent, so
+         it didn't move with this. Glow alphas (--accent-teal-glow/
+         --pro-gold-glow/--shadow-pro's ring) were bumped 0.22 → 0.38,
+         0.18 → 0.32 at one point, matching index.html, then reverted back
+         to the original 0.22/0.18 here too. */
+      --accent-teal:      #7741c8;
+      --accent-teal-dim:  rgba(119, 65, 200, 0.12);
+      --accent-teal-glow: rgba(119, 65, 200, 0.22);
+      --pro-gold:         #7741c8;
+      --pro-gold-dim:     rgba(119, 65, 200, 0.12);
+      --pro-gold-glow:    rgba(119, 65, 200, 0.22);
+
       --radius-card:  24px;
       --radius-btn:   50px;
+      --radius-tag:   8px;
       --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
       --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(119, 65, 200, 0.18);
+
+      --font-ui:      'DM Sans', -apple-system, sans-serif;
+      --font-serif:   'Lora', serif;
     }
 
     /* ─── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
     html { scroll-behavior: smooth; }
 
     body {
@@ -320,6 +357,20 @@
       margin-top: -40px;
     }
 
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-teal);
+      background: var(--accent-teal-dim);
+      border: 1px solid rgba(119, 65, 200, 0.2);
+      padding: 5px 14px;
+      border-radius: var(--radius-btn);
+      margin-bottom: 28px;
+    }
+
     .hero h1 {
       font-family: var(--font-serif);
       font-weight: 400;
@@ -386,18 +437,25 @@
     }
 
     /* ── Pro card ── */
-    /* Same glass tint as the free card — no background declared here at
-       all, so it's literally the same rgba(255,255,255,0.55) value
-       inherited from .plan-card above, not a second copy that could drift
-       out of sync. The free/pro split reads through the purple border
-       alone, not a glow or a fill color. box-shadow is spelled out
-       directly (the same black drop-shadow --shadow-pro also carries,
-       plus the same inset sheen the free card gets) rather than pulling
-       in --shadow-pro itself, since that token's purple ring isn't wanted
-       here — --shadow-pro stays defined above only because index.html's
-       Strict Mode card still consumes it. */
+    /* Same glass tint as the free card now, not a dark/black variant —
+       no background declared here at all, so it's literally the same
+       rgba(255,255,255,0.55) value inherited from .plan-card above rather
+       than a second copy that could drift out of sync. The free/pro split
+       now reads through a single purple border, not a glow — the corner
+       radial glow and bottom shimmer (::before/::after) were removed, and
+       box-shadow no longer pulls in --shadow-pro's purple ring (that
+       token's still used elsewhere, e.g. index.html's Strict Mode card —
+       left alone, just not referenced here anymore); this card's shadow is
+       the same black drop-shadow --shadow-pro also carries, spelled out
+       directly, plus the same inset sheen the free card gets. The CTA
+       button (.btn-plan.pro-btn below) is solid black now too, not purple.
+       Every plan-name/price/tagline/feature-text override that used to
+       exist purely to keep white text readable on black is still gone —
+       they fall through to the same dark text the free card's text
+       already uses. position: relative/overflow: hidden are gone too —
+       both existed only to host and clip the now-removed pseudo-elements. */
     .plan-card.pro {
-      border-color: var(--accent-pro-glow);
+      border-color: var(--pro-gold-glow);
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
       /* Slightly elevated visually */
       transform: translateY(-8px);
@@ -423,7 +481,7 @@
     }
 
     .plan-badge.pro-badge {
-      color: var(--accent-pro);
+      color: var(--pro-gold);
       background: rgba(119, 65, 200, 0.15);
       border: 1px solid rgba(119, 65, 200, 0.3);
     }
@@ -589,7 +647,7 @@
 
     .plan-card.pro .plan-feature-icon.check {
       background: rgba(119, 65, 200, 0.2);
-      color: var(--accent-pro);
+      color: var(--pro-gold);
     }
 
     /* ─── Comparison table ────────────────────────────────────────────── */
@@ -663,7 +721,7 @@
       margin-top: 2px;
     }
 
-    /* --accent-brand, not --accent-pro — this appears in both the Free and
+    /* --accent-teal, not --pro-gold — this appears in both the Free and
        Pro comparison-table columns (it just means "this row is included
        here"), so it's a general "yes" indicator, not a Pro-specific one. */
     .check-yes {
@@ -675,7 +733,7 @@
       border-radius: 50%;
       font-size: 0.7rem;
       background: rgba(119, 65, 200, 0.1);
-      color: var(--accent-brand);
+      color: var(--accent-teal);
     }
 
     .check-partial {
@@ -920,35 +978,11 @@
 
     /* ─── Responsive ──────────────────────────────────────────────────── */
     @media (max-width: 768px) {
-      /* .pricing-top's min-height: 100vh + justify-content: center (see
-         that rule's own comment) assumes hero + plan cards fit within one
-         screen, which is only true on a wide/short desktop viewport — on
-         a phone the two plan cards stack (see .plans-grid's own 680px
-         block) and easily total more than a full mobile screen's height.
-         Centered content taller than its box overflows equally on both
-         sides, which was pushing the hero up past the fixed nav instead
-         of sitting below it. flex-start + auto height just let the
-         content flow normally from the top, like every other section. */
-      .pricing-top { min-height: auto; justify-content: flex-start; }
       .nav { padding: 16px 24px; }
       .nav-links { gap: 4px; }
       .nav-link { display: none; }
       .page { padding: 0 20px; }
-      /* margin-top: -40px on .hero (base rule above) only makes sense
-         paired with .pricing-top's centering — it shifts the hero within
-         that centered box's own math. With centering off on mobile
-         (immediately above), it would just pull the hero 40px further up
-         than its padding already places it. Same reasoning for
-         .plans-grid's -24px margin-top, reset here too (not just in its
-         own 680px block below) — this 768px breakpoint is the wider one,
-         so without this a screen between 681-768px would still carry the
-         stale -24px with no centering left to make sense of it. */
-      /* padding-top bumped further still (120px → 190px), same as
-         index.html's own mobile hero — even correctly cleared of the nav
-         (the fix above), it read as sitting too high/cramped per the
-         founder on an actual phone. */
-      .hero { padding: 190px 0 60px; margin-top: 0; }
-      .plans-grid { margin-top: 0; }
+      .hero { padding: 120px 0 60px; }
       .comparison-table th:nth-child(2),
       .comparison-table td:nth-child(2) { display: none; }
       .footer { flex-direction: column; align-items: flex-start; gap: 16px; }

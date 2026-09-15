@@ -15,7 +15,7 @@
          consolidation, not a new value: one less near-black floating in
          the token set) rather than reintroducing a second, separate dark
          value. Cascades to every var(--black) consumer (.btn-primary,
-         .btn-sm.dark, .account-avatar, .pause-toggle, .toast)
+         .btn-sm.dark, .pause-toggle, .toast, .sidebar-nav-item.active)
          automatically. */
       --black:        #000000;
       --white:        #ffffff;
@@ -29,11 +29,10 @@
       --dot-active:   #2d6a4f;
       /* Settled palette: a muted-then-brightened violet as the one brand
          accent, used both for general interactive accents and for
-         Pro-tier signaling — no separate --accent-teal here anymore
-         (dashboard.html has no Friction/Strict mode indicator of its own,
-         that toggle only lives in the popup, so there's no need for a
-         second accent token the way popup.css/blocked.css still need
-         teal for Friction specifically). Went teal → gold → burgundy
+         Pro-tier signaling. (dashboard.html has since gained its own
+         Friction/Strict mode indicator too — see --friction-teal below —
+         but that was added later, on top of this palette, not as part of
+         this original decision.) Went teal → gold → burgundy
          ("Crimson Bordeaux") → royal blue → this: purple/violet, the
          dominant "Pro tier" SaaS color archetype (Discord Nitro, Twitch
          Prime, Grammarly Premium) — tests well for subscription
@@ -46,12 +45,20 @@
          alarm/lockout color), not a brand accent, so it didn't move with
          this. Naturalistic earth tones (sage, terracotta, gold, the
          dark-green rounds) were explored earlier and dropped too. Used by
-         .premium-badge, .premium-badge-dot, .btn-upgrade, and
-         .upgrade-banner's own gradient/glow. Token name kept as
-         --pro-gold for now. */
-      --pro-gold:      #7741c8;
-      --pro-gold-dim:  rgba(119, 65, 200, 0.1);
-      --pro-gold-glow: rgba(119, 65, 200, 0.22);
+         .btn-upgrade/.upgrade-banner's gradient/glow (as literal rgba(119,
+         65, 200, …) values there, not this token — no --pro-gold-dim/-glow
+         variants exist; the sidebar's pro-tag used to be the one consumer
+         of tokens like that, before it was changed to match popup.css's
+         plain gray .pro-tag instead, which dropped the need for them).
+         Token name kept as --pro-gold for now. */
+      --pro-gold: #7741c8;
+      /* Mode indicator pill (justified right of the quick-add chips — see
+         .mode-pill) — not this file's own --pro-gold brand accent, a
+         distinct meaning. Solid fill, matching popup.css/blocked.css's
+         own --friction/--strict exactly (same hex, same box-shadow glow
+         recipe) so the color means the same thing on both surfaces. */
+      --friction-teal:   #4a90a4;
+      --strict-burgundy: #b0203f;
       --radius-card:  20px;
       --radius-btn:   12px;
       --radius-field: 10px;
@@ -74,16 +81,42 @@
       min-height: 100vh;
     }
 
+    /* max-height: 100vh + overflow: hidden — a safety cap against the
+       blocklist ever growing the whole page taller as sites are added,
+       now that .dashboard-shell's own height (below) is a direct,
+       self-contained calc() off 100vh rather than something inherited
+       through a chain of flex-grow ancestors — that chain (this element,
+       .page-wrap, .dashboard-shell all needing flex: 1/flex: 7 ratios and
+       min-height: 0 to correctly hand a fixed height down) turned out too
+       fragile to reliably keep .sidebar/.content-pane matched — several
+       attempts at it still left them sized differently depending on which
+       section was showing. Scoped to #app-screen specifically (not
+       body/html) so #auth-screen — a plain centered login/signup card, in
+       practice never taller than one screen — keeps its own behavior
+       unchanged. */
+    #app-screen {
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
     /* ─── Layout ───────────────────────────────────────────────────────── */
+    /* max-width matches index.html/pricing.html's own .page (1100px) —
+       was 960px, which made the content-pane feel narrow now that it
+       shares the row with a fixed-width sidebar rather than being the
+       only thing on the page. Top/bottom padding equal (both 72px) —
+       .dashboard-shell's own height calc() below subtracts both of these
+       directly, so keeping them equal is what keeps the leftover space
+       above/below the cards balanced. */
     .page-wrap {
-      max-width: 680px;
+      width: 100%;
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 72px 24px 80px;
+      padding: 72px 32px 72px;
     }
 
     /* ─── Public nav (auth screen only — hidden with #auth-screen on login,
-       distinct classes from .top-nav below so nothing collides with the
-       in-app header) ────────────────────────────────────────────────── */
+       distinct classes from the in-app sidebar/content-pane below so
+       nothing collides) ────────────────────────────────────────────────── */
     .public-nav {
       position: fixed;
       top: 0;
@@ -195,14 +228,18 @@
       border: 1px solid transparent;
       border-radius: var(--radius-field);
       outline: none;
-      transition: border-color 0.2s, background 0.2s;
+      transition: background 0.2s;
     }
 
     .field::placeholder { color: var(--text-muted); }
 
+    /* No border on focus (stays transparent, same as at rest) — instead
+       an even lighter gray than the #f5f5f7 resting fill, so focus reads
+       as "lifted/lighter" rather than "outlined." Shared by every .field
+       in the file, so this covers the blocklist url-input and the
+       change-password fields the same way automatically. */
     .field:focus {
-      background: var(--white);
-      border-color: rgba(0, 0, 0, 0.2);
+      background: #fafafb;
     }
 
     .btn-primary {
@@ -294,18 +331,6 @@
 
     .auth-resend a:hover { color: var(--text); text-decoration: underline; }
 
-    /* ─── Top nav ──────────────────────────────────────────────────────── */
-    /* Back to a plain in-flow row at the top of .page-wrap — the fixed/
-       glass nav bar treatment (matching index.html's .nav) was tried and
-       reverted. No logo anymore either — just the pause toggle on the
-       left, premium badge + account avatar on the right. */
-    .top-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
     /* ─── Pause blocking ──────────────────────────────────────────────────────
        A regular iOS-style switch. Default (no class) = blocking is always
        on, which is the normal/expected state — black track, knob right,
@@ -316,11 +341,16 @@
        (.pause-options-pill) grows out from behind it, tucked underneath
        via a negative margin + lower z-index so the switch visually
        "covers" the seam and it reads as one continuous shape emerging from
-       the switch rather than two independent pieces. */
-    .top-nav-left {
+       the switch rather than two independent pieces. Lives directly in
+       .page-wrap now, above .dashboard-shell — a page-global control, not
+       specific to either the Blocklist or Settings section, and gives the
+       sidebar/content-pane some breathing room instead of starting flush
+       at the top. */
+    .pause-row {
       display: flex;
       align-items: center;
       gap: 10px;
+      margin-bottom: 12px;
     }
 
     .pause-toggle-row {
@@ -331,7 +361,7 @@
          is much narrower than it visually is (the row's calculated width
          includes the child's negative margin, but the switch itself still
          renders at its full 42px regardless), so #pause-label right after
-         it in .top-nav-left was starting underneath/behind the switch. */
+         it in .pause-row was starting underneath/behind the switch. */
       min-width: 42px;
     }
 
@@ -481,153 +511,67 @@
       white-space: nowrap;
     }
 
-    /* ─── Account menu (same pattern duplicated on index.html and
-       pricing.html — no shared component system in this build-free
-       codebase). Dashboard's own "Settings" item is an in-page anchor
-       (#settings-card) rather than a link, since it's already here. ─── */
-    .account-menu { position: relative; }
-
-    /* 36px / 0.85rem — matches index.html's own .account-avatar exactly
-       (this file's version had drifted through a couple of unrelated
-       resize experiments — 34px/0.82rem originally, then 31px/0.75rem —
-       neither of which actually matched index.html; this does). */
+    /* Static — no dropdown, no click behavior, just the user's initial.
+       Sits in .sidebar-footer next to the pro-tag, with Sign out pushed
+       to the far end of that same row. align-self: center keeps this
+       vertically centered in the row on its own terms (a circle, not
+       text) — .sidebar-footer itself aligns by baseline now (see its own
+       comment), which is for the pro-tag/Sign out text specifically. */
     .account-avatar {
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: var(--black);
       color: var(--white);
       border: none;
       font-family: var(--font-ui);
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .account-avatar:hover { opacity: 0.82; }
-
-    .account-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      min-width: 200px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-card);
-      padding: 8px;
-      display: none;
-      z-index: 200;
-    }
-
-    .account-dropdown.open { display: block; }
-
-    .account-dropdown-header {
-      padding: 8px 12px 10px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 6px;
-    }
-
-    .account-dropdown-email {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      word-break: break-all;
-    }
-
-
-    .account-dropdown-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.86rem;
-      color: var(--text);
-      text-decoration: none;
-      padding: 9px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .account-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
-
-    /* ─── Settings disclosure (top-level Settings card, and the nested
-       Change password sub-section within it) ─────────────────────────── */
-    /* .card's default 28px felt like an oversized, mostly-empty box
-       around this much shorter collapsed content (just the header row),
-       so both top and bottom are trimmed to 20px. Horizontal padding
-       stays the inherited 28px so the card's left/right edges still line
-       up with every other card. */
-    #settings-card {
-      padding-top: 20px;
-      padding-bottom: 20px;
-    }
-
-    .settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      font-family: var(--font-ui);
-      text-align: left;
-    }
-
-    /* "Settings" + email inline, not stacked — the email sits directly to
-       the right of the label, both left of the chevron. min-width: 0 on
-       both the group and the email itself is what lets the email actually
-       ellipsis-truncate instead of overflowing/pushing the chevron out. */
-    .settings-header-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .settings-header-dot {
-      color: var(--text-muted);
       flex-shrink: 0;
+      align-self: center;
     }
 
-    .settings-header-email {
-      font-size: 0.82rem;
-      font-weight: 400;
+    /* Was a pill-shaped, accent-colored badge with a pulsing dot for Pro
+       (previously #premium-badge) and a separate .free grayscale variant.
+       Now matches popup.css's own .pro-tag exactly instead — same values,
+       same reasoning: a plain gray rounded-rectangle label reads as
+       quieter than a colored pill competing with the accent used
+       elsewhere (the Focus Pro CTA), and this file's tag is visible
+       constantly (sidebar footer), same "always in view" case that
+       motivated the extension's own plainer treatment. One flat look for
+       both Pro/Free now — only the label text (set by
+       loadPremiumStatus()) tells them apart. */
+    .pro-tag {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      min-width: 0;
+      background: #f5f5f7;
+      border-radius: 4px;
+      padding: 3px 8px;
+      line-height: 1.2;
     }
 
-    .settings-body {
-      margin-top: 20px;
-    }
+    /* ─── Settings section (nested Change password / Delete account
+       sub-disclosures within it) ──────────────────────────────────────── */
+    /* No top-level disclosure anymore — Settings is a plain
+       always-rendered .content-section, shown/hidden by the sidebar nav
+       (see showSection()) rather than its own expand/collapse. Only the
+       two nested sub-panels below (password, delete account) still use a
+       disclosure pattern. */
 
     /* Account list rows (Change password / Manage subscription / Delete
        account) — deliberately plain, "look like links" rather than boxed
        buttons, so the section reads as one compact list instead of several
-       spread-out blocks. The divider lives on .settings-item (the row +
-       its optional expandable panel together), not on .settings-link-row
-       itself — otherwise it sits right under the row's text and stays
-       there while the panel expands below it, instead of moving down to
-       sit under the panel like a normal list divider should. */
-    .settings-item {
-      border-bottom: 1px solid var(--border);
-    }
-
-    .settings-item:last-child {
-      border-bottom: none;
-    }
-
+       spread-out blocks. No divider between rows anymore — .settings-item
+       is still the wrapper grouping each row with its optional expandable
+       panel, just without a border-bottom of its own. */
     .settings-link-row {
       display: flex;
       align-items: center;
@@ -646,70 +590,76 @@
 
     .settings-link-row:hover { opacity: 0.7; }
 
-    /* Same boxed treatment as .danger-confirm (Delete account's panel),
-       grayscale instead of red — but plain white, not a gray wash: unlike
-       .danger-confirm (text + buttons only), this box contains .field
-       inputs, which already have their own #f5f5f7 fill — a gray box
-       background nearly matched that fill and made the inputs visually
-       disappear into the box around them. White + the border alone is
-       enough to read as a distinct box against #settings-card's own
-       background. */
-    /* margin-top: 0 matches .danger-confirm's own top spacing exactly —
-       both boxes now sit flush against their trigger row the same way.
-       Plain white — the inputs inside (#password-body .field) keep
-       .field's own #f5f5f7 fill, so they still read as distinct from
-       this box without needing this box's own background to be tuned
-       around that relationship too. */
+    /* max-height: 0 -> .open { max-height: <generous cap> } technique —
+       tried the grid-template-rows: 0fr -> 1fr trick first (same one
+       .site-options-menu below uses), including a defensive overflow:
+       hidden/min-height: 0 on both this element and .settings-subbody-inner,
+       but it still left a real, visible gap of empty space below the
+       collapsed row in practice (grid's auto-track-sizing has edge cases
+       the simpler max-height approach doesn't). max-height's own
+       trade-off — the transition animates toward the fixed cap, not the
+       exact content height, so it isn't frame-perfect — is a fine one to
+       make for actually working reliably. The cap (300px) just needs to
+       comfortably clear this content's real height (two fields + an
+       error slot + a button); it doesn't need to be exact. */
     .settings-subbody {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      margin: 0;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+    }
+
+    .settings-subbody.open {
+      max-height: 300px;
+      opacity: 1;
       margin: 0 0 12px;
-      padding: 14px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-field);
     }
 
-
-    .chevron {
-      display: inline-block;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      transition: transform 0.2s ease;
+    /* No more boxed look (background/border-radius/generous padding) —
+       once the border was already removed (see history), a white box on
+       a white section background wasn't reading as a distinct box at
+       all, just extra dead space around the fields. A small top gap is
+       all that's left, clearing the "Change password" row above it. */
+    .settings-subbody-inner {
+      padding: 4px 0 0;
     }
-
-    .chevron.open { transform: rotate(180deg); }
 
     /* ─── Section headers ──────────────────────────────────────────────── */
-    /* Now actually applied — was previously dead CSS, styling a class
-       nothing used (the old card headings were all .section-label, a
-       small-uppercase-eyebrow style; that class is gone now too, nothing
-       references it anymore). Used by all three card headings — Profiles,
-       Blocklist, and Settings. */
+    /* Small gray uppercase label — matches extension/popup/popup.css's
+       .mode-label/.profiles-label exactly (same font-size/weight/color/
+       letter-spacing/uppercase; no font-family override, so it inherits
+       --font-ui same as those do). "Profiles" and "Blocklist" (the other
+       two headings that used to share this class) were removed outright;
+       "Settings" is the only one left using it now, paired with the
+       email on the same line via .settings-header-title. */
     .section-title {
-      font-family: var(--font-serif);
-      /* Lora at weight 400 — a brief detour through weight 500 on this
-         same serif was already tried and reverted once before, with the
-         1.3rem→1.4rem font-size bump being the actual fix for
-         "too plain/light" instead of a heavier weight. */
-      font-weight: 400;
-      font-size: 1.4rem;
-      /* Lora's default line-height leaves noticeably more space above the
-         cap-height than below it (typical serif ascender/descender
-         metrics) — with .settings-header-title's dot/email centered
-         against this element's full line box (align-items: center), that
-         asymmetry made them sit visibly lower than the actual "Settings"
-         glyphs, not truly centered against the text itself. Tightening to
-         1 makes the box track the visible letters closely enough that
-         center-alignment actually looks centered. */
-      line-height: 1;
-      color: var(--text);
-      letter-spacing: -0.02em;
-      /* No margin of its own — the Profiles/Blocklist cards space every
-         direct child via flex gap, and the Settings instance sits in a
-         center-aligned flex row with its email subtitle
-         (.settings-header-title's own gap), so a margin here would only
-         ever be redundant or fight another element's own spacing. */
-      margin: 0;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      /* margin-top adds room above "Settings" specifically, on top of
+         .content-section's own 16px flex gap, rather than changing that
+         gap itself (which would also affect the spacing everywhere else
+         in the pane). */
+      margin: 12px 0 0;
     }
+
+    /* "Settings" + email on one line — flex row so the dot/email sit
+       inline with a controlled gap instead of relying on literal
+       whitespace in the markup (the HTML has none between "Settings"
+       and the dot/email spans for exactly this reason). */
+    .settings-header-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .settings-header-dot {
+      opacity: 0.5;
+    }
+
 
     /* ─── Card ─────────────────────────────────────────────────────────── */
     .card {
@@ -721,35 +671,236 @@
       margin-bottom: 20px;
     }
 
+    /* ─── Dashboard shell: sidebar + content-pane ─────────────────────────
+       Replaces the old single-column stack of .card panels (#profiles-card,
+       #blocklist-card, #settings-card) with a persistent left sidebar
+       (Blocklist/Settings nav, sign out) and a single right-hand
+       content-pane that swaps between two .content-section panels via
+       showSection(). Both .sidebar and .content-pane reuse the same panel
+       language .card already established (--radius-card/--shadow-card/
+       --border/--card) so they read as the same kind of surface, just
+       detached from each other (a visible gap, not one continuous block)
+       rather than one fused bar.
+       grid-template-columns: 232px 1fr (not flex + a fixed sidebar width)
+       is what actually keeps .content-pane's width constant regardless of
+       which section is showing — a flex: 1 + min-width: 0 version of this
+       was tried first and still let .content-pane's computed width vary
+       between Blocklist/Settings (their different content was still
+       influencing the flex-basis calculation despite min-width: 0). Grid's
+       1fr column has no such content-dependent sizing: it's always
+       "whatever's left after the fixed 232px column," full stop.
+       Row height: .sidebar/.content-pane fill this row via grid's own
+       default align-items: stretch (there's only one row, since no
+       grid-template-rows is set) — that part reliably matches the two of
+       them to each other. What was NOT reliable was getting
+       .dashboard-shell's OWN height right in the first place: it used to
+       get that via flex: 7 (plus a .page-wrap-spacer sibling at flex: 3,
+       splitting .page-wrap's leftover height 70/30 for the "30% smaller"
+       card size) — which depended on .page-wrap and #app-screen also
+       being flex containers correctly handing a fixed height down through
+       flex-grow, a chain that kept silently falling back to
+       content-based sizing instead (this is the actual reason Blocklist
+       and Settings kept rendering at different heights across several
+       fix attempts). height: calc() below removes that dependency
+       entirely — a fixed formula off 100vh directly, unaffected by
+       whatever .page-wrap/#app-screen's own rendered heights happen to
+       be. The subtracted values are .page-wrap's own top+bottom padding
+       (72px each) and the pause row's own height + bottom margin
+       (24px + 12px) sitting above this element; the remaining space is
+       then multiplied by 0.85 (was 0.7 — the "30% smaller" sizing read
+       as a bit short in practice, so this claws back most of that
+       reduction without going all the way back to the full 100%), with
+       the rest left as blank space below — no spacer element needed for
+       that, it's just whatever .page-wrap's own padding-bottom doesn't
+       already cover. */
+    .dashboard-shell {
+      display: grid;
+      grid-template-columns: 232px 1fr;
+      gap: 20px;
+      height: calc((100vh - 72px - 72px - 24px - 12px) * 0.85);
+    }
+
+    /* Width comes entirely from .dashboard-shell's grid-template-columns
+       (232px) now, not a width declared here — one source of truth
+       instead of two that could disagree. flex column so .sidebar-footer
+       below can pin itself to the bottom via margin-top: auto,
+       independent of .sidebar-nav's own height. */
+    /* Bottom padding matches the left/right padding (14px, was 20px like
+       the top) — the avatar in .sidebar-footer sits at the bottom-left
+       corner, and equal left/bottom insets are what make it read as
+       symmetrically nested against that corner's curve instead of sitting
+       closer to one edge than the other. */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      padding: 20px 14px 14px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Same rest/hover pattern as .settings-link-row — black text at rest,
+       dimmed via opacity: 0.7 on hover (which reads as light gray against
+       the white sidebar) rather than a color swap. .active still gets the
+       solid black fill .profile-tab.active already uses elsewhere in this
+       file, since a visible "this is the current section" indicator is
+       still needed — hovering the active item dims it the same way,
+       which is fine as ordinary hover feedback on an already-selected
+       control. */
+    .sidebar-nav-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      transition: opacity 0.25s ease;
+    }
+
+    .sidebar-nav-item:hover { opacity: 0.7; }
+
+    .sidebar-nav-item.active {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    /* Avatar (left) + sign out (right) on one row, pinned to the bottom
+       of the sidebar. */
+    /* Clustered together with a small gap (not justify-content:
+       space-between, which spread avatar and Sign out to opposite edges
+       of the sidebar) — avatar sits close to the sidebar's own
+       bottom-left rounded corner instead of anchoring one end of a row
+       stretched across the full width. */
+    /* align-items: baseline (not center) — the pro-tag and Sign out
+       button have different font-sizes/padding, so centering their boxes
+       didn't actually line up their text; baseline lines up the text
+       itself regardless of box size. The avatar (a circle, not text)
+       opts back out via its own align-self: center. */
+    .sidebar-footer {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 14px;
+    }
+
+    /* Smaller/auto-width rather than a full-width block is what still
+       keeps this quieter than the two nav items above (an instant action,
+       not a content destination) — muted gray at rest (not the black
+       .sidebar-nav-item/.settings-link-row use), opacity: 0.7 on hover.
+       Pushed to the far end of .sidebar-footer via margin-left: auto
+       while avatar + pro-tag stay clustered on the left via that row's
+       own small gap. */
+    .sidebar-signout {
+      display: inline-block;
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+      font-size: 0.84rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      padding: 6px 8px;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      transition: opacity 0.25s ease;
+    }
+
+    .sidebar-signout:hover {
+      opacity: 0.7;
+    }
+
+    /* Mobile drawer trigger + backdrop — hidden entirely above the
+       768px breakpoint below, where the sidebar is always visible in-flow. */
+    .sidebar-hamburger {
+      display: none;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+    }
+
+    /* min-width: 0 still matters under grid, same reasoning as flex — a
+       1fr column's default min-width is auto (content-based), which would
+       let a long unwrapped blocklist URL push this wider than its column
+       rather than wrapping/scrolling within it. */
+    .content-pane {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      padding: 28px;
+    }
+
     /* flex column + gap instead of per-element margins: every direct
        child (including the conditionally-hidden ones — the add-profile
        form, the error message) gets spaced by the container, not by
        margins declared on the children themselves. A hidden child (still
        display:none when inactive) contributes no gap on either side
        automatically — no :last-child/:first-child patch ever needed here,
-       no matter what gets added, removed, or reordered later. Split back
-       into its own card (was merged with #blocklist-card for a while) —
-       shorter content now, so no need for the taller card's wider padding
-       .blocklist-card still uses; the shared .card default is enough. */
-    #profiles-card {
+       no matter what gets added, removed, or reordered later. */
+    /* flex: 1 + min-height: 0 (the only visible one at a time fills the
+       whole content-pane) is what lets #url-list below cap itself to
+       "whatever's left" and scroll internally instead of growing the
+       card past its fixed height — see #url-list's own comment. */
+    .content-section {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      flex: 1;
+      min-height: 0;
     }
 
-    /* Blocklist is the tallest, densest card on the page (input row,
-       quick-add row, url list) — .card's default 28px felt cramped
-       against that much content, so this one gets more top breathing room
-       than the shared default. #settings-card goes the other way for the
-       same reason (much shorter content, see below).
-       padding-bottom is smaller than padding-top (16 vs 30) — .sync-hint
-       is unconditionally the last thing in this card, so this is really
-       just "the gap below the sync hint," tightened alongside its own
-       negative margin-top so it sits closer to the bottom of the card
-       than the same breathing room every other section gets. */
-    #blocklist-card {
-      padding-top: 30px;
-      padding-bottom: 16px;
+    /* Defensive fallback, scoped to Settings specifically (not
+       .content-section generally, which also applied to Blocklist) — if
+       Settings' content ever exceeds .content-pane's fixed height (e.g.
+       both sub-disclosures open at once), this section scrolls internally
+       too rather than breaking out of the fixed-height card. Applying
+       this to #section-blocklist as well was clipping the quick-add
+       chips' .site-options-menu dropdown, which is meant to overlay past
+       the card's edge (position: absolute, no containing scroll context
+       of its own) — Settings has no equivalent overlaying element, so it
+       doesn't have that same conflict. */
+    #section-settings {
+      overflow-y: auto;
+    }
+
+    /* Short fade + slight rise on section switch (showSection()) — same
+       "add a class, force reflow, add the animation class, remove it on a
+       timeout" idiom .shake already uses in this file, not a new
+       mechanism. Flat/fast, not the bouncy cubic-bezier reserved for the
+       toast. */
+    @keyframes section-fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .content-section.section-enter {
+      animation: section-fade-in 0.18s ease;
+    }
+
+    /* Profile switcher — moved here from the old #profiles-card, pinned
+       at the top of #section-blocklist. Own internal 16px gap column,
+       same rhythm .content-section itself uses, so it reads as one
+       continuous flow with the rest of the pane's spacing. */
+    .profile-switcher {
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -757,13 +908,84 @@
 
     /* .error-msg's shared 8px top margin (used across every form in this
        file — login, signup, password fields, etc.) would stack on top of
-       these two cards' own 16px gap rather than replacing it, same
-       reasoning as .new-profile-form above. Scoped to just these two
-       cards — every other .error-msg usage keeps its own margin
-       untouched. */
-    #profiles-card .error-msg,
-    #blocklist-card .error-msg {
+       the profile switcher / content-section's own 16px gap rather than
+       replacing it, same reasoning as .new-profile-form above. Scoped by
+       id directly (both are unique) rather than by container, since
+       neither #profiles-card nor #blocklist-card exist as containers
+       anymore. */
+    #profile-error,
+    #url-error {
       margin-top: 0;
+    }
+
+    /* ─── Mobile: sidebar becomes an off-canvas drawer ────────────────────
+       Same breakpoint pricing.html/index.html already use elsewhere in
+       this codebase (768px). */
+    @media (max-width: 768px) {
+      /* .sidebar goes position: fixed below (off-canvas drawer) — taken
+         out of grid flow entirely, which would otherwise leave
+         .dashboard-shell's first (232px) column sitting empty and
+         .content-pane confined to the second column alone. One column
+         lets .content-pane use the full width once the sidebar isn't
+         actually sharing the row anymore. */
+      .dashboard-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 260;
+        width: 38px;
+        height: 38px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        box-shadow: var(--shadow-card);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 300;
+        width: 260px;
+        border-radius: 0;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        overflow-y: auto;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 250;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .sidebar-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .content-pane {
+        padding: 24px 20px;
+      }
     }
 
     /* ─── Profile tabs ─────────────────────────────────────────────────── */
@@ -790,8 +1012,8 @@
       font-weight: 400;
       padding: 0 18px;
       border-radius: 24px;
-      border: 1px solid var(--border);
-      background: transparent;
+      border: none;
+      background: #f5f5f7;
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.18s ease;
@@ -799,7 +1021,6 @@
     }
 
     .profile-tab:hover {
-      border-color: var(--border-hover);
       color: var(--text);
     }
 
@@ -818,7 +1039,6 @@
 
     .profile-tab.locked:hover {
       opacity: 0.85;
-      border-color: var(--border-hover);
     }
 
     .profile-tab-lock {
@@ -881,10 +1101,11 @@
     }
 
     /* New profile inline form */
-    /* No margin-top of its own — as a direct child of #profiles-card, it
-       already gets the container's 16px gap above it when visible (flex
-       item margins add on top of gap rather than collapsing with it, so
-       a margin here would double up, not just replace, that spacing). */
+    /* No margin-top of its own — as a direct child of .profile-switcher,
+       it already gets the container's 16px gap above it when visible
+       (flex item margins add on top of gap rather than collapsing with
+       it, so a margin here would double up, not just replace, that
+       spacing). */
     .new-profile-form {
       display: none;
       align-items: center;
@@ -923,19 +1144,41 @@
 
     .btn-sm.light:hover { color: var(--text); }
 
-    .btn-sm.danger { background: var(--error); color: var(--white); }
+    .btn-sm.danger { background: var(--black); color: var(--white); }
     .btn-sm.danger:hover { opacity: 0.85; }
     .btn-sm.danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* ─── Settings: delete account ────────────────────────────────────────── */
-    .danger-link { color: var(--error); }
-    .danger-link:hover { color: var(--error); opacity: 0.8; }
+    /* Grayscale now, not red — same "quiet, not alarming" treatment as
+       the rest of this file's restrained palette. */
+    .danger-link { color: var(--text); }
+    .danger-link:hover { color: var(--text); opacity: 0.8; }
 
+    /* Same grid-template-rows: 0fr -> .open { 1fr } technique as
+       .settings-subbody above (and .site-options-menu below) — see that
+       rule's own comment for the full reasoning. Chrome (background/
+       border/radius/padding) lives on .danger-confirm-inner so a closed
+       (0fr) row is genuinely zero-height, not just hidden content behind
+       a still-visible red box. */
+    /* Same max-height technique as .settings-subbody above, same reason
+       (the grid-template-rows: 0fr version left a real gap in practice). */
     .danger-confirm {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      margin: 0;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+    }
+
+    .danger-confirm.open {
+      max-height: 220px;
+      opacity: 1;
       margin: 0 0 8px;
+    }
+
+    .danger-confirm-inner {
       padding: 14px;
-      background: rgba(192, 57, 43, 0.06);
-      border: 1px solid rgba(192, 57, 43, 0.22);
+      background: #f5f5f7;
       border-radius: var(--radius-field);
     }
 
@@ -958,13 +1201,13 @@
       padding: 9px 14px;
     }
 
-    /* Matches the blocklist's own url-input-row field height (9px 14px,
-       vs .field's shared 11px 14px default) rather than the taller
-       standard used by every other form in this file. No background
-       override anymore — .field's own shared #f5f5f7 fill works here now
-       that .settings-subbody itself is a lighter #fafafb, not the same
-       #f5f5f7 the inputs would've blended into. */
+    /* Explicit height (not just padding) — box-sizing: border-box (set
+       globally) means this is the field's full outer box regardless of
+       padding/font-size, giving #change-password-btn below something
+       exact to match rather than needing padding tuned to approximate
+       the same number. */
     #password-body .field {
+      height: 40px;
       padding: 9px 14px;
     }
 
@@ -982,31 +1225,58 @@
       font-size: 0.82rem;
     }
 
-    /* ─── URL list ──────────────────────────────────────────────────────── */
-    /* margin-top: 6px restores the gap the old 32px .quick-add-chip box's
-       own bottom padding used to provide (see .quick-add-row's own
-       comment) — 16 (base gap) + 6 = 22px from the icons to here, same
-       as it visually was before the chip box was removed. */
-    /* Contained now — same flat #f5f5f7 fill and radius .field itself
-       uses, no border, so the list reads as its own defined surface
-       ("here's where the results live") rather than rows floating loose
-       in the card. padding: 8px top/bottom, 12px left/right — 8px is the
-       real, equal number on both axes, but the favicon is a flush-edge
-       image with no internal padding of its own (unlike the row's
-       vertically-centered content), so an 8px gap against it read as
-       visually smaller than the same 8px measured above the first row —
-       same optical effect as the favicon-vs-text margin question earlier
-       in this file's history. 12px compensates for that so the two
-       actually look equal, not just measure equal in the CSS. */
-    .url-list {
-      list-style: none;
-      margin: 6px 0 0;
-      padding: 8px 12px;
+    /* "Update password" sits alone below two stacked fields, not beside
+       one in a flex row, so it has no sibling to get stretched taller by
+       the way .url-input-row's "Block site" button does — it was
+       rendering at .btn-sm's own shorter, un-stretched height instead.
+       Matching #password-body .field's padding alone wasn't enough (the
+       button's smaller 0.82rem font gives it a shorter natural line
+       height than the field's 0.9rem, so equal padding still didn't add
+       up to equal total height) — an explicit height: 40px, the exact
+       same value #password-body .field now declares, is what actually
+       guarantees they match instead of approximating it. */
+    #change-password-btn {
+      height: 40px;
+      padding: 9px 14px;
+    }
+
+    /* ─── Blocklist surface (quick-add + divider + url list) ───────────── */
+    /* Trying the quick-add chips moved inside the same card as the added-
+       sites list, at the top, with a divider between them — was: a
+       standalone .quick-add-row sitting between the url-input and a
+       separately-boxed .url-list. May get reverted; if so, move
+       .quick-add-row back out as a sibling of this wrapper and restore
+       .url-list's own background/padding/margin-top below. */
+    .blocklist-surface {
+      display: flex;
+      flex-direction: column;
+      margin-top: -2px;
+      padding: 10px 12px 8px;
       background: #f5f5f7;
       border-radius: var(--radius-field);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Contained inside .blocklist-surface now, which owns the background/
+       padding — this is just the scrolling list itself. */
+    /* flex: 1 + min-height: 0 makes this the one element in
+       #section-blocklist that actually grows/shrinks with available
+       space — everything above it (profile switcher, "Blocklist" title,
+       url input, quick-add chips) keeps its natural height, and once the
+       list's own content would exceed what's left, overflow-y: auto
+       scrolls just the list instead of growing the card past its fixed
+       height (see .content-section/.content-pane). */
+    .url-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     /* No border-bottom between rows anymore — .url-list's own gap: 2px
@@ -1024,8 +1294,7 @@
 
     /* Pulls this closer to .url-list above, reading as more attached to
        the bottom of the list rather than floating with the same
-       breathing room every other section gets. #blocklist-card's own
-       padding-bottom was also tightened to match — see its own comment. */
+       breathing room every other section gets. */
     .sync-hint {
       font-size: 0.76rem;
       color: var(--text-muted);
@@ -1073,31 +1342,58 @@
     }
 
     /* ─── Quick-add row (common distracting sites) ────────────────────── */
-    /* .quick-add-chip lost its 32px box (20px icon centered inside, 6px
-       of invisible padding on all four sides — see its own comment), so
-       every direction that box's padding used to push things apart in
-       needed re-deriving, not just the horizontal gap between icons.
-       - gap: 22px — icon-to-icon used to be 10 (old chip gap) + 6 + 6
-         (each icon's own inset from its box edge) = 22px real spacing,
-         even though the CSS said 10.
-       - margin-top: -2px — box-top now equals icon-top exactly (no more
-         6px inset), so the -8px that used to land the box 8px below
-         .url-input-row (visually 8 + 6 = 14px to the icon itself) would
-         now put the icon only 8px away. -2px gives the same 16 + (-2) =
-         14px the icon always visually sat at.
-       - .url-list's own margin-top (below) restores the matching 6px on
-         the bottom side, for the same reason. */
+    /* Now the first thing inside .blocklist-surface — no more position-
+       compensating negative margins, since it's no longer squeezed
+       directly under .url-input-row. .quick-add-row is the outer bar
+       (chips on the left, .mode-pill pushed to the far right via
+       space-between); .quick-add-chips is just the chip group itself, so
+       its own gap/wrap behavior isn't disturbed by the pill sharing the
+       row. */
     .quick-add-row {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 6px 10px;
+    }
+
+    .quick-add-chips {
+      display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 22px;
-      margin-top: -6px;
-      margin-left: 8px;
+      min-width: 0;
+    }
+
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 5px 14px;
+      border: none;
+      border-radius: 24px;
+      color: var(--white);
+    }
+
+    /* Solid fill + glow, matching popup.css's own
+       .mode-option[data-mode="…"].active exactly (same colors, same
+       shadow recipe). */
+    .mode-pill.mode-friction {
+      background: var(--friction-teal);
+      box-shadow: 0 2px 10px rgba(74, 144, 164, 0.35);
+    }
+
+    .mode-pill.mode-strict {
+      background: var(--strict-burgundy);
+      box-shadow: 0 2px 10px rgba(176, 32, 63, 0.35);
     }
 
     /* Wraps each chip so the options menu (sectioned sites only) can be
-       positioned absolute relative to its own trigger, same relationship
-       as .account-menu → .account-dropdown elsewhere in this file. */
+       positioned absolute relative to its own trigger — same
+       trigger/absolute-positioned-popover relationship used elsewhere in
+       this file (see .site-options-menu's own comment below). */
     .quick-add-item { position: relative; }
 
     /* No box at all — a fixed-size circular button (white fill, no
@@ -1199,11 +1495,10 @@
     }
 
     /* Options menu for a sectioned chip (YouTube, Facebook, Instagram) —
-       modeled directly on .account-dropdown above: same absolute
-       positioning idea, same white/border/shadow-card shape. Centered
-       under its trigger rather than right-aligned like .account-dropdown,
-       since a chip can sit anywhere in the row (not pinned to a page edge
-       the way the nav avatar is). top: calc(100% + 15px) — see
+       same absolute positioning idea, same white/border/shadow-card shape
+       as this file's other popover panels. Centered under its trigger
+       rather than right-aligned, since a chip can sit anywhere in the row
+       (not pinned to a page edge). top: calc(100% + 15px) — see
        .quick-add-chip-arrow's own comment for the centering math this
        and its 15px are tied to (the chevron sits centered in this exact
        15px gap).
@@ -1305,14 +1600,16 @@
     }
 
     .btn-delete-url:hover {
-      color: var(--error);
-      background: rgba(192, 57, 43, 0.06);
+      color: var(--black);
+      background: none;
     }
 
-    /* Strict Mode: the destructive red hover would signal "about to delete"
-       for a button that can't actually delete anything right now — swap
-       it for a neutral no-op hover instead. */
-
+    /* Strict Mode: was a neutral no-op override against the destructive
+       red hover above ("about to delete" wouldn't make sense for a button
+       that can't actually delete anything right now) — now identical to
+       the rest state above it since that hover is neutral already, kept
+       as its own rule in case Strict Mode's hover needs to diverge again
+       later. */
     .btn-delete-url.locked:hover {
       color: var(--text-muted);
       background: none;
@@ -1328,41 +1625,6 @@
       padding: 16px 0;
       color: var(--text-muted);
       font-size: 0.88rem;
-    }
-
-    /* ─── Premium badge ─────────────────────────────────────────────────── */
-    /* Reverted back to its original size — no index.html equivalent
-       exists to match (this badge is dashboard-only), so this just undoes
-       the same whole-nav-row resize experiment that touched the rest of
-       the row too. */
-    .premium-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--pro-gold);
-      background: var(--pro-gold-dim);
-      border: 1px solid var(--pro-gold-glow);
-      padding: 3px 10px;
-      border-radius: 24px;
-      vertical-align: middle;
-      margin-left: 8px;
-    }
-
-    .premium-badge-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--pro-gold);
-      animation: pulse-badge 2.4s ease-in-out infinite;
-    }
-
-    @keyframes pulse-badge {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
     }
 
     /* ─── Upgrade banner ─────────────────────────────────────────────────── */
@@ -1457,15 +1719,6 @@
     .toast.visible {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
-    }
-
-    /* Rejection variant — solid red instead of black, same shape/motion.
-       Solid rather than the light red wash used on .error-msg/the remove
-       button's hover: those sit inside a white card, this floats as an
-       opaque overlay, so it follows the toast's own existing bold visual
-       language instead. */
-    .toast.error {
-      background: var(--error);
     }
 
     /* ─── Utility ───────────────────────────────────────────────────────── */
@@ -1595,175 +1848,189 @@
   <div id="app-screen" class="hidden">
     <div class="page-wrap">
 
-      <!-- Top nav — plain in-flow row, no logo (the fixed/glass nav bar
-           treatment matching index.html's .nav was tried and reverted). -->
-      <div class="top-nav">
-        <div class="top-nav-left">
-          <!-- Pause blocking: Friction Mode only. Deliberately dashboard-only
-               (not in the extension popup) so pausing costs a real trip, not
-               a one-click escape — see docs/ARCHITECTURE.md §5 for the full mechanism.
-               No extra wait on top of that: the 30s hold already lives on
-               leaving Strict Mode (in the popup) — a Friction-mode user
-               picking a duration here commits immediately.
-               The toggle itself never moves or resizes; a separate gray
-               pill (.pause-options-pill) grows out from behind it to the
-               right, tucked underneath via z-index + negative margin so it
-               reads as one continuous shape. -->
-          <div class="pause-toggle-row" id="pause-toggle-row">
-            <button class="pause-toggle" id="pause-toggle" aria-expanded="false" aria-pressed="false" title="Pause blocking">
-              <span class="pause-toggle-knob"></span>
-            </button>
-            <div class="pause-options-pill" id="pause-toggle-options">
-              <div class="pause-durations" id="pause-durations-row">
-                <button class="pause-duration-btn" data-minutes="30" type="button">30m</button>
-                <button class="pause-duration-btn" data-minutes="60" type="button">1h</button>
-                <button class="pause-duration-btn" data-minutes="120" type="button">2h</button>
-                <button class="pause-duration-btn" data-minutes="360" type="button">6h</button>
-                <button class="pause-duration-btn" data-minutes="720" type="button">12h</button>
-                <button class="pause-duration-btn pause-duration-infinite" data-minutes="infinite" type="button" title="Pause indefinitely, until you resume it">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M18.178 8c5.096 0 5.096 8 0 8-5.096 0-7.646-8-12.906-8-4.789 0-4.789 8 0 8 5.26 0 7.81-8 12.906-8z"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          <span class="pause-label hidden" id="pause-label"></span>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:12px;">
-          <!-- Premium badge: shown by JS when is_premium = true -->
-          <span class="premium-badge hidden" id="premium-badge">
-            <span class="premium-badge-dot"></span>
-            Pro
-          </span>
-          <div class="account-menu" id="account-menu">
-            <button class="account-avatar" id="account-avatar-btn"></button>
-            <div class="account-dropdown" id="account-dropdown">
-              <div class="account-dropdown-header">
-                <div class="account-dropdown-email" id="account-email"></div>
-              </div>
-              <a href="#settings-card" class="account-dropdown-item" id="settings-link">Settings</a>
-              <button class="account-dropdown-item" id="logout-btn">Sign out</button>
+      <!-- Pause blocking, above the sidebar/content-pane row rather than
+           inside the Blocklist section — a page-global control, not
+           specific to one section, and gives the two cards below some
+           breathing room instead of starting right at the top edge. -->
+      <div class="pause-row">
+        <div class="pause-toggle-row" id="pause-toggle-row">
+          <button class="pause-toggle" id="pause-toggle" aria-expanded="false" aria-pressed="false" title="Pause blocking">
+            <span class="pause-toggle-knob"></span>
+          </button>
+          <div class="pause-options-pill" id="pause-toggle-options">
+            <div class="pause-durations" id="pause-durations-row">
+              <button class="pause-duration-btn" data-minutes="30" type="button">30m</button>
+              <button class="pause-duration-btn" data-minutes="60" type="button">1h</button>
+              <button class="pause-duration-btn" data-minutes="120" type="button">2h</button>
+              <button class="pause-duration-btn" data-minutes="360" type="button">6h</button>
+              <button class="pause-duration-btn" data-minutes="720" type="button">12h</button>
+              <button class="pause-duration-btn pause-duration-infinite" data-minutes="infinite" type="button" title="Pause indefinitely, until you resume it">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M18.178 8c5.096 0 5.096 8 0 8-5.096 0-7.646-8-12.906-8-4.789 0-4.789 8 0 8 5.26 0 7.81-8 12.906-8z"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
+        <span class="pause-label hidden" id="pause-label"></span>
       </div>
 
-      <!-- Profiles card — split back out from a merged Profiles+Blocklist
-           card into its own card again, per the founder's request. -->
-      <div class="card" id="profiles-card">
-        <p class="section-title">Profiles</p>
+      <div class="dashboard-shell">
 
-        <!-- Profile tabs (rendered by JS) -->
-        <div class="profile-tabs" id="profile-tabs"></div>
-
-        <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
-             only for premium users, to avoid a flash of an actionable
-             button before premium status resolves. -->
-        <button class="btn-add-profile hidden" id="add-profile-btn">+ New profile</button>
-
-        <div class="new-profile-form" id="new-profile-form">
-          <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="28">
-          <button class="btn-sm dark" id="new-profile-confirm">Add</button>
-          <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
-        </div>
-        <p class="error-msg" id="profile-error"></p>
-      </div>
-
-      <!-- Blocklist card — own card again (was merged into #profiles-card
-           for a while, with a divider marking the boundary between the
-           two sections; now that they're separate cards, the card
-           boundary itself does that job, so the divider is gone). -->
-      <div class="card" id="blocklist-card">
-        <p class="section-title">Blocklist</p>
-
-        <div class="url-input-row">
-          <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
-          <button class="btn-sm dark" id="add-url-btn">Block site</button>
-        </div>
-        <p class="error-msg" id="url-error"></p>
-
-        <div class="quick-add-row" id="quick-add-row"></div>
-
-        <ul class="url-list" id="url-list">
-          <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
-        </ul>
-
-        <p class="sync-hint">Blocklist syncs every minute.</p>
-      </div>
-
-      <!-- Settings card — reachable via the account menu's "Settings" link,
-           or directly at dashboard.html#settings-card. Collapsed by default
-           to keep the page minimal; "Change password" is a second, nested
-           disclosure inside it for the same reason. -->
-      <div class="card" id="settings-card">
-        <button class="settings-header" id="settings-toggle" aria-expanded="false">
-          <span class="settings-header-title">
-            <h2 class="section-title">Settings</h2>
-            <span class="settings-header-dot">&bull;</span>
-            <span class="settings-header-email" id="settings-email"></span>
-          </span>
-          <span class="chevron" id="settings-chevron">&#9662;</span>
+        <!-- Mobile-only: toggles the sidebar drawer below the 768px
+             breakpoint. Hidden entirely (display:none) above it. -->
+        <button class="sidebar-hamburger" id="sidebar-hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
 
-        <div class="settings-body hidden" id="settings-body">
+        <!-- Closes the drawer on an outside click — same
+             toggle-open/close-on-outside-click shape the old
+             account-dropdown used for itself. -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-          <div class="settings-item">
-            <button class="settings-link-row" id="password-toggle" aria-expanded="false">
-              Change password
-              <span class="chevron" id="password-chevron">&#9662;</span>
-            </button>
-            <div class="settings-subbody hidden" id="password-body">
-              <div class="form-group">
-                <input class="field" type="password" id="new-password-input" placeholder="New password" autocomplete="new-password">
+        <aside class="sidebar" id="sidebar">
+          <nav class="sidebar-nav">
+            <button class="sidebar-nav-item active" data-section="blocklist">Blocklist</button>
+            <button class="sidebar-nav-item" data-section="settings">Settings</button>
+          </nav>
+
+          <!-- Pinned to the bottom via margin-top: auto on this row (see
+               .sidebar's own flex-column CSS) — avatar + pro tag
+               clustered left, sign out pushed to the right via its own
+               margin-left: auto. Avatar is static (no dropdown/click
+               behavior); its initial letter is set once in showApp(). -->
+          <div class="sidebar-footer">
+            <div class="account-avatar" id="sidebar-avatar"></div>
+            <!-- Always visible — loadPremiumStatus() swaps the label text
+                 between Pro/Free; the tag itself no longer changes color
+                 for either state, matching popup.css's own plain gray
+                 .pro-tag (see its CSS comment below). -->
+            <span class="pro-tag" id="pro-tag">
+              <span id="pro-tag-label">Pro</span>
+            </span>
+            <button class="sidebar-signout" id="logout-btn">Sign out</button>
+          </div>
+        </aside>
+
+        <div class="content-pane">
+
+          <!-- Blocklist section — visible by default. -->
+          <div class="content-section" id="section-blocklist">
+
+            <!-- Profile switcher — moved here from the old #profiles-card,
+                 pinned at the top of this pane. -->
+            <div class="profile-switcher">
+              <!-- Profile tabs (rendered by JS) -->
+              <div class="profile-tabs" id="profile-tabs"></div>
+
+              <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
+                   only for premium users, to avoid a flash of an actionable
+                   button before premium status resolves. -->
+              <button class="btn-add-profile hidden" id="add-profile-btn">+ New profile</button>
+
+              <div class="new-profile-form" id="new-profile-form">
+                <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="28">
+                <button class="btn-sm dark" id="new-profile-confirm">Add</button>
+                <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
+              <p class="error-msg" id="profile-error"></p>
+            </div>
+
+            <div class="url-input-row">
+              <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
+              <button class="btn-sm dark" id="add-url-btn">Block site</button>
+            </div>
+            <p class="error-msg" id="url-error"></p>
+
+            <div class="blocklist-surface">
+              <div class="quick-add-row">
+                <div class="quick-add-chips" id="quick-add-chips"></div>
+                <span class="mode-pill" id="mode-pill"></span>
               </div>
-              <p class="error-msg" id="password-error"></p>
-              <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
+              <ul class="url-list" id="url-list">
+                <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
+              </ul>
+            </div>
+
+            <p class="sync-hint">Blocklist syncs every minute.</p>
+          </div>
+
+          <!-- Settings section — hidden by default, shown via the sidebar
+               nav or a direct dashboard.html#settings-card link (see
+               handlePostLoginRedirect()). "Change password" is a nested
+               disclosure inside it, same as before. -->
+          <div class="content-section hidden" id="section-settings">
+            <!-- Email joins "Settings" on the same line via a middle dot
+                 — font-size/weight/color/letter-spacing/uppercase all
+                 inherit straight from .section-title (every one of those
+                 is an inherited CSS property), so no separate styling is
+                 needed for either the dot or the email to match. -->
+            <p class="section-title settings-header-title">
+              Settings<span class="settings-header-dot">&bull;</span><span id="settings-email"></span>
+            </p>
+
+            <div class="settings-body">
+
+              <div class="settings-item">
+                <button class="settings-link-row" id="password-toggle" aria-expanded="false">
+                  Change password
+                </button>
+                <div class="settings-subbody" id="password-body">
+                  <div class="settings-subbody-inner">
+                    <div class="form-group">
+                      <input class="field" type="password" id="new-password-input" placeholder="New password" autocomplete="new-password">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                      <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
+                    </div>
+                    <p class="error-msg" id="password-error"></p>
+                    <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-item">
+                <a href="pricing.html" class="settings-link-row" id="subscription-link">Manage subscription</a>
+              </div>
+
+              <div class="settings-item">
+                <button class="settings-link-row danger-link" id="delete-account-btn" aria-expanded="false">
+                  Delete account
+                </button>
+                <div class="danger-confirm" id="delete-account-confirm">
+                  <div class="danger-confirm-inner">
+                    <p class="danger-warning">
+                      This permanently deletes your account, profiles, and blocklist,
+                      and cancels any active subscription. This cannot be undone.
+                    </p>
+                    <div style="display: flex; gap: 8px;">
+                      <button class="btn-sm light" id="delete-account-cancel">Cancel</button>
+                      <button class="btn-sm danger" id="delete-account-confirm-btn">Yes, delete my account</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upgrade banner: shown by JS when is_premium = false. Moved
+                 into the Settings section (previously the last thing on the
+                 whole page) — still the last thing a user sees, now scoped
+                 to where account/plan information already lives. No JS
+                 change needed — the toggle is a plain
+                 getElementById().classList.toggle(), doesn't care about DOM
+                 position. -->
+            <div class="upgrade-banner hidden" id="upgrade-banner">
+              <div class="upgrade-banner-text">
+                <strong>Unlock Focus Pro</strong>
+                Strict Mode, unlimited profiles &amp; upcoming analytics for $4.99/mo.
+              </div>
+              <a href="pricing.html" class="btn-upgrade">See plans</a>
             </div>
           </div>
 
-          <div class="settings-item">
-            <a href="pricing.html" class="settings-link-row" id="subscription-link">Manage subscription</a>
-          </div>
-
-          <div class="settings-item">
-            <button class="settings-link-row danger-link" id="delete-account-btn" aria-expanded="false">
-              Delete account
-              <span class="chevron" id="delete-chevron">&#9662;</span>
-            </button>
-            <div class="danger-confirm hidden" id="delete-account-confirm">
-              <p class="danger-warning">
-                This permanently deletes your account, profiles, and blocklist,
-                and cancels any active subscription. This cannot be undone.
-              </p>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn-sm light" id="delete-account-cancel">Cancel</button>
-                <button class="btn-sm danger" id="delete-account-confirm-btn">Yes, delete my account</button>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-
-      <!-- Upgrade banner: shown by JS when is_premium = false. Moved twice
-           per the founder's requests — originally sat right at the top,
-           immediately below the nav (read as an upsell gate before the
-           actual product, at odds with this app's "we're not trying to
-           hook you" positioning); then just above Settings; now below
-           Settings entirely, the last thing on the page. No JS change
-           needed either time — the toggle below is a plain
-           getElementById().classList.toggle(), doesn't care about DOM
-           position. -->
-      <div class="upgrade-banner hidden" id="upgrade-banner">
-        <div class="upgrade-banner-text">
-          <strong>Unlock Focus Pro</strong>
-          Strict Mode, unlimited profiles &amp; upcoming analytics for $4.99/mo.
-        </div>
-        <a href="pricing.html" class="btn-upgrade">See plans</a>
       </div>
 
     </div>
@@ -1974,7 +2241,9 @@
     async function showApp() {
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('app-screen').classList.remove('hidden');
-      initAccountMenu();
+      document.getElementById('sidebar-avatar').textContent =
+        currentUser.email.charAt(0).toUpperCase();
+      document.getElementById('settings-email').textContent = currentUser.email;
       // Sequential, not parallel: loadProfiles()'s renderProfileTabs() needs
       // isPremiumUser (set by loadPremiumStatus()) to know which profiles to
       // lock, so premium status must resolve first.
@@ -2003,6 +2272,21 @@
     let pauseActionToken = 0;
 
     /**
+     * Updates the pill justified right of the quick-add chips to the
+     * active mode, colored to match (teal for Friction, burgundy for
+     * Strict — see the --friction-teal/--strict-burgundy tokens' own
+     * comment). Reads currentBlockingMode directly rather than taking a
+     * parameter, so every refreshPauseUI() caller gets this for free.
+     */
+    function applyModeIndicator() {
+      const el = document.getElementById('mode-pill');
+      const isStrict = currentBlockingMode === 'strict';
+      el.textContent = isStrict ? 'Strict' : 'Friction';
+      el.classList.toggle('mode-strict', isStrict);
+      el.classList.toggle('mode-friction', !isStrict);
+    }
+
+    /**
      * Fetches blocking_mode + paused_until fresh from Supabase and updates
      * the switch's appearance (knob position, track color, "Paused until"
      * label). Called on load, on tab focus (visibilitychange, below), and
@@ -2020,6 +2304,7 @@
 
       currentBlockingMode = nextBlockingMode;
       currentPausedUntil  = nextPausedUntil;
+      applyModeIndicator();
 
       // isActive here means "a pause is currently in effect" — the
       // .paused CSS class (gray track, knob left) is the exception state;
@@ -2191,61 +2476,76 @@
       }
     });
 
-    // ─── Account menu ──────────────────────────────────────────────────────────
-    // Same avatar + dropdown pattern as index.html/pricing.html, minus the
-    // logged-out fallback (this page only reaches here once logged in).
-    function initAccountMenu() {
-      document.getElementById('account-email').textContent = currentUser.email;
-      document.getElementById('settings-email').textContent = currentUser.email;
-      document.getElementById('account-avatar-btn').textContent =
-        currentUser.email.charAt(0).toUpperCase();
+    // ─── Section switching (Blocklist / Settings) ──────────────────────────────
+    function showSection(name) {
+      document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.section === name);
+      });
+
+      document.querySelectorAll('.content-section').forEach((section) => {
+        const isTarget = section.id === `section-${name}`;
+        section.classList.toggle('hidden', !isTarget);
+        if (isTarget) {
+          // Same "add a class, force reflow, add the animation class,
+          // remove it on a timeout" idiom shakeElement() already uses in
+          // this file — a short fade + slight rise, not a new mechanism.
+          section.classList.remove('section-enter');
+          void section.offsetWidth;
+          section.classList.add('section-enter');
+          setTimeout(() => section.classList.remove('section-enter'), 200);
+        }
+      });
+
+      closeSidebarDrawer();
     }
 
-    document.getElementById('account-avatar-btn').addEventListener('click', (e) => {
+    document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
+      btn.addEventListener('click', () => showSection(btn.dataset.section));
+    });
+
+    // ─── Mobile sidebar drawer ──────────────────────────────────────────────────
+    function openSidebarDrawer() {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('sidebar-backdrop').classList.add('open');
+      document.getElementById('sidebar-hamburger').setAttribute('aria-expanded', 'true');
+    }
+
+    function closeSidebarDrawer() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('open');
+      document.getElementById('sidebar-hamburger').setAttribute('aria-expanded', 'false');
+    }
+
+    document.getElementById('sidebar-hamburger').addEventListener('click', (e) => {
       e.stopPropagation();
-      document.getElementById('account-dropdown').classList.toggle('open');
+      const isOpen = document.getElementById('sidebar').classList.contains('open');
+      if (isOpen) { closeSidebarDrawer(); } else { openSidebarDrawer(); }
     });
 
-    document.addEventListener('click', () => {
-      document.getElementById('account-dropdown').classList.remove('open');
-    });
+    // Same outside-click-closes shape the old account-dropdown used.
+    document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebarDrawer);
 
-    document.getElementById('settings-link').addEventListener('click', (e) => {
-      // Explicit expand + scroll instead of relying on the native #hash
-      // anchor: this link is an in-page click (already on dashboard.html),
-      // so none of the page-load logic that expands the settings section
-      // for a fresh navigation (handlePostLoginRedirect(), below) runs —
-      // without this it just silently scrolls to a collapsed, easy-to-miss
-      // header. Navigating here FROM index.html/pricing.html already works
-      // correctly via that page-load path; this only covers the in-page case.
-      e.preventDefault();
-      document.getElementById('account-dropdown').classList.remove('open');
-      setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', true);
-      document.getElementById('settings-card').scrollIntoView({ behavior: 'smooth' });
-    });
-
-    // ─── Settings disclosure ────────────────────────────────────────────────────
-    function setDisclosure(toggleId, bodyId, chevronId, open) {
-      document.getElementById(bodyId).classList.toggle('hidden', !open);
+    // ─── Settings sub-disclosures (Change password, Delete account) ───────────
+    // Toggles .open, not .hidden — .settings-subbody/.danger-confirm now
+    // animate via max-height (see their own CSS comments), not a plain
+    // display:none swap. No chevron parameter anymore — the chevron icon
+    // itself was removed, so there's nothing left to rotate.
+    function setDisclosure(toggleId, bodyId, open) {
+      document.getElementById(bodyId).classList.toggle('open', open);
       document.getElementById(toggleId).setAttribute('aria-expanded', String(open));
-      document.getElementById(chevronId).classList.toggle('open', open);
     }
-
-    document.getElementById('settings-toggle').addEventListener('click', () => {
-      const isOpen = !document.getElementById('settings-body').classList.contains('hidden');
-      setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', !isOpen);
-    });
 
     document.getElementById('password-toggle').addEventListener('click', () => {
-      const isOpen = !document.getElementById('password-body').classList.contains('hidden');
-      setDisclosure('password-toggle', 'password-body', 'password-chevron', !isOpen);
+      const isOpen = document.getElementById('password-body').classList.contains('open');
+      setDisclosure('password-toggle', 'password-body', !isOpen);
     });
 
     // ─── Premium status ────────────────────────────────────────────────────────
 
     /**
-     * Fetches is_premium from user_settings and updates the nav badge + upgrade banner.
-     * RLS ensures users only ever see their own row.
+     * Fetches is_premium from user_settings and updates the sidebar
+     * pro-tag + upgrade banner. RLS ensures users only ever see their
+     * own row.
      */
     async function loadPremiumStatus() {
       const accessToken = await currentAccessToken();
@@ -2254,7 +2554,7 @@
       const isPremium = await fetchIsPremium(accessToken, currentUser.id);
       isPremiumUser = isPremium;
 
-      document.getElementById('premium-badge').classList.toggle('hidden', !isPremium);
+      document.getElementById('pro-tag-label').textContent = isPremium ? 'Pro' : 'Free';
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
     }
 
@@ -2281,30 +2581,77 @@
       }
 
       if (window.location.hash === '#settings-card') {
-        setDisclosure('settings-toggle', 'settings-body', 'settings-chevron', true);
-        document.getElementById('settings-card').scrollIntoView({ behavior: 'smooth' });
+        showSection('settings');
       }
     }
 
     // ─── Toast ─────────────────────────────────────────────────────────────────
 
-    const TOAST_DURATION_MS = 4000;
+    const TOAST_DURATION_MS = 5000;
+
+    // Matches .toast's own transform transition (0.4s) — how long the
+    // slide-down animation takes before it's safe to show the next queued
+    // toast sliding back up.
+    const TOAST_HIDE_TRANSITION_MS = 400;
+
+    // 'idle' (nothing showing, safe to show the next queued toast right
+    // away), 'visible' (a toast is up, mid-duration), or 'hiding' (a toast
+    // is mid-slide-down, waiting out TOAST_HIDE_TRANSITION_MS before the
+    // next one can show).
+    let toastState = 'idle';
+    let toastQueue = [];
+    let toastDismissTimer = null;
 
     /**
      * Floating, fixed-position notification — zero layout impact by design
      * (doesn't participate in document flow), auto-dismisses after
-     * TOAST_DURATION_MS. isError swaps the default black styling for a red
-     * variant, used for "that action was rejected" messages (Strict Mode
+     * TOAST_DURATION_MS. isError used to swap the default black styling for
+     * a red variant on "that action was rejected" messages (Strict Mode
      * blocking a profile switch or site removal, "you need at least one
-     * profile," etc.) — as opposed to the default variant's neutral/success
-     * use (e.g. "Welcome to Focus Pro").
+     * profile," etc.) — now renders identically to the default black/white
+     * styling (see .toast's own rule; the old .toast.error override was
+     * removed). The class is still toggled on the element in case a
+     * non-color distinction (an icon, say) is wanted for errors later.
+     *
+     * Queued rather than just overwriting the visible toast's text in
+     * place — calling this again while a toast is already up used to swap
+     * the message instantly but leave the *original* toast's dismiss timer
+     * running, so a second message could get cut short with no warning and
+     * never got its own full TOAST_DURATION_MS. Now a call while one is
+     * already visible forces it to slide down immediately, then the next
+     * queued message slides up fresh once that animation finishes, always
+     * getting its own complete, untouched timer.
      */
     function showToast(msg, isError = false) {
+      toastQueue.push({ msg, isError });
+      advanceToastQueue();
+    }
+
+    function advanceToastQueue() {
+      if (toastState === 'visible') {
+        dismissToast(); // forces the current one down; its own timeout calls this again once hidden
+        return;
+      }
+      if (toastState === 'hiding' || !toastQueue.length) return;
+
+      const { msg, isError } = toastQueue.shift();
       const el = document.getElementById('toast');
       el.textContent = msg;
       el.classList.toggle('error', isError);
       el.classList.add('visible');
-      setTimeout(() => el.classList.remove('visible'), TOAST_DURATION_MS);
+      toastState = 'visible';
+      clearTimeout(toastDismissTimer);
+      toastDismissTimer = setTimeout(dismissToast, TOAST_DURATION_MS);
+    }
+
+    function dismissToast() {
+      clearTimeout(toastDismissTimer);
+      document.getElementById('toast').classList.remove('visible');
+      toastState = 'hiding';
+      setTimeout(() => {
+        toastState = 'idle';
+        advanceToastQueue();
+      }, TOAST_HIDE_TRANSITION_MS);
     }
 
     // ─── Error helpers ─────────────────────────────────────────────────────────
@@ -2694,7 +3041,7 @@
     // treatment a plain chip gets, no menu built at all, rather than
     // presenting a menu that looks available but has nothing actionable in it.
     function renderQuickAddChips() {
-      const row = document.getElementById('quick-add-row');
+      const row = document.getElementById('quick-add-chips');
       if (!row) return;
       row.innerHTML = '';
 
@@ -2819,8 +3166,8 @@
     }
 
     // Closes any open site-options-menu on an outside click — same
-    // toggle-open/close-on-outside-click shape as the account-dropdown
-    // listener above, generalized to "close every open one" since more
+    // toggle-open/close-on-outside-click shape as the sidebar drawer's
+    // backdrop listener, generalized to "close every open one" since more
     // than one sectioned chip's menu can exist in the row at a time.
     document.addEventListener('click', closeAllSiteMenus);
 
@@ -3278,15 +3625,15 @@
 
     // ─── Settings: delete account ───────────────────────────────────────────────
     // Same expand/collapse pattern as "Change password" above — the row
-    // stays put, its chevron rotates, and the (still separately
-    // button-gated) confirmation panel expands underneath it.
+    // stays put and the (still separately button-gated) confirmation
+    // panel expands underneath it.
     document.getElementById('delete-account-btn').addEventListener('click', () => {
-      const isOpen = !document.getElementById('delete-account-confirm').classList.contains('hidden');
-      setDisclosure('delete-account-btn', 'delete-account-confirm', 'delete-chevron', !isOpen);
+      const isOpen = document.getElementById('delete-account-confirm').classList.contains('open');
+      setDisclosure('delete-account-btn', 'delete-account-confirm', !isOpen);
     });
 
     document.getElementById('delete-account-cancel').addEventListener('click', () => {
-      setDisclosure('delete-account-btn', 'delete-account-confirm', 'delete-chevron', false);
+      setDisclosure('delete-account-btn', 'delete-account-confirm', false);
     });
 
     document.getElementById('delete-account-confirm-btn').addEventListener('click', async () => {

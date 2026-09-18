@@ -10,6 +10,8 @@
     { "source": "/dashboard", "destination": "/web/dashboard.html" },
     { "source": "/pricing", "destination": "/web/pricing.html" },
     { "source": "/privacy", "destination": "/web/privacy.html" },
+    { "source": "/site.css", "destination": "/web/site.css" },
+    { "source": "/site.js", "destination": "/web/site.js" },
     { "source": "/assets/:path*", "destination": "/web/assets/:path*" }
   ]
 }

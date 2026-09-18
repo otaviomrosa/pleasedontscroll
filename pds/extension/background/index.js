@@ -6,9 +6,13 @@
 
 import { chromeStorageAdapter } from '../../core/auth/storage.js';
 import { getValidAccessToken, getStoredSession } from '../../core/auth/session.js';
-import { fetchActiveProfile, switchProfile } from '../../core/sync/profiles.js';
+import { fetchActiveProfile, switchProfileDetailed } from '../../core/sync/profiles.js';
 import { fetchBlockedUrls } from '../../core/sync/blockedUrls.js';
-import { fetchBlockingMode, setBlockingMode, fetchIsPremium, fetchPauseUntil, setPauseUntil } from '../../core/sync/userSettings.js';
+import {
+  fetchBlockingMode, setBlockingModeDetailed, fetchIsPremium, fetchPauseUntil, setPauseUntil, setTimezoneIfUnset,
+} from '../../core/sync/userSettings.js';
+import { fetchSchedules, applySchedule } from '../../core/sync/schedules.js';
+import { activeBlockAt, nextBoundaryAt } from '../../core/schedule/active.js';
 import { isNavigableUrl, parseBlocklistEntry, matchesBlockedEntry } from '../../core/blocklist/hostname.js';
 
 // ─── In-memory state ─────────────────────────────────────────────────────────
@@ -78,6 +82,107 @@ let isPremium = false;
 const REFRESH_ALARM_NAME = 'pds-refresh';
 const REFRESH_PERIOD_MINUTES = 1;
 
+// ─── Scheduled blocking ──────────────────────────────────────────────────────
+// The user's painted weekly blocks (core/types Schedule rows), cached for
+// two local purposes only: computing the next block boundary for the
+// one-shot alarm below, and telling the popup "Scheduled Strict until X"
+// via buildStatePayload(). Enforcement is NOT done from this cache — the
+// server's apply_schedule() RPC (016_schedules.sql) is the only thing that
+// ever switches profile/mode for a block, and every refresh calls it
+// before reading anything else, so the reads below already reflect it.
+// Empty for free accounts (their rows stay dormant server-side too).
+let schedules = [];
+
+// One-shot alarm at the next block start/end so a boundary lands on the
+// minute instead of up to a full poll period late. Re-armed on every
+// refresh; chrome.alarms.create() with the same name replaces the old one.
+const BOUNDARY_ALARM_NAME = 'pds-schedule-boundary';
+// Fire a beat after the boundary, not exactly on it: apply_schedule()
+// decides "now" on the server's clock, and if this machine runs a couple
+// of seconds fast the RPC would still see the previous minute and do
+// nothing until the next poll.
+const BOUNDARY_ALARM_SLACK_MS = 3000;
+
+// Which user we've already offered our timezone for this worker lifetime —
+// setTimezoneIfUnset() is idempotent (writes only while the column is
+// null), this just avoids a pointless PATCH every minute.
+let timezoneOfferedFor = null;
+
+/**
+ * Re-arms the boundary alarm from the cached schedule (or clears it when
+ * there's nothing scheduled).
+ */
+function armBoundaryAlarm() {
+  const next = nextBoundaryAt(schedules);
+  if (!next) {
+    chrome.alarms.clear(BOUNDARY_ALARM_NAME);
+    return;
+  }
+  chrome.alarms.create(BOUNDARY_ALARM_NAME, { when: next.getTime() + BOUNDARY_ALARM_SLACK_MS });
+}
+
+/**
+ * The scheduled block covering right now (from the cache), or null. Only
+ * meaningful for a Focus Pro account — the server ignores the schedule
+ * for everyone else, so this must too, or the popup would show a lock
+ * the server isn't enforcing.
+ */
+function currentScheduledBlock() {
+  if (!isPremium || schedules.length === 0) return null;
+  return activeBlockAt(schedules);
+}
+
+/** Epoch ms at which today's instance of `block` ends (end_min 1440 = next midnight). */
+function blockEndMs(block) {
+  const end = new Date();
+  end.setHours(0, 0, 0, 0);
+  end.setMinutes(block.end_min);
+  return end.getTime();
+}
+
+/** "11:00 PM" — same shape the server's schedule_minute_label() produces. */
+function formatBlockEnd(block) {
+  return new Date(blockEndMs(block)).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+/**
+ * The message a user gets when a scheduled Strict block stops them from
+ * leaving Strict or switching profiles — null when no such block is
+ * active. Mirrors the server guard (016) for a fast local answer; the
+ * server is still the one that actually refuses.
+ */
+function scheduledStrictRefusal() {
+  const block = currentScheduledBlock();
+  if (!block || block.mode !== 'strict' || blockingMode !== 'strict') return null;
+  return `Strict Mode is scheduled until ${formatBlockEnd(block)}.`;
+}
+
+/**
+ * Live { mode, pausedUntil, profileId } from the server in one round trip.
+ * Calls apply_schedule() — which both runs any due schedule transition
+ * (so "live" here includes a block that started seconds ago, even if no
+ * alarm has fired yet) and returns the resulting mode/paused_until/profile
+ * for every account, Focus Pro or not. Falls back to the plain
+ * blocking_mode + paused_until reads if the RPC is unavailable, so the
+ * extension keeps enforcing normally even before 016 is applied or during
+ * a partial outage.
+ */
+async function fetchLiveState(accessToken, userId) {
+  const result = await applySchedule(accessToken, userId);
+  if (result && (result.mode === 'friction' || result.mode === 'strict')) {
+    return {
+      mode: result.mode,
+      pausedUntil: result.paused_until ? new Date(result.paused_until).getTime() : null,
+      profileId: result.profile_id ?? null,
+    };
+  }
+  const [mode, pauseIso] = await Promise.all([
+    fetchBlockingMode(accessToken, userId),
+    fetchPauseUntil(accessToken, userId),
+  ]);
+  return { mode, pausedUntil: pauseIso ? new Date(pauseIso).getTime() : null, profileId: null };
+}
+
 // ─── Blocklist management ─────────────────────────────────────────────────────
 
 /**
@@ -94,28 +199,49 @@ async function refreshBlocklist() {
     blockedEntries = [];
     activeProfile = null;
     isPremium = false;
+    schedules = [];
+    armBoundaryAlarm();
     console.log('[PDS] No active session. Blocking disabled.');
     return;
   }
 
   const session = await getStoredSession(chromeStorageAdapter);
+  const userId = session.user.id;
 
-  // None of these four depend on each other's result, so run them
-  // concurrently instead of one after another — this was the main cost
-  // behind GET_STATE's forced refresh feeling slow (see the message
-  // listener below): four sequential round trips collapse to the time of
-  // the single slowest one. Only fetchBlockedUrls (below) genuinely has to
-  // wait, since it needs profile.id from this batch first.
-  const [mode, premium, pauseIso, profile] = await Promise.all([
-    fetchBlockingMode(accessToken, session.user.id),
-    fetchIsPremium(accessToken, session.user.id),
-    fetchPauseUntil(accessToken, session.user.id),
-    fetchActiveProfile(accessToken),
+  // The schedule is evaluated in the user's own wall clock, which the
+  // server only knows once some client tells it. First writer wins and
+  // later changes are guarded server-side — see setTimezoneIfUnset().
+  if (timezoneOfferedFor !== userId) {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (await setTimezoneIfUnset(accessToken, userId, zone)) timezoneOfferedFor = userId;
+  }
+
+  // Order matters here: fetchLiveState() runs apply_schedule(), which may
+  // switch the active profile, so the profile read has to come after it —
+  // otherwise a block's profile switch would only show up one poll late.
+  // is_premium doesn't depend on it, so that one still runs concurrently.
+  const [live, premium] = await Promise.all([
+    fetchLiveState(accessToken, userId),
+    fetchIsPremium(accessToken, userId),
   ]);
 
-  blockingMode = mode;
+  blockingMode = live.mode;
   isPremium = premium;
-  pausedUntil = pauseIso ? new Date(pauseIso).getTime() : null;
+  pausedUntil = live.pausedUntil;
+
+  // Cache the schedule (Focus Pro only — dormant otherwise, matching the
+  // server) and re-arm the boundary alarm from it. A failed fetch keeps
+  // the previous copy: dropping it would silently cancel the alarm for a
+  // block that's still very much going to start.
+  if (isPremium) {
+    const rows = await fetchSchedules(accessToken);
+    if (rows !== null) schedules = rows;
+  } else {
+    schedules = [];
+  }
+  armBoundaryAlarm();
+
+  const profile = await fetchActiveProfile(accessToken);
 
   if (!profile) {
     blockedEntries = [];
@@ -149,7 +275,7 @@ function startRefreshCycle() {
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === REFRESH_ALARM_NAME) refreshBlocklist();
+  if (alarm.name === REFRESH_ALARM_NAME || alarm.name === BOUNDARY_ALARM_NAME) refreshBlocklist();
 });
 
 // ─── Tab interception logic ───────────────────────────────────────────────────
@@ -203,11 +329,25 @@ async function checkAndBlockTab(tabId, url) {
   const accessToken = await getValidAccessToken(chromeStorageAdapter);
   if (accessToken) {
     const session = await getStoredSession(chromeStorageAdapter);
-    blockingMode = await fetchBlockingMode(accessToken, session.user.id);
+    // One RPC that also applies any schedule transition that's due — so a
+    // Strict block that began moments ago is enforced on this very
+    // navigation, not after the boundary alarm or the next poll.
+    const live = await fetchLiveState(accessToken, session.user.id);
+    blockingMode = live.mode;
+
+    // If that transition just moved the user to another profile, this
+    // navigation must be judged against that profile's list, not the
+    // cached one — refresh, then re-ask whether the URL is even a candidate.
+    if (live.profileId && activeProfile && live.profileId !== activeProfile.id) {
+      await refreshBlocklist();
+      if (!isCandidateForBlocking(url)) {
+        if (isNavigableUrl(url)) lastSafeUrl.set(tabId, url);
+        return;
+      }
+    }
 
     if (blockingMode === 'friction') {
-      const freshPauseIso = await fetchPauseUntil(accessToken, session.user.id);
-      pausedUntil = freshPauseIso ? new Date(freshPauseIso).getTime() : null;
+      pausedUntil = live.pausedUntil;
       if (pausedUntil && Date.now() < pausedUntil) {
         lastSafeUrl.set(tabId, url); // currently paused — let it through, still a safe page
         return;
@@ -255,6 +395,12 @@ function buildStatePayload() {
   // youtube.com/shorts) should still read as one site, not two, so this
   // counts unique hostnames rather than raw blockedEntries.length.
   const uniqueHosts = new Set(blockedEntries.map((entry) => entry.hostname));
+  // The scheduled Strict block in force right now, if any — the popup
+  // uses it to lock the Friction option and say until when. Null unless
+  // the server is actually enforcing it (Focus Pro, mode really is
+  // Strict), so the popup never shows a lock the user couldn't rely on.
+  const block = currentScheduledBlock();
+  const scheduledStrictUntil = block && block.mode === 'strict' && blockingMode === 'strict' ? blockEndMs(block) : null;
   return {
     blockedCount:  uniqueHosts.size,
     blockedHosts:  [...uniqueHosts],
@@ -263,6 +409,7 @@ function buildStatePayload() {
     activeProfile,
     blockingMode,
     isPremium,
+    scheduledStrictUntil,
   };
 }
 
@@ -305,6 +452,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     pausedUntil = null;
     blockingMode = 'friction';
     isPremium = false;
+    schedules = [];
+    timezoneOfferedFor = null;
+    armBoundaryAlarm();
     sendResponse({ ok: true });
     return true;
   }
@@ -359,7 +509,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         }
       }
 
-      const ok = await setBlockingMode(accessToken, session.user.id, mode);
+      // A scheduled Strict block can't be left until it ends (founder's
+      // call — the popup's 30s hold is a client-side courtesy the server
+      // no longer honors during a block). The trigger in 016 refuses the
+      // write regardless; this local check just answers instantly with
+      // the same message and skips a round trip that would fail.
+      if (mode === 'friction') {
+        const refusal = scheduledStrictRefusal();
+        if (refusal) {
+          sendResponse({ ok: false, error: refusal, blockingMode, isPremium });
+          return;
+        }
+      }
+
+      const { ok, error } = await setBlockingModeDetailed(accessToken, session.user.id, mode);
       if (ok) {
         blockingMode = mode;
 
@@ -380,8 +543,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           const cleared = await setPauseUntil(accessToken, session.user.id, null);
           if (cleared) pausedUntil = null;
         }
+      } else if (mode === 'friction') {
+        // The server said no — most likely the scheduled-Strict guard, in
+        // which case our cached mode was stale (a block started since the
+        // last poll). Resync so the popup's next STATE_REFRESHED shows the
+        // lock and the real reason, not a toggle that silently snaps back.
+        await refreshBlocklist();
       }
-      sendResponse({ ok, blockingMode, isPremium });
+      sendResponse({ ok, error: ok ? null : (error || 'Could not change mode.'), blockingMode, isPremium });
     })();
     return true; // async
   }
@@ -443,9 +612,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       }
 
       const session = await getStoredSession(chromeStorageAdapter);
-      const ok = await switchProfile(accessToken, session.user.id, message.profileId);
-      if (ok) await refreshBlocklist();
-      sendResponse({ ok, activeProfile });
+
+      // Same fast local answer as SET_BLOCKING_MODE: switch_active_profile()
+      // already refuses any switch in Strict Mode (011), and during a
+      // scheduled Strict block its message names the end time (016).
+      const refusal = scheduledStrictRefusal();
+      if (refusal) {
+        sendResponse({ ok: false, error: refusal, activeProfile });
+        return;
+      }
+
+      const { ok, error } = await switchProfileDetailed(accessToken, session.user.id, message.profileId);
+      // Refresh either way — a refusal usually means the cache was stale
+      // (a Strict block began since the last poll), and the popup needs
+      // the corrected state to explain itself.
+      await refreshBlocklist();
+      sendResponse({ ok, error: ok ? null : (error || 'Could not switch profile.'), activeProfile });
     })();
     return true; // async
   }

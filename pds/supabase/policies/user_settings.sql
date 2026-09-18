@@ -8,6 +8,10 @@
 -- Touched by: 004_stripe.sql (added stripe_customer_id column; policy unchanged)
 -- Touched by: 005_blocking_mode.sql (added blocking_mode column; policy unchanged)
 -- Touched by: 006_stripe_subscription_id.sql (added stripe_subscription_id column; policy unchanged)
+-- Touched by: 008_pause.sql (added paused_until column; policy unchanged)
+-- Touched by: 016_schedules.sql (added timezone + schedule_state columns and a
+--   BEFORE UPDATE trigger guarding Strict->Friction / timezone changes during a
+--   scheduled Strict block, and schedule_state writes by clients; policy unchanged)
 -- ============================================================
 
 CREATE POLICY "Users manage own settings"

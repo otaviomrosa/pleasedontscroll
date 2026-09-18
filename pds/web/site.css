@@ -1,0 +1,553 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Please Don't Scroll · marketing site v2 (trial)
+
+   Design principles, carried over from the dashboard:
+   · No hairlines. Sections separate by whitespace and flat surface color,
+     never by borders or rules.
+   · Monochrome first: paper, ink, one gray surface. Color is emphasis only,
+     and only the two modes get any: deep teal for Friction Mode, Apple
+     system red for Strict Mode (the same hexes the product uses).
+     Focus Pro has no color: it is premium by being monochrome, white on
+     the black plan tile, like Apple's own "Pro".
+   · Shape system: pill for buttons and tags; 24px for surfaces; 16px for
+     elements that sit inside a surface (FAQ rows, menus, the preview's
+     inner panel); 12px for controls nested inside those. Nothing else.
+   · Type: DM Sans for everything functional, Plus Jakarta Sans (700) for
+     headlines. Nothing else.
+   · Motion: one scroll reveal and one motivated ambient animation (the
+     breathing ring), both gated behind prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --ink:          #000000;
+  --paper:        #ffffff;
+  --surface:      #f5f5f7;
+  --surface-deep: #e8e8ed;
+  --muted:        #6e6e73;
+  --faint:        #aeaeb2;
+  --on-ink-muted: rgba(255, 255, 255, 0.68);
+
+  --friction:     #296ce2;
+  --friction-dim: rgba(41, 108, 226, 0.10);
+  --strict:       #d72f2f;
+  --strict-dim:   rgba(215, 47, 47, 0.09);
+
+  --radius-surface: 24px;
+  --radius-inner:   16px;
+  --radius-nested:  12px;
+  --radius-pill:    999px;
+  --shadow-float:   0 12px 40px rgba(0, 0, 0, 0.12);
+
+  --font-ui:      'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --nav-h:     68px;
+  --container: 1120px;
+  --gutter:    clamp(20px, 4vw, 40px);
+  --section:   clamp(72px, 9vw, 120px);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, h4, p, ul, figure { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+details summary { list-style: none; cursor: pointer; }
+details summary::-webkit-details-marker { display: none; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+/* Inside the ink-filled Pro tile the ring flips to paper, or it vanishes. */
+.plan--pro :focus-visible { outline-color: var(--paper); }
+.hidden { display: none !important; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Keyboard users get a way past the nav. Hidden until focused. */
+.skip {
+  position: absolute; top: -100px; left: 16px; z-index: 50;
+  background: var(--ink); color: var(--paper);
+  padding: 10px 16px; border-radius: var(--radius-pill); font-weight: 500;
+}
+.skip:focus { top: 12px; }
+
+/* ─── Layout ────────────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.section { padding: var(--section) 0; scroll-margin-top: calc(var(--nav-h) + 12px); }
+.section--tight { padding: calc(var(--section) * 0.6) 0; }
+
+/* ─── Type ──────────────────────────────────────────────────────────────── */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  text-wrap: balance;
+}
+h1.display { font-size: clamp(2.4rem, 4.1vw, 3.5rem); }
+h2.display { font-size: clamp(2rem, 3.8vw, 3rem); line-height: 1.12; }
+h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
+
+.lede {
+  font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 36em;
+  text-wrap: pretty;
+}
+.muted { color: var(--muted); }
+
+/* ─── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 0.18s var(--ease-out), background 0.18s ease, opacity 0.18s ease;
+}
+.btn:hover  { transform: translateY(-1px); }
+.btn:active { transform: scale(0.98); }
+.btn[disabled] { opacity: 0.55; cursor: default; transform: none; }
+
+.btn--ink     { background: var(--ink);     color: var(--paper); }
+.btn--ink:hover { opacity: 0.86; }
+.btn--surface { background: var(--surface); color: var(--ink); }
+.btn--surface:hover { background: var(--surface-deep); }
+.btn--paper   { background: var(--paper);   color: var(--ink); }
+.btn--paper:hover { opacity: 0.9; }
+.btn--lg      { height: 56px; padding: 0 30px; font-size: 16px; }
+.btn img      { width: 20px; height: 20px; }
+
+.textlink {
+  font-weight: 500;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.18s ease;
+}
+.textlink:hover { opacity: 0.6; }
+
+/* ─── Nav ───────────────────────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--nav-h);
+  background: var(--paper);
+}
+.nav__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav__brand { display: inline-flex; align-items: center; gap: 12px; }
+.nav__logo { height: 26px; width: auto; filter: invert(1); }
+.nav__name { font-family: var(--font-display); font-weight: 600; font-size: 1rem; letter-spacing: -0.01em; }
+.nav__links { display: flex; align-items: center; gap: 28px; }
+.nav__link {
+  padding: 10px 2px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.18s ease;
+}
+.nav__link:hover { color: var(--ink); }
+.nav__links .btn { height: 40px; padding: 0 18px; }
+
+/* Signed-in account menu. Same behavior as the existing pages (avatar
+   toggles a dropdown; outside click closes it), restyled flat. */
+.account { position: relative; }
+.account__avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 14px;
+  display: grid; place-items: center;
+  transition: opacity 0.18s ease;
+}
+.account__avatar:hover { opacity: 0.8; }
+.account__menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+  background: var(--paper);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--shadow-float);
+  padding: 6px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s var(--ease-out);
+}
+.account__menu.open { opacity: 1; transform: none; pointer-events: auto; }
+.account__email {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 10px 12px 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.account__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-radius: var(--radius-nested);
+  transition: background 0.15s ease;
+}
+.account__item:hover { background: var(--surface); }
+
+/* ─── Hero ──────────────────────────────────────────────────────────────── */
+/* The burst behind the hero drawing is wider than its column and is
+   rotated, which makes its bounding box wider still, so it would add
+   horizontal page scroll at narrow widths. Clipped here rather than
+   shrunk: rays running off the edge is the intended look. `clip`, not
+   `hidden`, so the vertical axis stays visible and no scroll container
+   is created. */
+.hero { padding: clamp(32px, 5vw, 64px) 0 clamp(56px, 7vw, 96px); overflow-x: clip; }
+.hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+.hero__copy { display: flex; flex-direction: column; gap: 26px; align-items: flex-start; }
+.hero__actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+
+/* No ground behind the hero drawing: the ink sits straight on the page,
+   so the drawing itself is the shape. Kept as a square box purely to
+   reserve the column's height. */
+.stage {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+/* A few degrees off square, so a hand-drawn object does not sit like a
+   placed asset. Counter-clockwise reads as set down rather than tilted.
+   Scoped to .ink so the bursts below keep their own sizing. */
+.stage .ink { position: relative; z-index: 1; width: 100%; height: 100%; transform: rotate(-3deg) scale(0.88); }
+
+/* One burst, drawn once. The file carries both mode colors and places the
+   second arm with its own matrix, so there is no second copy to rotate and
+   no interleave angle to solve — the earlier versions needed both. Sized so
+   the rays clear the monitor's corners, which the diagonals point at. */
+.burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 205%;
+  aspect-ratio: 145 / 153;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* ─── Ink illustrations ─────────────────────────────────────────────────── */
+/* Real hand-drawn artwork now, one filled path per drawing, so the wobble
+   is in the geometry. The earlier versions were clean vector shapes run
+   through an SVG displacement filter to fake it; that filter, the Lora
+   italic used for the monitor's caption, and the breathing animation on
+   the old concentric-circle drawing all went with them. */
+.ink { overflow: visible; }
+
+/* ─── Mode bands ────────────────────────────────────────────────────────── */
+.modes { display: grid; gap: 20px; }
+.band {
+  background: var(--surface);
+  border-radius: var(--radius-surface);
+  padding: clamp(28px, 4.5vw, 60px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+.band--flip .band__art { order: 2; }
+.band__art { display: grid; place-items: center; }
+.band__art svg { width: min(100%, 360px); height: auto; }
+.band__art .ink--drawn { width: min(70%, 250px); }
+/* The breath circles read heavier than the padlock at the same width,
+   since they fill their whole viewBox. 7% down evens the two bands. */
+.band__art .ink--breath { width: min(65.1%, 232px); }
+.band__copy { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.band__copy .lede { font-size: 1.05rem; max-width: 30em; }
+
+/* Plan tag: a sentence-case pill, not an uppercase eyebrow. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface-deep);
+  color: var(--ink);
+}
+.tag--pro      { background: var(--surface-deep); color: var(--ink); }
+.tag--friction { background: var(--friction-dim); color: var(--friction); }
+.tag--strict   { background: var(--strict-dim);   color: var(--strict); }
+.tag--pro-solid { background: var(--paper); color: var(--ink); }
+
+/* ─── Product preview (a real mini-version of the dashboard's controls) ── */
+/* Laid out exactly like the dashboard's Blocklist section: gray pills on
+   the white page, the input row, then the gray blocklist surface with the
+   quick-add glyphs and the rows sitting directly on it (no per-site card). */
+.preview {
+  margin-top: clamp(36px, 5vw, 56px);
+  max-width: 760px;
+  display: grid;
+  gap: 16px;
+}
+.preview__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center;
+  height: 34px; padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+button.pill:not(.pill--on):hover { color: var(--ink); }
+.pill--on { background: var(--ink); color: var(--paper); font-weight: 500; }
+.pill--add { background: none; color: var(--muted); }
+.preview__input { display: flex; gap: 8px; }
+.preview__field { flex: 1; display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 15px; }
+.preview__btn { display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; white-space: nowrap; }
+/* Quick add sits above the list surface, never inside it, and its chips
+   take the same gray circle the dashboard gives them. */
+.preview__quick { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+.preview__quick-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.preview__icons { display: flex; flex-wrap: wrap; gap: 8px; }
+.preview__chip { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); }
+.preview__chip svg { width: 18px; height: 18px; color: var(--muted); }
+.preview__sites {
+  background: var(--surface);
+  border-radius: var(--radius-surface);
+  padding: 12px;
+  min-height: 190px;
+}
+.preview__site {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 10px 9px 14px;
+  font-size: 15px;
+}
+.preview__site-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.preview__favicon { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+.preview__site-x { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); }
+.preview__site-x svg { width: 12px; height: 12px; }
+.preview__empty { padding: 18px 0; text-align: center; color: var(--muted); font-size: 14px; }
+
+/* ─── Plans ─────────────────────────────────────────────────────────────── */
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.plan {
+  background: var(--surface);
+  border-radius: var(--radius-surface);
+  padding: clamp(28px, 3.5vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.plan--pro { background: var(--ink); color: var(--paper); }
+.plan__head { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.plan__price {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 3.5vw, 3rem);
+  line-height: 1;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.plan__price small { font-family: var(--font-ui); font-size: 15px; color: var(--muted); }
+.plan--pro .plan__price small { color: var(--on-ink-muted); }
+.plan__desc { color: var(--muted); font-size: 1rem; }
+.plan--pro .plan__desc { color: var(--on-ink-muted); }
+.plan__list { display: grid; gap: 12px; font-size: 15.5px; }
+.plan__list li { display: flex; align-items: flex-start; gap: 12px; }
+.plan__list svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px; fill: var(--ink); }
+.plan--pro .plan__list svg { fill: var(--paper); }
+.plan .btn { align-self: flex-start; }
+.plan--pro .btn--paper { color: var(--ink); }
+
+/* ─── Feature tiles (2 x 2) ─────────────────────────────────────────────── */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.tile {
+  background: var(--surface);
+  border-radius: var(--radius-surface);
+  padding: clamp(24px, 3.5vw, 36px);
+  display: flex; flex-direction: column; gap: 14px; align-items: flex-start;
+}
+.tile h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; font-size: 1.25rem; }
+.tile p { color: var(--muted); font-size: 1rem; max-width: 34em; }
+.tile__icons { display: flex; gap: 18px; color: var(--muted); padding: 4px 0 2px; }
+.tile__icons svg { width: 22px; height: 22px; }
+/* The dashboard's pause switch, drawn at its real size. */
+.switch { width: 42px; height: 24px; border-radius: 12px; background: var(--ink); position: relative; flex-shrink: 0; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 20px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+.tile__switchrow { display: flex; align-items: center; gap: 12px; }
+.tile__durations { display: flex; gap: 6px; }
+.tile__durations span { background: var(--paper); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; color: var(--muted); }
+.tile__lock { color: var(--ink); padding: 2px 0 4px; }
+.tile__lock svg { width: 44px; height: 44px; }
+.tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; max-width: 300px; }
+.tile__week i { display: block; height: 56px; border-radius: 8px; background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; }
+.tile__week i.f::after, .tile__week i.s::after { content: ''; position: absolute; left: 4px; right: 4px; border-radius: 5px; }
+.tile__week i.f::after { top: 8px; height: 20px; background: var(--friction); }
+.tile__week i.s::after { top: 28px; height: 20px; background: var(--strict); }
+
+/* ─── Quote ─────────────────────────────────────────────────────────────── */
+.quote {
+  max-width: 40em;
+  margin: 0 auto;
+  text-align: center;
+  display: grid;
+  gap: 22px;
+}
+.quote p {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  line-height: 1.42;
+  text-wrap: pretty;
+}
+.quote cite { font-style: normal; font-size: 15px; color: var(--muted); }
+
+/* ─── FAQ ───────────────────────────────────────────────────────────────── */
+.faq { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
+.faq details {
+  background: var(--surface);
+  border-radius: var(--radius-inner);
+  padding: 0 24px;
+}
+.faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 20px 0;
+  font-weight: 500;
+  font-size: 1.02rem;
+}
+.faq summary::after {
+  content: '+';
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.2s var(--ease-out);
+}
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { padding: 0 0 22px; color: var(--muted); max-width: 60ch; }
+
+/* ─── CTA band ──────────────────────────────────────────────────────────── */
+.cta {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius-surface);
+  padding: clamp(56px, 7vw, 96px) var(--gutter);
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.cta .lede { color: var(--muted); }
+.cta__logo { height: 40px; width: auto; filter: invert(1); margin-bottom: 4px; }
+
+/* ─── Long-form (privacy) ───────────────────────────────────────────────── */
+.prose { max-width: 68ch; margin: 0 auto; display: grid; gap: 18px; }
+.prose h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; margin-top: 22px; }
+.prose p, .prose li { color: #2c2c2e; }
+.prose ul { display: grid; gap: 10px; padding-left: 1.2em; list-style: disc; }
+.prose a { text-decoration: underline; text-underline-offset: 3px; }
+.prose .meta { color: var(--muted); font-size: 15px; }
+
+/* ─── Footer ────────────────────────────────────────────────────────────── */
+.footer { padding: 56px 0 44px; }
+.footer__inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+}
+.footer__links { display: flex; gap: 4px 22px; flex-wrap: wrap; }
+.footer__links a { display: inline-block; padding: 6px 0; font-size: 14.5px; color: var(--muted); transition: color 0.18s ease; }
+.footer__links a:hover { color: var(--ink); }
+.footer__copy { font-size: 13.5px; color: var(--muted); }
+
+/* ─── Toast ─────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: var(--paper);
+  font-size: 14.5px;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-float);
+  opacity: 0;
+  transition: transform 0.4s var(--ease-out), opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Scroll reveal (gated: site.js only adds .reveal when motion is allowed) */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(14px);
+            transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); }
+  .reveal.in-view { opacity: 1; transform: none; }
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  body { font-size: 16px; }
+  .hero__grid { grid-template-columns: 1fr; }
+  .hero__copy { order: 1; }
+  .hero__art  { order: 2; }
+  .band { grid-template-columns: 1fr; }
+  .band--flip .band__art { order: 0; }
+  .band__art svg { width: min(100%, 260px); }
+  .plans { grid-template-columns: 1fr; }
+  .tiles { grid-template-columns: 1fr; }
+  .footer__inner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 520px) {
+  .nav__links { gap: 16px; }
+  .nav__name { display: none; }
+  .hero__actions { flex-direction: column; align-items: stretch; gap: 6px; }
+  .hero__actions .btn { width: 100%; }
+  .hero__actions .textlink { justify-content: center; padding: 12px; }
+  .burst { width: 178%; }
+  .preview__icons { gap: 8px; }
+}
+
+.nowrap { white-space: nowrap; }

@@ -1,6 +1,6 @@
 // Queries against the `user_settings` table.
 
-import { supabaseFetch } from './restClient.js';
+import { supabaseFetch, supabaseFetchDetailed } from './restClient.js';
 
 /** Whether the given user currently has an active premium subscription. */
 export async function fetchIsPremium(accessToken, userId) {
@@ -27,11 +27,21 @@ export async function fetchBlockingMode(accessToken, userId) {
 
 /** Sets the user's blocking mode. Returns true on success. */
 export async function setBlockingMode(accessToken, userId, mode) {
-  const result = await supabaseFetch(`/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}`, accessToken, {
+  return (await setBlockingModeDetailed(accessToken, userId, mode)).ok;
+}
+
+/**
+ * Same write as setBlockingMode(), resolving to { ok, error }. `error` is
+ * the server's rejection text when a trigger refused the change — leaving
+ * Strict during a scheduled Strict block raises "Strict Mode is scheduled
+ * until 11:00 PM." (016_schedules.sql) and the popup shows that verbatim.
+ */
+export async function setBlockingModeDetailed(accessToken, userId, mode) {
+  const { error } = await supabaseFetchDetailed(`/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}`, accessToken, {
     method: 'PATCH',
     body: JSON.stringify({ blocking_mode: mode === 'strict' ? 'strict' : 'friction' }),
   });
-  return result !== null;
+  return { ok: error === null, error };
 }
 
 // Sentinel for "paused indefinitely, until manually resumed" — no schema
@@ -85,4 +95,37 @@ export async function setPauseUntil(accessToken, userId, pausedUntilIso) {
     body: JSON.stringify({ paused_until: pausedUntilIso }),
   });
   return result !== null;
+}
+
+/**
+ * Records the user's IANA timezone (e.g. 'America/Sao_Paulo') — but only
+ * if none is stored yet. The schedule (016_schedules.sql) evaluates "now"
+ * in this zone, and a scheduled Strict block is only as strong as the
+ * clock it's measured against: if every client could overwrite the zone,
+ * a second device set to another timezone would unlock the block by moving
+ * "now" outside it. So the first client to see the account wins, and a
+ * change later is deliberately a manual, server-guarded act (the trigger
+ * also refuses a change during an active Strict block). Idempotent; the
+ * `timezone=is.null` filter makes the no-op case a 200 with an empty
+ * array, so this returns true either way and false only on failure.
+ */
+export async function setTimezoneIfUnset(accessToken, userId, timezone) {
+  if (!timezone) return false;
+  const result = await supabaseFetch(
+    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&timezone=is.null`,
+    accessToken,
+    { method: 'PATCH', body: JSON.stringify({ timezone }) },
+  );
+  return result !== null;
+}
+
+/**
+ * The user's stored timezone (IANA name) or null if never set.
+ */
+export async function fetchTimezone(accessToken, userId) {
+  const rows = await supabaseFetch(
+    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=timezone`,
+    accessToken,
+  );
+  return rows?.[0]?.timezone ?? null;
 }

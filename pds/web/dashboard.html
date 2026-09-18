@@ -3,1726 +3,312 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Please Don't Scroll | Dashboard</title>
+  <title>Please Don’t Scroll | Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
   <style>
-    /* ─── Tokens ───────────────────────────────────────────────────────── */
+    /* ─────────────────────────────────────────────────────────────────────
+       Please Don't Scroll · dashboard v2 (trial)
+       Same language as the marketing pages: no hairlines, flat gray
+       surfaces on white, pill buttons, 24px surfaces, DM Sans + Plus
+       Jakarta Sans, color only for the two modes (teal / scarlet).
+       Every id and class the script touches is unchanged from web/. */
     :root {
-      /* Back to pure #000000 — went #000000 → #1a1a1a → #111111 →
-         #000000. --black and --text stay equal on purpose (a deliberate
-         consolidation, not a new value: one less near-black floating in
-         the token set) rather than reintroducing a second, separate dark
-         value. Cascades to every var(--black) consumer (.btn-primary,
-         .btn-sm.dark, .pause-toggle, .toast, .sidebar-nav-item.active)
-         automatically. */
-      --black:        #000000;
-      --white:        #ffffff;
-      --text:         #000000;
-      --text-muted:   #8e8e93;
-      --bg:           #ffffff;
-      --card:         #ffffff;
-      --border:       rgba(0, 0, 0, 0.11);
-      --border-hover: rgba(0, 0, 0, 0.16);
-      --error:        #c0392b;
-      --dot-active:   #2d6a4f;
-      /* Settled palette: a muted-then-brightened violet as the one brand
-         accent, used both for general interactive accents and for
-         Pro-tier signaling. (dashboard.html has since gained its own
-         Friction/Strict mode indicator too — see --friction-teal below —
-         but that was added later, on top of this palette, not as part of
-         this original decision.) Went teal → gold → burgundy
-         ("Crimson Bordeaux") → royal blue → this: purple/violet, the
-         dominant "Pro tier" SaaS color archetype (Discord Nitro, Twitch
-         Prime, Grammarly Premium) — tests well for subscription
-         conversion specifically, without the urgency/alarm connotation
-         warmer colors (orange/red) carry, which would cut against this
-         product's "no manipulative dark patterns" positioning anyway.
-         Same value as index.html's own accent now. Strict Mode's own
-         indicator color (popup.css/blocked.css's --strict) deliberately
-         stayed on the burgundy value — a distinct meaning (an
-         alarm/lockout color), not a brand accent, so it didn't move with
-         this. Naturalistic earth tones (sage, terracotta, gold, the
-         dark-green rounds) were explored earlier and dropped too. Used by
-         .btn-upgrade/.upgrade-banner's gradient/glow (as literal rgba(119,
-         65, 200, …) values there, not this token — no --pro-gold-dim/-glow
-         variants exist; the sidebar's pro-tag used to be the one consumer
-         of tokens like that, before it was changed to match popup.css's
-         plain gray .pro-tag instead, which dropped the need for them).
-         Token name kept as --pro-gold for now. */
-      --pro-gold: #7741c8;
-      /* Mode indicator pill (justified right of the quick-add chips — see
-         .mode-pill) — not this file's own --pro-gold brand accent, a
-         distinct meaning. Solid fill, matching popup.css/blocked.css's
-         own --friction/--strict exactly (same hex, same box-shadow glow
-         recipe) so the color means the same thing on both surfaces. */
-      --friction-teal:   #4a90a4;
-      --strict-burgundy: #b0203f;
-      --radius-card:  20px;
-      --radius-btn:   12px;
-      --radius-field: 10px;
-      --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.07);
-      --font-ui:      'DM Sans', -apple-system, sans-serif;
-      --font-serif:   'Lora', serif;
+      --ink: #000000;   --black: #000000;  --text: #000000;
+      --paper: #ffffff; --white: #ffffff;  --bg: #ffffff;  --card: #ffffff;
+      --surface: #f5f5f7; --surface-deep: #e8e8ed;
+      --muted: #6e6e73;  --text-muted: #6e6e73;  --faint: #aeaeb2;
+      --border: rgba(0, 0, 0, 0.09);           /* gridlines only, never boxes */
+      --error: #d70015;
+      --friction: #296ce2;  --friction-teal: #296ce2;
+      --strict: #d72f2f;    --strict-burgundy: #d72f2f;
+      --radius-surface: 24px; --radius-card: 24px; --radius-inner: 16px;
+      --radius-btn: 999px; --radius-field: 12px; --radius-pill: 999px;
+      --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.12); --shadow-card: none;
+      --font-ui: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: var(--font-display);
+      --nav-h: 68px; --container: 1120px; --gutter: clamp(20px, 4vw, 40px);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
-
-    /* ─── Reset ────────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    h1, h2, h3, p, ul { margin: 0; }
+    ul { padding: 0; list-style: none; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    img, svg { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+    .field:focus-visible, .pill:focus-visible { outline: none; }
+    .hidden { display: none !important; }
+    .display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; }
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      font-family: var(--font-ui);
-      font-size: 15px;
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
-    }
-
-    /* max-height: 100vh + overflow: hidden — a safety cap against the
-       blocklist ever growing the whole page taller as sites are added,
-       now that .dashboard-shell's own height (below) is a direct,
-       self-contained calc() off 100vh rather than something inherited
-       through a chain of flex-grow ancestors — that chain (this element,
-       .page-wrap, .dashboard-shell all needing flex: 1/flex: 7 ratios and
-       min-height: 0 to correctly hand a fixed height down) turned out too
-       fragile to reliably keep .sidebar/.content-pane matched — several
-       attempts at it still left them sized differently depending on which
-       section was showing. Scoped to #app-screen specifically (not
-       body/html) so #auth-screen — a plain centered login/signup card, in
-       practice never taller than one screen — keeps its own behavior
-       unchanged. */
-    #app-screen {
-      max-height: 100vh;
-      overflow: hidden;
-    }
-
-    /* ─── Layout ───────────────────────────────────────────────────────── */
-    /* max-width matches index.html/pricing.html's own .page (1100px) —
-       was 960px, which made the content-pane feel narrow now that it
-       shares the row with a fixed-width sidebar rather than being the
-       only thing on the page. Top/bottom padding equal (both 72px) —
-       .dashboard-shell's own height calc() below subtracts both of these
-       directly, so keeping them equal is what keeps the leftover space
-       above/below the cards balanced. */
-    .page-wrap {
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 72px 32px 72px;
-    }
-
-    /* ─── Public nav (auth screen only — hidden with #auth-screen on login,
-       distinct classes from the in-app sidebar/content-pane below so
-       nothing collides) ────────────────────────────────────────────────── */
-    .public-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 40px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .public-nav-logo {
-      height: 24px;
-      width: auto;
-      filter: invert(1);
-      /* invert(1) on a white source already lands on pure black, which is
-         now exactly --black (#000000) — no opacity softening needed to
-         approximate a muted target anymore, unlike when --black was
-         #111111/#1a1a1a. */
-      position: relative;
-      top: 2px;
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
-       clean flip. Counter-clockwise; the cubic-bezier above gives a
-       slow-start/fast-middle/slow-end feel. */
-    .public-nav-logo:hover {
-      transform: rotate(-180deg);
-    }
-
-    .public-nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .public-nav-link {
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 24px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .public-nav-link:hover {
-      color: var(--text);
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    /* ─── Auth screen ──────────────────────────────────────────────────── */
-    .auth-shell {
-      padding: 160px 24px 80px;
-    }
-
-    .auth-card {
-      background: var(--card);
-      border-radius: var(--radius-card);
-      padding: 44px 40px;
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--border);
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    .auth-eyebrow {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin: 0 0 14px;
-    }
-
-    .auth-title {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1.7rem;
-      letter-spacing: -0.02em;
-      color: var(--black);
-      margin: 0 0 8px;
-      line-height: 1.2;
-    }
-
-    .auth-sub {
-      font-size: 0.92rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-      margin: 0 0 32px;
-    }
-
-    .form-group { margin-bottom: 12px; }
-
-    .field {
-      display: block;
-      width: 100%;
-      padding: 11px 14px;
-      font-family: var(--font-ui);
-      font-size: 0.9rem;
-      color: var(--text);
-      background: #f5f5f7;
-      border: 1px solid transparent;
-      border-radius: var(--radius-field);
-      outline: none;
-      transition: background 0.2s;
-    }
-
-    .field::placeholder { color: var(--text-muted); }
-
-    /* No border on focus (stays transparent, same as at rest) — instead
-       an even lighter gray than the #f5f5f7 resting fill, so focus reads
-       as "lifted/lighter" rather than "outlined." Shared by every .field
-       in the file, so this covers the blocklist url-input and the
-       change-password fields the same way automatically. */
-    .field:focus {
-      background: #fafafb;
-    }
-
-    .btn-primary {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background: var(--black);
-      color: var(--white);
-      font-family: var(--font-ui);
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-align: center;
-      border: none;
-      border-radius: var(--radius-btn);
-      cursor: pointer;
-      transition: opacity 0.2s;
-      margin-top: 8px;
-      text-decoration: none;
-    }
-
-    .btn-primary:hover    { opacity: 0.82; }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-ghost {
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 0;
-      transition: color 0.15s;
-    }
-
-    .btn-ghost:hover { color: var(--text); }
-
-    .auth-toggle {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin: 16px 0 0;
-    }
-
-    .auth-toggle a {
-      color: var(--text);
-      font-weight: 500;
-      text-decoration: none;
-    }
-
-    .auth-toggle a:hover { text-decoration: underline; }
-
-    .error-msg {
-      font-size: 0.8rem;
-      color: var(--error);
-      margin: 8px 0 0;
-      display: none;
-    }
-
+    /* ─── Auth screen ─────────────────────────────────────────────────── */
+    .public-nav { height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
+    .public-nav-logo { height: 26px; width: auto; filter: invert(1); }
+    .public-nav-brand { display: inline-flex; align-items: center; gap: 12px; }
+    .public-nav-name { font-family: var(--font-display); font-weight: 600; font-size: 1rem; letter-spacing: -0.01em; }
+    .public-nav-links { display: flex; gap: 24px; }
+    .public-nav-link { font-size: 15px; font-weight: 500; color: var(--muted); padding: 10px 2px; transition: color 0.18s ease; }
+    .public-nav-link:hover { color: var(--ink); }
+    .auth-shell { min-height: calc(100vh - var(--nav-h)); display: grid; place-items: start center; padding: clamp(24px, 6vh, 72px) var(--gutter) 72px; }
+    .auth-card { width: min(100%, 440px); background: var(--surface); border-radius: var(--radius-surface); padding: clamp(28px, 4vw, 40px); display: flex; flex-direction: column; gap: 12px; }
+    .auth-eyebrow { display: none; }
+    .auth-title { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em; font-size: 1.85rem; line-height: 1.1; }
+    .auth-sub { color: var(--muted); margin-bottom: 8px; }
+    .form-group { margin: 0; }
+    .field { display: block; width: 100%; height: 48px; padding: 0 16px; font: inherit; color: var(--ink); background: var(--paper); border: 0; border-radius: var(--radius-field); outline: none; transition: box-shadow 0.15s ease; }
+    .field::placeholder { color: var(--muted); }
+    .field:focus { box-shadow: 0 0 0 3px rgba(41, 108, 226, 0.26); }
+    .field-inline { width: auto; flex: 1; min-width: 0; }
+    .auth-forgot, .auth-toggle, .auth-resend { font-size: 14px; color: var(--muted); }
+    .auth-forgot a, .auth-toggle a, .auth-resend a { color: var(--ink); font-weight: 500; }
+    .auth-forgot a:hover, .auth-toggle a:hover, .auth-resend a:hover { opacity: 0.6; }
+    .auth-toggle { text-align: center; margin-top: 4px; }
+    .auth-success { font-size: 14px; color: var(--ink); background: var(--paper); border-radius: var(--radius-field); padding: 12px 14px; }
+    .error-msg { display: none; font-size: 14px; color: var(--error); }
     .error-msg.visible { display: block; }
-
-    .auth-forgot {
-      font-size: 0.8rem;
-      text-align: right;
-      margin: -4px 0 20px;
-    }
-
-    .auth-forgot a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    .auth-forgot a:hover { color: var(--text); text-decoration: underline; }
-
-    .auth-success {
-      font-size: 0.8rem;
-      color: var(--dot-active);
-      margin: 8px 0 0;
-    }
-
-    .auth-resend {
-      font-size: 0.8rem;
-      margin: 8px 0 0;
-    }
-
-    .auth-resend a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    .auth-resend a:hover { color: var(--text); text-decoration: underline; }
-
-    /* ─── Pause blocking ──────────────────────────────────────────────────────
-       A regular iOS-style switch. Default (no class) = blocking is always
-       on, which is the normal/expected state — black track, knob right,
-       same visual convention as "on" everywhere else this shape is used.
-       .paused = the exception, applied only while an actual pause is in
-       effect — gray track (same gray as the extending pill), knob left.
-       Clicking it doesn't resize the switch itself; a separate gray pill
-       (.pause-options-pill) grows out from behind it, tucked underneath
-       via a negative margin + lower z-index so the switch visually
-       "covers" the seam and it reads as one continuous shape emerging from
-       the switch rather than two independent pieces. Lives directly in
-       .page-wrap now, above .dashboard-shell — a page-global control, not
-       specific to either the Blocklist or Settings section, and gives the
-       sidebar/content-pane some breathing room instead of starting flush
-       at the top. */
-    .pause-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .pause-toggle-row {
-      display: flex;
-      align-items: center;
-      /* min-width: matches the switch's own 42px — without this, the
-         pill's negative margin-left makes the flex layout think this row
-         is much narrower than it visually is (the row's calculated width
-         includes the child's negative margin, but the switch itself still
-         renders at its full 42px regardless), so #pause-label right after
-         it in .pause-row was starting underneath/behind the switch. */
-      min-width: 42px;
-    }
-
-    /* Reverted back to its original 42×24/radius-12 size (was shrunk to
-       39×22/11, briefly 35×20/10, as part of a whole-nav-row resize
-       experiment that's since been undone). */
-    .pause-toggle {
-      position: relative;
-      z-index: 2;
-      flex-shrink: 0;
-      width: 42px;
-      height: 24px;
-      background: var(--black);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0;
-      margin-left: 4px;
-      cursor: pointer;
-      transition: background 0.25s ease;
-    }
-
-    /* Paused = the exception state, not the default */
-    .pause-toggle.paused {
-      background: #f5f5f7;
-    }
-
-    @keyframes pause-shake {
-      0%, 100% { transform: translateX(0); }
-      20%      { transform: translateX(-2px); }
-      40%      { transform: translateX(2px); }
-      60%      { transform: translateX(-2px); }
-      80%      { transform: translateX(2px); }
-    }
-
-    /* Generic — not scoped to .pause-toggle, so any element can reuse this
-       same "you can't do that right now" feedback (e.g. profile tabs and
-       blocklist remove buttons while in Strict Mode). */
-    .shake { animation: pause-shake 0.3s ease; }
-
-    /* Reverted back to the original geometry — 42×24 track, 1px border,
-       true interior 40×22px. 2px insets on all sides centers an 18px knob
-       in that (22 - 2*2 = 18). translateX(18px) is the actual travel
-       distance to the right edge — interior_width(40) - knob_width(18) -
-       2*inset(4) = 18 (coincidentally equal to the knob's own width at
-       this particular size — not a rule, it won't necessarily hold if
-       this shell is ever resized again).
-       Default position is the right side (translateX), matching the
-       default "blocking always on" state; .paused pulls it back to the left. */
-    .pause-toggle-knob {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--white);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-      transform: translateX(18px);
-      transition: transform 0.25s ease;
-    }
-
-    .pause-toggle.paused .pause-toggle-knob {
-      transform: translateX(0);
-    }
-
-    /* Tucked behind the switch (lower z-index, pulled left under it) so
-       its rounded left edge is always hidden — only the part that grows
-       past the switch's right edge is ever visible.
-       No padding of its own: a container's OWN padding is never actually
-       suppressed by width: 0 (box-sizing: border-box only clamps the
-       *content* area to 0, padding still renders at full size regardless —
-       that was the real cause of the sliver that kept surviving every
-       previous attempt at this). The equivalent spacing lives as
-       margin-left on the child (.pause-durations) instead, where it's a
-       normal descendant that overflow: hidden legitimately clips.
-       Width (not max-width) target is set from JS (openPauseOptions())
-       rather than guessed here — a hardcoded value either clips the last
-       button or leaves a visible gap of empty gray after it depending on
-       actual rendered text width, so it's measured for real instead. */
-    /* height/border-radius match .pause-toggle's own reverted 24px/12px.
-       margin-left: -18px matches .pause-toggle-knob's reverted
-       translateX(18px) exactly — not a coincidence, the tuck distance is
-       deliberately kept equal to the knob's travel distance. */
-    .pause-options-pill {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-      width: 0;
-      height: 24px;
-      margin-left: -18px;
-      background: #f5f5f7;
-      border-radius: 12px;
-      overflow: hidden;
-      white-space: nowrap;
-      transition: width 0.3s ease;
-    }
-
-    /* margin-left: 26px — clears .pause-options-pill's tucked-under
-       portion, reverted back with the rest of this shell. */
-    .pause-durations {
-      display: flex;
-      align-items: center;
-      margin-left: 26px;
-      padding-right: 10px;
-    }
-
-    /* min-width + centered text: "30m" is the widest label, so every
-       option gets that same footprint instead of each button hugging its
-       own text — reads as a row of equal-sized slots, not ragged widths. */
-    .pause-duration-btn {
-      font-family: var(--font-ui);
-      font-size: 0.86rem;
-      font-weight: 400;
-      min-width: 45px;
-      padding: 4px 6px;
-      border: none;
-      background: none;
-      color: rgb(88, 88, 88);
-      cursor: pointer;
-      white-space: nowrap;
-      text-align: center;
-      transition: color 0.15s;
-    }
-
-    .pause-duration-btn:hover { color: var(--text); }
-
-    /* Inline SVG instead of the ∞ Unicode glyph: DM Sans doesn't include
-       that character, so it was silently rendering from a fallback system
-       font — which explained both the mismatched weight and why nudging
-       font-weight jumped straight from too-thick to too-thin with nothing
-       usable in between (system fallback fonts typically ship only a
-       couple of discrete weight instances, not a smooth range). SVG
-       stroke-width gives exact, reliable control regardless of font
-       support — same approach the popup's Strict Mode lock icon already
-       uses elsewhere in this codebase. */
-    .pause-duration-infinite {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .pause-label {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    /* Static — no dropdown, no click behavior, just the user's initial.
-       Sits in .sidebar-footer next to the pro-tag, with Sign out pushed
-       to the far end of that same row. align-self: center keeps this
-       vertically centered in the row on its own terms (a circle, not
-       text) — .sidebar-footer itself aligns by baseline now (see its own
-       comment), which is for the pro-tag/Sign out text specifically. */
-    .account-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: var(--black);
-      color: var(--white);
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.78rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      align-self: center;
-    }
-
-    /* Was a pill-shaped, accent-colored badge with a pulsing dot for Pro
-       (previously #premium-badge) and a separate .free grayscale variant.
-       Now matches popup.css's own .pro-tag exactly instead — same values,
-       same reasoning: a plain gray rounded-rectangle label reads as
-       quieter than a colored pill competing with the accent used
-       elsewhere (the Focus Pro CTA), and this file's tag is visible
-       constantly (sidebar footer), same "always in view" case that
-       motivated the extension's own plainer treatment. One flat look for
-       both Pro/Free now — only the label text (set by
-       loadPremiumStatus()) tells them apart. */
-    .pro-tag {
-      display: inline-flex;
-      align-items: center;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: #f5f5f7;
-      border-radius: 4px;
-      padding: 3px 8px;
-      line-height: 1.2;
-    }
-
-    /* ─── Settings section (nested Change password / Delete account
-       sub-disclosures within it) ──────────────────────────────────────── */
-    /* No top-level disclosure anymore — Settings is a plain
-       always-rendered .content-section, shown/hidden by the sidebar nav
-       (see showSection()) rather than its own expand/collapse. Only the
-       two nested sub-panels below (password, delete account) still use a
-       disclosure pattern. */
-
-    /* Account list rows (Change password / Manage subscription / Delete
-       account) — deliberately plain, "look like links" rather than boxed
-       buttons, so the section reads as one compact list instead of several
-       spread-out blocks. No divider between rows anymore — .settings-item
-       is still the wrapper grouping each row with its optional expandable
-       panel, just without a border-bottom of its own. */
-    .settings-link-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 11px 0;
-      cursor: pointer;
-      font-family: var(--font-ui);
-      font-size: 0.88rem;
-      color: var(--text);
-      text-decoration: none;
-      text-align: left;
-    }
-
-    .settings-link-row:hover { opacity: 0.7; }
-
-    /* max-height: 0 -> .open { max-height: <generous cap> } technique —
-       tried the grid-template-rows: 0fr -> 1fr trick first (same one
-       .site-options-menu below uses), including a defensive overflow:
-       hidden/min-height: 0 on both this element and .settings-subbody-inner,
-       but it still left a real, visible gap of empty space below the
-       collapsed row in practice (grid's auto-track-sizing has edge cases
-       the simpler max-height approach doesn't). max-height's own
-       trade-off — the transition animates toward the fixed cap, not the
-       exact content height, so it isn't frame-perfect — is a fine one to
-       make for actually working reliably. The cap (300px) just needs to
-       comfortably clear this content's real height (two fields + an
-       error slot + a button); it doesn't need to be exact. */
-    .settings-subbody {
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      margin: 0;
-      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
-    }
-
-    .settings-subbody.open {
-      max-height: 300px;
-      opacity: 1;
-      margin: 0 0 12px;
-    }
-
-    /* No more boxed look (background/border-radius/generous padding) —
-       once the border was already removed (see history), a white box on
-       a white section background wasn't reading as a distinct box at
-       all, just extra dead space around the fields. A small top gap is
-       all that's left, clearing the "Change password" row above it. */
-    .settings-subbody-inner {
-      padding: 4px 0 0;
-    }
-
-    /* ─── Section headers ──────────────────────────────────────────────── */
-    /* Small gray uppercase label — matches extension/popup/popup.css's
-       .mode-label/.profiles-label exactly (same font-size/weight/color/
-       letter-spacing/uppercase; no font-family override, so it inherits
-       --font-ui same as those do). "Profiles" and "Blocklist" (the other
-       two headings that used to share this class) were removed outright;
-       "Settings" is the only one left using it now, paired with the
-       email on the same line via .settings-header-title. */
-    .section-title {
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      /* margin-top adds room above "Settings" specifically, on top of
-         .content-section's own 16px flex gap, rather than changing that
-         gap itself (which would also affect the spacing everywhere else
-         in the pane). */
-      margin: 12px 0 0;
-    }
-
-    /* "Settings" + email on one line — flex row so the dot/email sit
-       inline with a controlled gap instead of relying on literal
-       whitespace in the markup (the HTML has none between "Settings"
-       and the dot/email spans for exactly this reason). */
-    .settings-header-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .settings-header-dot {
-      opacity: 0.5;
-    }
-
-
-    /* ─── Card ─────────────────────────────────────────────────────────── */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius-card);
-      padding: 28px 28px;
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-
-    /* ─── Dashboard shell: sidebar + content-pane ─────────────────────────
-       Replaces the old single-column stack of .card panels (#profiles-card,
-       #blocklist-card, #settings-card) with a persistent left sidebar
-       (Blocklist/Settings nav, sign out) and a single right-hand
-       content-pane that swaps between two .content-section panels via
-       showSection(). Both .sidebar and .content-pane reuse the same panel
-       language .card already established (--radius-card/--shadow-card/
-       --border/--card) so they read as the same kind of surface, just
-       detached from each other (a visible gap, not one continuous block)
-       rather than one fused bar.
-       grid-template-columns: 232px 1fr (not flex + a fixed sidebar width)
-       is what actually keeps .content-pane's width constant regardless of
-       which section is showing — a flex: 1 + min-width: 0 version of this
-       was tried first and still let .content-pane's computed width vary
-       between Blocklist/Settings (their different content was still
-       influencing the flex-basis calculation despite min-width: 0). Grid's
-       1fr column has no such content-dependent sizing: it's always
-       "whatever's left after the fixed 232px column," full stop.
-       Row height: .sidebar/.content-pane fill this row via grid's own
-       default align-items: stretch (there's only one row, since no
-       grid-template-rows is set) — that part reliably matches the two of
-       them to each other. What was NOT reliable was getting
-       .dashboard-shell's OWN height right in the first place: it used to
-       get that via flex: 7 (plus a .page-wrap-spacer sibling at flex: 3,
-       splitting .page-wrap's leftover height 70/30 for the "30% smaller"
-       card size) — which depended on .page-wrap and #app-screen also
-       being flex containers correctly handing a fixed height down through
-       flex-grow, a chain that kept silently falling back to
-       content-based sizing instead (this is the actual reason Blocklist
-       and Settings kept rendering at different heights across several
-       fix attempts). height: calc() below removes that dependency
-       entirely — a fixed formula off 100vh directly, unaffected by
-       whatever .page-wrap/#app-screen's own rendered heights happen to
-       be. The subtracted values are .page-wrap's own top+bottom padding
-       (72px each) and the pause row's own height + bottom margin
-       (24px + 12px) sitting above this element; the remaining space is
-       then multiplied by 0.85 (was 0.7 — the "30% smaller" sizing read
-       as a bit short in practice, so this claws back most of that
-       reduction without going all the way back to the full 100%), with
-       the rest left as blank space below — no spacer element needed for
-       that, it's just whatever .page-wrap's own padding-bottom doesn't
-       already cover. */
-    .dashboard-shell {
-      display: grid;
-      grid-template-columns: 232px 1fr;
-      gap: 20px;
-      height: calc((100vh - 72px - 72px - 24px - 12px) * 0.85);
-    }
-
-    /* Width comes entirely from .dashboard-shell's grid-template-columns
-       (232px) now, not a width declared here — one source of truth
-       instead of two that could disagree. flex column so .sidebar-footer
-       below can pin itself to the bottom via margin-top: auto,
-       independent of .sidebar-nav's own height. */
-    /* Bottom padding matches the left/right padding (14px, was 20px like
-       the top) — the avatar in .sidebar-footer sits at the bottom-left
-       corner, and equal left/bottom insets are what make it read as
-       symmetrically nested against that corner's curve instead of sitting
-       closer to one edge than the other. */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      background: var(--card);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--border);
-      padding: 20px 14px 14px;
-    }
-
-    .sidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    /* Same rest/hover pattern as .settings-link-row — black text at rest,
-       dimmed via opacity: 0.7 on hover (which reads as light gray against
-       the white sidebar) rather than a color swap. .active still gets the
-       solid black fill .profile-tab.active already uses elsewhere in this
-       file, since a visible "this is the current section" indicator is
-       still needed — hovering the active item dims it the same way,
-       which is fine as ordinary hover feedback on an already-selected
-       control. */
-    .sidebar-nav-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: var(--radius-btn);
-      cursor: pointer;
-      transition: opacity 0.25s ease;
-    }
-
-    .sidebar-nav-item:hover { opacity: 0.7; }
-
-    .sidebar-nav-item.active {
-      background: var(--black);
-      color: var(--white);
-    }
-
-    /* Avatar (left) + sign out (right) on one row, pinned to the bottom
-       of the sidebar. */
-    /* Clustered together with a small gap (not justify-content:
-       space-between, which spread avatar and Sign out to opposite edges
-       of the sidebar) — avatar sits close to the sidebar's own
-       bottom-left rounded corner instead of anchoring one end of a row
-       stretched across the full width. */
-    /* align-items: baseline (not center) — the pro-tag and Sign out
-       button have different font-sizes/padding, so centering their boxes
-       didn't actually line up their text; baseline lines up the text
-       itself regardless of box size. The avatar (a circle, not text)
-       opts back out via its own align-self: center. */
-    .sidebar-footer {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-top: auto;
-      padding-top: 14px;
-    }
-
-    /* Smaller/auto-width rather than a full-width block is what still
-       keeps this quieter than the two nav items above (an instant action,
-       not a content destination) — muted gray at rest (not the black
-       .sidebar-nav-item/.settings-link-row use), opacity: 0.7 on hover.
-       Pushed to the far end of .sidebar-footer via margin-left: auto
-       while avatar + pro-tag stay clustered on the left via that row's
-       own small gap. */
-    .sidebar-signout {
-      display: inline-block;
-      margin-left: auto;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.84rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      padding: 6px 8px;
-      border-radius: var(--radius-btn);
-      cursor: pointer;
-      transition: opacity 0.25s ease;
-    }
-
-    .sidebar-signout:hover {
-      opacity: 0.7;
-    }
-
-    /* Mobile drawer trigger + backdrop — hidden entirely above the
-       768px breakpoint below, where the sidebar is always visible in-flow. */
-    .sidebar-hamburger {
-      display: none;
-    }
-
-    .sidebar-backdrop {
-      display: none;
-    }
-
-    /* min-width: 0 still matters under grid, same reasoning as flex — a
-       1fr column's default min-width is auto (content-based), which would
-       let a long unwrapped blocklist URL push this wider than its column
-       rather than wrapping/scrolling within it. */
-    .content-pane {
-      min-width: 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      background: var(--card);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--border);
-      padding: 28px;
-    }
-
-    /* flex column + gap instead of per-element margins: every direct
-       child (including the conditionally-hidden ones — the add-profile
-       form, the error message) gets spaced by the container, not by
-       margins declared on the children themselves. A hidden child (still
-       display:none when inactive) contributes no gap on either side
-       automatically — no :last-child/:first-child patch ever needed here,
-       no matter what gets added, removed, or reordered later. */
-    /* flex: 1 + min-height: 0 (the only visible one at a time fills the
-       whole content-pane) is what lets #url-list below cap itself to
-       "whatever's left" and scroll internally instead of growing the
-       card past its fixed height — see #url-list's own comment. */
-    .content-section {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* Defensive fallback, scoped to Settings specifically (not
-       .content-section generally, which also applied to Blocklist) — if
-       Settings' content ever exceeds .content-pane's fixed height (e.g.
-       both sub-disclosures open at once), this section scrolls internally
-       too rather than breaking out of the fixed-height card. Applying
-       this to #section-blocklist as well was clipping the quick-add
-       chips' .site-options-menu dropdown, which is meant to overlay past
-       the card's edge (position: absolute, no containing scroll context
-       of its own) — Settings has no equivalent overlaying element, so it
-       doesn't have that same conflict. */
-    #section-settings {
-      overflow-y: auto;
-    }
-
-    /* Short fade + slight rise on section switch (showSection()) — same
-       "add a class, force reflow, add the animation class, remove it on a
-       timeout" idiom .shake already uses in this file, not a new
-       mechanism. Flat/fast, not the bouncy cubic-bezier reserved for the
-       toast. */
-    @keyframes section-fade-in {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .content-section.section-enter {
-      animation: section-fade-in 0.18s ease;
-    }
-
-    /* Profile switcher — moved here from the old #profiles-card, pinned
-       at the top of #section-blocklist. Own internal 16px gap column,
-       same rhythm .content-section itself uses, so it reads as one
-       continuous flow with the rest of the pane's spacing. */
-    .profile-switcher {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* .error-msg's shared 8px top margin (used across every form in this
-       file — login, signup, password fields, etc.) would stack on top of
-       the profile switcher / content-section's own 16px gap rather than
-       replacing it, same reasoning as .new-profile-form above. Scoped by
-       id directly (both are unique) rather than by container, since
-       neither #profiles-card nor #blocklist-card exist as containers
-       anymore. */
-    #profile-error,
-    #url-error {
-      margin-top: 0;
-    }
-
-    /* ─── Mobile: sidebar becomes an off-canvas drawer ────────────────────
-       Same breakpoint pricing.html/index.html already use elsewhere in
-       this codebase (768px). */
-    @media (max-width: 768px) {
-      /* .sidebar goes position: fixed below (off-canvas drawer) — taken
-         out of grid flow entirely, which would otherwise leave
-         .dashboard-shell's first (232px) column sitting empty and
-         .content-pane confined to the second column alone. One column
-         lets .content-pane use the full width once the sidebar isn't
-         actually sharing the row anymore. */
-      .dashboard-shell {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar-hamburger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        top: 16px;
-        left: 16px;
-        z-index: 260;
-        width: 38px;
-        height: 38px;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 50%;
-        box-shadow: var(--shadow-card);
-        color: var(--text);
-        cursor: pointer;
-      }
-
-      .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        z-index: 300;
-        width: 260px;
-        border-radius: 0;
-        transform: translateX(-100%);
-        transition: transform 0.25s ease;
-        overflow-y: auto;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .sidebar-backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 250;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
-
-      .sidebar-backdrop.open {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .content-pane {
-        padding: 24px 20px;
-      }
-    }
-
-    /* ─── Profile tabs ─────────────────────────────────────────────────── */
-    .profile-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .profile-tab {
-      /* display:inline-flex + a fixed height, instead of letting the
-         button's height come from its tallest inline content: that's what
-         let bumping .profile-tab-delete's font-size grow the whole pill
-         taller and throw the name's baseline upward. With a fixed height
-         and align-items:center, every child (name, lock, delete) is
-         centered on the cross axis regardless of its own font-size, so the
-         delete icon can be sized freely without touching the pill at all. */
-      display: inline-flex;
-      align-items: center;
-      height: 32px;
-      font-family: var(--font-ui);
-      font-size: 0.84rem;
-      font-weight: 400;
-      padding: 0 18px;
-      border-radius: 24px;
-      border: none;
-      background: #f5f5f7;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.18s ease;
-      white-space: nowrap;
-    }
-
-    .profile-tab:hover {
-      color: var(--text);
-    }
-
-    .profile-tab.active {
-      background: var(--black);
-      color: var(--white);
-      border-color: var(--black);
-      font-weight: 500;
-    }
-
-    .profile-tab.locked {
-      color: var(--text-muted);
-      opacity: 0.6;
-      cursor: pointer; /* still clickable — routes to pricing.html */
-    }
-
-    .profile-tab.locked:hover {
-      opacity: 0.85;
-    }
-
-    .profile-tab-lock {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 6px;
-    }
-
-    /* Tabs that carry a delete icon get a smaller right-hand padding —
-       the icon's own margin + width already provide trailing space, so
-       keeping the tab's full 18px right padding on top of that stacked
-       up to 38px of empty space past the name when the icon is at
-       opacity:0 (not hovered). */
-    .profile-tab.has-delete {
-      padding-right: 11px;
-    }
-
-    /* Delete icon inside inactive tabs — a plain gray glyph, no circle
-       background behind it. */
-    .profile-tab-delete {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 6px;
-      font-size: 1.3rem;
-      line-height: 1;
-      color: rgb(150, 150, 150);
-      opacity: 0;
-      transition: opacity 0.15s, color 0.15s;
-      vertical-align: middle;
-    }
-
-    .profile-tab-delete:hover {
-      color: rgb(90, 90, 90);
-    }
-
+    .btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; margin-top: 6px; background: var(--ink); color: var(--paper); border-radius: var(--radius-pill); font-weight: 500; transition: opacity 0.18s ease, transform 0.18s var(--ease-out); }
+    .btn-primary:hover { opacity: 0.86; transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+    /* ─── App shell ───────────────────────────────────────────────────── */
+    #app-screen { max-height: 100vh; overflow: hidden; }
+    .page-wrap { width: 100%; max-width: var(--container); margin: 0 auto; padding: 40px var(--gutter) 72px; }
+    .dashboard-shell { display: grid; grid-template-columns: 232px 1fr; gap: 20px; height: calc((100vh - 40px - 72px - 24px - 16px) * 0.88); min-height: 520px; }
+    .sidebar { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 16px 12px 12px; }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-nav-item { display: block; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--muted); padding: 11px 14px; border-radius: var(--radius-inner); transition: background 0.18s ease, color 0.18s ease; }
+    .sidebar-nav-item:hover { color: var(--ink); background: var(--surface-deep); }
+    .sidebar-nav-item.active { background: var(--ink); color: var(--paper); }
+    .sidebar-nav-item.locked { display: flex; align-items: center; justify-content: space-between; color: var(--muted); }
+    .sidebar-nav-lock { display: inline-flex; align-items: center; }
+    .sidebar-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 14px 4px 2px; }
+    .account-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 600; display: grid; place-items: center; flex-shrink: 0; }
+    .pro-tag { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--paper); border-radius: 6px; padding: 3px 8px; line-height: 1.2; }
+    .sidebar-signout { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--muted); padding: 6px 8px; border-radius: var(--radius-pill); transition: color 0.18s ease; }
+    .sidebar-signout:hover { color: var(--ink); }
+    .sidebar-hamburger, .sidebar-backdrop { display: none; }
+    .content-pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 4px 0 0; }
+    .content-section { display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
+    #section-settings { overflow-y: auto; }
+    @keyframes section-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .content-section.section-enter { animation: section-fade-in 0.18s ease; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .shake { animation: shake 0.3s ease; }
+    @media (prefers-reduced-motion: reduce) { .content-section.section-enter, .shake { animation: none; } }
+
+    /* ─── Profiles ────────────────────────────────────────────────────── */
+    .profile-switcher { display: flex; flex-direction: column; gap: 10px; }
+    .profile-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .profile-tab { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    .profile-tab:hover { color: var(--ink); }
+    .profile-tab.active { background: var(--ink); color: var(--paper); font-weight: 500; }
+    .profile-tab.locked { opacity: 0.6; }
+    .profile-tab.locked:hover { opacity: 0.85; }
+    .profile-tab-lock { display: inline-flex; align-items: center; margin-left: 6px; }
+    .profile-tab.has-delete { padding-right: 10px; }
+    .profile-tab-delete { display: inline-flex; align-items: center; margin-left: 6px; font-size: 1.2rem; line-height: 1; color: var(--muted); opacity: 0; transition: opacity 0.15s, color 0.15s; }
     .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
-
-    .btn-add-profile {
-      display: inline-flex;
-      align-items: center;
-      height: 32px;
-      font-family: var(--font-ui);
-      font-size: 0.84rem;
-      font-weight: 400;
-      padding: 0 14px;
-      border-radius: 24px;
-      border: 1px dashed var(--border-hover);
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.18s;
-      white-space: nowrap;
-    }
-
-    .btn-add-profile:hover {
-      border-style: solid;
-      color: var(--text);
-    }
-
-    /* New profile inline form */
-    /* No margin-top of its own — as a direct child of .profile-switcher,
-       it already gets the container's 16px gap above it when visible
-       (flex item margins add on top of gap rather than collapsing with
-       it, so a margin here would double up, not just replace, that
-       spacing). */
-    .new-profile-form {
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .profile-tab-delete:hover { color: var(--ink); }
+    .btn-add-profile { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); color: var(--muted); font-size: 14px; background: none; transition: background 0.18s ease, color 0.18s ease; }
+    .btn-add-profile:hover { background: var(--surface); color: var(--ink); }
+    .new-profile-form { display: none; gap: 8px; align-items: center; }
     .new-profile-form.visible { display: flex; }
+    .new-profile-form .field { background: var(--surface); height: 40px; }
 
-    .field-inline {
-      flex: 1;
-      padding: 8px 12px;
-      font-size: 0.85rem;
-      border-radius: var(--radius-field);
+    /* ─── Buttons (small) ─────────────────────────────────────────────── */
+    .btn-sm { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 500; white-space: nowrap; transition: opacity 0.18s ease, background 0.18s ease, transform 0.18s var(--ease-out); flex-shrink: 0; }
+    .btn-sm:hover { transform: translateY(-1px); }
+    .btn-sm:active { transform: scale(0.98); }
+    .btn-sm:disabled { opacity: 0.5; cursor: default; transform: none; }
+    .btn-sm.dark { background: var(--ink); color: var(--paper); }
+    .btn-sm.dark:hover { opacity: 0.86; }
+    .btn-sm.light { background: var(--surface); color: var(--ink); }
+    .btn-sm.light:hover { background: var(--surface-deep); }
+    .btn-sm.danger { background: var(--ink); color: var(--paper); }
+    .btn-ghost { color: var(--muted); }
+    .new-profile-form .btn-sm { height: 40px; padding: 0 14px; }
+
+    /* ─── Blocklist ───────────────────────────────────────────────────── */
+    .url-input-row { display: flex; gap: 8px; }
+    .url-input-row .field { flex: 1; background: var(--surface); height: 44px; }
+    .blocklist-surface { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 12px; flex: 1; min-height: 0; }
+    .url-list { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0 0; }
+    /* Rows sit directly on the gray surface — no white card per site, and
+       tighter now that there's no bubble needing its own breathing room. */
+    .url-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px 9px 14px; border-radius: var(--radius-field); }
+    .url-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .url-text { font-size: 15px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .url-favicon, .url-favicon-fallback { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; }
+    .url-favicon-fallback { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
+    .btn-delete-url { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); transition: color 0.15s; flex-shrink: 0; }
+    .btn-delete-url:hover { color: var(--ink); }
+    .btn-delete-url.locked:hover { color: var(--muted); }
+    .empty-state { text-align: center; padding: 18px 0; color: var(--muted); font-size: 14px; }
+    .sync-hint { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 2px; }
+
+    /* ─── Settings ────────────────────────────────────────────────────── */
+    .section-title { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin: 4px 0 0; }
+    .settings-header-title { display: flex; align-items: center; gap: 6px; }
+    .settings-header-dot { opacity: 0.5; }
+    .settings-body { display: flex; flex-direction: column; gap: 8px; }
+    .settings-item { background: var(--surface); border-radius: var(--radius-inner); }
+    .settings-link-row { display: block; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--ink); padding: 15px 18px; border-radius: var(--radius-inner); transition: background 0.15s ease; }
+    .settings-link-row:hover { background: var(--surface-deep); }
+    /* Once a disclosure is open, its row is a heading for what's below it,
+       not a button waiting to be pressed — no hover highlight. */
+    .settings-link-row[aria-expanded="true"], .settings-link-row[aria-expanded="true"]:hover { background: none; }
+    .settings-subbody, .danger-confirm { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.25s ease, opacity 0.2s ease; }
+    .settings-subbody.open { max-height: 340px; opacity: 1; }
+    .danger-confirm.open { max-height: 260px; opacity: 1; }
+    .settings-subbody-inner, .danger-confirm-inner { padding: 2px 18px 18px; display: flex; flex-direction: column; gap: 8px; }
+    .danger-warning { font-size: 14px; color: var(--ink); line-height: 1.5; padding-bottom: 6px; }
+    .danger-link { color: var(--muted); }
+    .settings-link-row.danger-link:hover { color: var(--ink); }
+    #password-body .field, #change-password-btn { height: 44px; }
+    .settings-subbody-inner .btn-sm, .danger-confirm-inner .btn-sm { align-self: flex-start; }
+    .upgrade-banner { margin-top: auto; background: var(--ink); color: var(--paper); border-radius: var(--radius-surface); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .upgrade-banner-text { font-size: 14px; color: rgba(255, 255, 255, 0.68); line-height: 1.45; }
+    .upgrade-banner-text strong { display: block; color: var(--paper); font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+    .btn-upgrade { display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--paper); color: var(--ink); font-size: 14px; font-weight: 500; white-space: nowrap; transition: opacity 0.15s; flex-shrink: 0; }
+    .btn-upgrade:hover { opacity: 0.88; }
+
+    /* ─── Toast ───────────────────────────────────────────────────────── */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: var(--paper); font-size: 14.5px; padding: 12px 22px; border-radius: var(--radius-pill); box-shadow: var(--shadow-float); opacity: 0; transition: transform 0.4s var(--ease-out), opacity 0.3s ease; pointer-events: none; z-index: 1000; max-width: calc(100vw - 32px); text-align: center; }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── Mobile ──────────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .page-wrap { padding: 24px 20px 56px; }
+      .dashboard-shell { grid-template-columns: 1fr; height: auto; min-height: 0; }
+      .sidebar-hamburger { display: grid; place-items: center; position: fixed; top: 14px; left: 14px; z-index: 260; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; color: var(--ink); }
+      .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 300; width: 260px; border-radius: 0; transform: translateX(-100%); transition: transform 0.25s ease; overflow-y: auto; padding-top: 68px; }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 250; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+      .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+      .pause-row { padding-left: 54px; }
+      .sched { display: none; }
+      .sched-mobile-note { display: block; }
     }
 
-    .btn-sm {
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      border-radius: var(--radius-btn);
-      border: none;
-      cursor: pointer;
-      font-family: var(--font-ui);
-      transition: opacity 0.15s;
-      white-space: nowrap;
-    }
+    /* ─── Pause toggle ────────────────────────────────────────────────── */
+    /* Flat: no border, no knob shadow. Paused = light gray track, knob left. */
+    .pause-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-left: 2px; }
+    .pause-toggle-row { display: flex; align-items: center; min-width: 52px; }
+    .pause-toggle { position: relative; z-index: 2; flex-shrink: 0; width: 52px; height: 30px; background: var(--ink); border-radius: 15px; padding: 0; margin-left: 4px; cursor: pointer; transition: background 0.25s ease; }
+    .pause-toggle.paused { background: var(--surface-deep); }
+    @keyframes pause-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 40% { transform: translateX(2px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }
+    .pause-toggle-knob { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--paper); transform: translateX(22px); transition: transform 0.25s ease; }
+    .pause-toggle.paused .pause-toggle-knob { transform: translateX(0); }
+    /* The durations are small gray bubbles next to the switch (same as the
+       landing page's "Pause when you need to" tile), not one extended
+       gray bar. The container stays a zero-width clip that animates open;
+       openPauseOptions() measures the row's scrollWidth for it. */
+    .pause-options-pill { position: relative; z-index: 1; display: flex; align-items: center; flex-shrink: 0; width: 0; height: 30px; margin-left: 0; overflow: hidden; white-space: nowrap; transition: width 0.3s ease; }
+    .pause-durations { display: flex; align-items: center; gap: 6px; margin-left: 10px; padding-right: 4px; }
+    .pause-duration-btn { display: inline-flex; align-items: center; justify-content: center; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; transition: color 0.15s, background 0.15s; }
+    .pause-duration-btn:hover { color: var(--ink); background: var(--surface-deep); }
+    .pause-duration-infinite { display: inline-flex; align-items: center; justify-content: center; }
+    .pause-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    /* Same solid mode pill the popup's toggle and the blocked page use. */
+    .mode-status { display: inline-flex; align-items: center; margin-right: -2px; height: 30px; padding: 0 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 500; color: var(--paper); white-space: nowrap; }
+    .mode-status-dot { display: none; }
+    .mode-status.mode-friction { background: var(--friction); }
+    .mode-status.mode-strict   { background: var(--strict); }
+    .pause-title { font-size: 13px; color: var(--muted); white-space: nowrap; }
 
-    .btn-sm.dark { background: var(--black); color: var(--white); }
-    .btn-sm.dark:hover { opacity: 0.82; }
-    .btn-sm.dark:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    .btn-sm.light {
-      background: none;
-      color: var(--text-muted);
-    }
-
-    .btn-sm.light:hover { color: var(--text); }
-
-    .btn-sm.danger { background: var(--black); color: var(--white); }
-    .btn-sm.danger:hover { opacity: 0.85; }
-    .btn-sm.danger:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* ─── Settings: delete account ────────────────────────────────────────── */
-    /* Grayscale now, not red — same "quiet, not alarming" treatment as
-       the rest of this file's restrained palette. */
-    .danger-link { color: var(--text); }
-    .danger-link:hover { color: var(--text); opacity: 0.8; }
-
-    /* Same grid-template-rows: 0fr -> .open { 1fr } technique as
-       .settings-subbody above (and .site-options-menu below) — see that
-       rule's own comment for the full reasoning. Chrome (background/
-       border/radius/padding) lives on .danger-confirm-inner so a closed
-       (0fr) row is genuinely zero-height, not just hidden content behind
-       a still-visible red box. */
-    /* Same max-height technique as .settings-subbody above, same reason
-       (the grid-template-rows: 0fr version left a real gap in practice). */
-    .danger-confirm {
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      margin: 0;
-      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
-    }
-
-    .danger-confirm.open {
-      max-height: 220px;
-      opacity: 1;
-      margin: 0 0 8px;
-    }
-
-    .danger-confirm-inner {
-      padding: 14px;
-      background: #f5f5f7;
-      border-radius: var(--radius-field);
-    }
-
-    .danger-warning {
-      font-size: 0.85rem;
-      color: var(--text);
-      line-height: 1.5;
-      margin: 0 0 12px;
-    }
-
-    /* ─── URL input row ─────────────────────────────────────────────────── */
-    .url-input-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .url-input-row .field {
-      flex: 1;
-      margin: 0;
-      padding: 9px 14px;
-    }
-
-    /* Explicit height (not just padding) — box-sizing: border-box (set
-       globally) means this is the field's full outer box regardless of
-       padding/font-size, giving #change-password-btn below something
-       exact to match rather than needing padding tuned to approximate
-       the same number. */
-    #password-body .field {
-      height: 40px;
-      padding: 9px 14px;
-    }
-
-    /* Scoped to just this button, not .btn-sm generally — shared with
-       other buttons (new-profile Add/Cancel, delete-account confirm)
-       that weren't asked to resize. font-size is back to .btn-sm's
-       original 0.82rem (briefly matched .field's 0.9rem, reverted per
-       request) — only the size reverted, the shorter box height/padding
-       match from earlier stays. Vertical padding stays smaller than
-       .field's above, so .field remains the taller sibling and stretch
-       expands this button to match it. */
-    .url-input-row .btn-sm {
-      flex-shrink: 0;
-      padding: 7px 14px;
-      font-size: 0.82rem;
-    }
-
-    /* "Update password" sits alone below two stacked fields, not beside
-       one in a flex row, so it has no sibling to get stretched taller by
-       the way .url-input-row's "Block site" button does — it was
-       rendering at .btn-sm's own shorter, un-stretched height instead.
-       Matching #password-body .field's padding alone wasn't enough (the
-       button's smaller 0.82rem font gives it a shorter natural line
-       height than the field's 0.9rem, so equal padding still didn't add
-       up to equal total height) — an explicit height: 40px, the exact
-       same value #password-body .field now declares, is what actually
-       guarantees they match instead of approximating it. */
-    #change-password-btn {
-      height: 40px;
-      padding: 9px 14px;
-    }
-
-    /* ─── Blocklist surface (quick-add + divider + url list) ───────────── */
-    /* Trying the quick-add chips moved inside the same card as the added-
-       sites list, at the top, with a divider between them — was: a
-       standalone .quick-add-row sitting between the url-input and a
-       separately-boxed .url-list. May get reverted; if so, move
-       .quick-add-row back out as a sibling of this wrapper and restore
-       .url-list's own background/padding/margin-top below. */
-    .blocklist-surface {
-      display: flex;
-      flex-direction: column;
-      margin-top: -2px;
-      padding: 10px 12px 8px;
-      background: #f5f5f7;
-      border-radius: var(--radius-field);
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* Contained inside .blocklist-surface now, which owns the background/
-       padding — this is just the scrolling list itself. */
-    /* flex: 1 + min-height: 0 makes this the one element in
-       #section-blocklist that actually grows/shrinks with available
-       space — everything above it (profile switcher, "Blocklist" title,
-       url input, quick-add chips) keeps its natural height, and once the
-       list's own content would exceed what's left, overflow-y: auto
-       scrolls just the list instead of growing the card past its fixed
-       height (see .content-section/.content-pane). */
-    .url-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-    }
-
-    /* No border-bottom between rows anymore — .url-list's own gap: 2px
-       plus its #f5f5f7 contained background (see its own comment) is
-       enough to separate rows without a divider line on top of that too. */
-    /* padding: 8px 0 (was 11px) — the real distance between adjacent rows'
-       visible content, since .url-list's own gap is just 2px; tightening
-       this is what actually pulls the rows closer together. */
-    .url-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0px 6px 6px;
-    }
-
-    /* Pulls this closer to .url-list above, reading as more attached to
-       the bottom of the list rather than floating with the same
-       breathing room every other section gets. */
-    .sync-hint {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    /* Truncates with an ellipsis instead of wrapping/overflowing — a long
-       entry (near MAX_BLOCKLIST_URL_LENGTH) could otherwise push the row
-       wider than the card or wrap awkwardly against the delete button.
-       The full value is still reachable via the title tooltip set on this
-       element in renderUrlList() below. */
-    .url-text {
-      font-size: 0.82rem;
-      color: var(--text);
-      font-weight: 400;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .url-favicon {
-      width: 14px;
-      height: 14px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      border-radius: 3px;
-    }
-
-    /* Shown in place of .url-favicon when the real one fails to load (not
-       every domain has one, or the icon service doesn't have it cached) —
-       a plain generic-globe glyph, same idea as Chrome's own default
-       favicon, not the site's real icon. */
-    .url-favicon-fallback {
-      width: 14px;
-      height: 14px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-    }
-
-    /* ─── Quick-add row (common distracting sites) ────────────────────── */
-    /* Now the first thing inside .blocklist-surface — no more position-
-       compensating negative margins, since it's no longer squeezed
-       directly under .url-input-row. .quick-add-row is the outer bar
-       (chips on the left, .mode-pill pushed to the far right via
-       space-between); .quick-add-chips is just the chip group itself, so
-       its own gap/wrap behavior isn't disturbed by the pill sharing the
-       row. */
-    .quick-add-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 6px 6px 10px;
-    }
-
-    .quick-add-chips {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 22px;
-      min-width: 0;
-    }
-
-    .mode-pill {
-      display: inline-flex;
-      align-items: center;
-      flex-shrink: 0;
-      font-size: 0.8rem;
-      font-weight: 500;
-      padding: 5px 14px;
-      border: none;
-      border-radius: 24px;
-      color: var(--white);
-    }
-
-    /* Solid fill + glow, matching popup.css's own
-       .mode-option[data-mode="…"].active exactly (same colors, same
-       shadow recipe). */
-    .mode-pill.mode-friction {
-      background: var(--friction-teal);
-      box-shadow: 0 2px 10px rgba(74, 144, 164, 0.35);
-    }
-
-    .mode-pill.mode-strict {
-      background: var(--strict-burgundy);
-      box-shadow: 0 2px 10px rgba(176, 32, 63, 0.35);
-    }
-
-    /* Wraps each chip so the options menu (sectioned sites only) can be
-       positioned absolute relative to its own trigger — same
-       trigger/absolute-positioned-popover relationship used elsewhere in
-       this file (see .site-options-menu's own comment below). */
+    /* ─── Quick-add row + site options menu ───────────────────────────── */
+     /* Adding lives above the list, never inside it: the gray surface below
+       means "what is blocked", and everything above it means "add
+       something". That move is also what lets the chips take the standard
+       gray circle — on the surface it would have had to be white, which is
+       the shadowed chip shape that was already rejected. */
+    .quick-add { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+    .quick-add-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .quick-add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     .quick-add-item { position: relative; }
-
-    /* No box at all — a fixed-size circular button (white fill, no
-       border/shadow) was tried, but it was invisible against the card's
-       own white background anyway, so there was no actual "chip" to see,
-       just wasted invisible click area. Now the button is sized to its
-       content (the 20x20 svg) directly, no width/height/border-radius/
-       background of its own. */
-    .quick-add-chip {
-      position: relative;
-      border: none;
-      background: none;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    /* Small chevron marking a chip that opens an options menu (YouTube,
-       Facebook, Instagram) instead of adding immediately, so it reads as
-       "more options here" rather than behaving identically to every other
-       chip with no visible difference. A sibling of .quick-add-chip (not
-       a child/pseudo-element of it) since it sits below the chip's own
-       box, not inside it — positioned against .quick-add-item instead.
-       pointer-events: none so it's purely decorative; the chip itself
-       stays the only click target. Hidden at rest (opacity: 0) and only
-       fades in on hover — went through an always-visible-but-dimmed
-       version first (opacity: 0.5, smaller size) but the founder decided
-       to hide it entirely by default instead, for a cleaner row, and
-       accept that the affordance only reveals itself once someone's
-       actually hovering that chip. */
-    /* bottom: -10px centers this 5px-tall chevron in the 15px gap between
-       the icon's own bottom edge and .site-options-menu's top edge (see
-       its own top: calc(100% + 15px)) — (15 - 5) / 2 = 5px clearance on
-       each side, so the chevron's bottom edge lands at 5 + 5 = 10px.
-       Both values were recomputed together: .quick-add-chip no longer has
-       its own fixed-size box (see its own comment), so .quick-add-item's
-       height — what both this and the menu's "100%"/bottom position off
-       of — now matches the icon's real 20px height exactly, instead of
-       the old 32px box with the icon centered inside it. */
-    .quick-add-chip-arrow {
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      color: var(--black);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
-    }
-
-    /* No shadow/lift/outline/scale to animate — hover feedback is just
-       the icon (and, for a sectioned chip, its chevron fading in)
-       darkening — see .quick-add-chip svg below. `.menu-open` (set in
-       renderQuickAddChips()'s chip click handler while its options menu
-       is open) triggers the exact same look as :hover — otherwise, moving
-       the mouse down into the open menu to click a row would make the
-       trigger chip visually "let go" mid-interaction, which read as
-       inconsistent since the menu is clearly still open right below it. */
-
-    /* No color change here anymore — already var(--text-muted) at rest
-       (see .quick-add-chip-arrow above), so revealing it (opacity 0 -> 1)
-       is the only hover feedback needed; darkening it to var(--text) on
-       top of that read as less muted than the icon it sits under. */
-    .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow,
-    .quick-add-chip.menu-open ~ .quick-add-chip-arrow {
-      opacity: 1;
-    }
-
-    /* color: var(--text-muted) here, not baked into the SVG markup
-       directly — renderQuickAddChips() sets stroke="currentColor" (and
-       fill="currentColor" on Reddit's two dot paths) instead of a fixed
-       token, so this single color change on hover/menu-open flips every
-       line in the icon at once. var(--black) on hover, not white — same
-       "hover darkens toward black" feedback .profile-tab:hover uses, now
-       that there's no chip background behind the icon for a white line
-       to contrast against. */
-    .quick-add-chip svg {
-      display: block;
-      color: var(--black);
-      transition: color 0.15s;
-    }
-
-    .quick-add-chip:not(.added):hover svg,
-    .quick-add-chip.menu-open svg {
-      color: var(--black);
-    }
-
-    /* Already on the blocklist — informational, not a toggle. Clicking
-       doesn't remove it; removing a site stays a deliberate action via
-       the list below (or is unavailable at all in Strict Mode), on
-       purpose — see docs/ARCHITECTURE.md on why adding and removing aren't
-       symmetric in this product. */
-    .quick-add-chip.added {
-      cursor: default;
-      opacity: 0.4;
-    }
-
-    /* Options menu for a sectioned chip (YouTube, Facebook, Instagram) —
-       same absolute positioning idea, same white/border/shadow-card shape
-       as this file's other popover panels. Centered under its trigger
-       rather than right-aligned, since a chip can sit anywhere in the row
-       (not pinned to a page edge). top: calc(100% + 15px) — see
-       .quick-add-chip-arrow's own comment for the centering math this
-       and its 15px are tied to (the chevron sits centered in this exact
-       15px gap).
-       Grid-rows animation, not a display:none/.open toggle — display
-       can't be transitioned, so opening/closing used to be an instant
-       snap. grid-template-rows: 0fr -> 1fr smoothly animates to the
-       menu's actual content height (2-3 rows depending on the site)
-       without needing a guessed max-height or JS to measure it. The
-       outer element only handles that row-track animation; all the
-       visible chrome (background/border/shadow/padding) lives on
-       .site-options-menu-inner instead, so when the row track is 0fr the
-       menu is genuinely zero-height with nothing showing — not just
-       hidden content behind a still-visible bordered box. */
-    .site-options-menu {
-      position: absolute;
-      top: calc(100% + 15px);
-      left: 50%;
-      transform: translateX(-50%);
-      min-width: 160px;
-      display: grid;
-      grid-template-rows: 0fr;
-      opacity: 0;
-      transition: grid-template-rows 0.22s ease, opacity 0.16s ease;
-      z-index: 50;
-    }
-
-    .site-options-menu.open {
-      grid-template-rows: 1fr;
-      opacity: 1;
-    }
-
-    .site-options-menu-inner {
-      overflow: hidden;
-      min-height: 0;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow-card);
-      padding: 5px;
-    }
-
-    .site-options-menu-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.78rem;
-      color: var(--text);
-      padding: 6px 8px;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-    }
-
-    .site-options-menu-item:hover { background: rgba(0, 0, 0, 0.05); }
-
-    /* Same "already blocked, informational only" treatment as
-       .quick-add-chip.added — this row's site/section is already covered. */
-    .site-options-menu-item.added {
-      color: var(--text-muted);
-      cursor: default;
-    }
-
+    .quick-add-chip { position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); cursor: pointer; transition: background 0.18s ease; }
+    .quick-add-chip:not(.added):hover, .quick-add-chip.menu-open { background: var(--surface-deep); }
+    /* Glyph follows .sidebar-nav-item exactly: muted at rest, ink on hover,
+       with the surface darkening underneath at the same time. */
+    .quick-add-chip svg { display: block; color: var(--muted); transition: color 0.18s ease; }
+    .quick-add-chip:not(.added):hover svg, .quick-add-chip.menu-open svg { color: var(--ink); }
+    .quick-add-chip.added { cursor: default; }
+    .quick-add-chip.added svg { color: var(--faint); }
+    .quick-add-chip-arrow { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); display: flex; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow, .quick-add-chip.menu-open ~ .quick-add-chip-arrow { opacity: 1; }
+    /* The one floating surface in the blocklist. No border; a soft shadow
+       is what lifts it off the gray surface underneath. */
+    .site-options-menu { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); min-width: 190px; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.16s ease; z-index: 50; }
+    .site-options-menu.open { grid-template-rows: 1fr; opacity: 1; }
+    .site-options-menu-inner { overflow: hidden; min-height: 0; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
+    .site-options-menu-item { display: block; width: 100%; text-align: left; font-size: 14px; font-weight: 500; color: var(--ink); padding: 9px 12px; border-radius: 10px; transition: background 0.15s; white-space: nowrap; }
+    .site-options-menu-item:hover { background: var(--surface); }
+    .site-options-menu-item.added { color: var(--muted); font-weight: 400; cursor: default; }
     .site-options-menu-item.added:hover { background: none; }
 
-    .url-left {
-      display: flex;
-      align-items: center;
-      /* flex: 1 — previously auto-width (hugging favicon+text), which let
-         a long entry push .url-item wider instead of truncating; growing
-         to fill the row is what makes .url-text's own min-width:0 +
-         ellipsis (below) actually have room to kick in. */
-      flex: 1;
-      min-width: 0;
-    }
-
-    /* Icon button (X) now, not text ("Remove") — display:inline-flex
-       centers the SVG the same way .locked's lock icon already needed. */
-    .btn-delete-url {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      /* Symmetric padding — with the 12x12 icon this makes a 24x24 square
-         box, so border-radius: 50% renders an actual circle instead of an
-         oval (the old 4px/8px padding was tuned for "Remove" as text). */
-      padding: 6px;
-      border-radius: 50%;
-      transition: color 0.15s, background 0.15s;
-      flex-shrink: 0;
-      margin-left: 8px;
-    }
-
-    .btn-delete-url:hover {
-      color: var(--black);
-      background: none;
-    }
-
-    /* Strict Mode: was a neutral no-op override against the destructive
-       red hover above ("about to delete" wouldn't make sense for a button
-       that can't actually delete anything right now) — now identical to
-       the rest state above it since that hover is neutral already, kept
-       as its own rule in case Strict Mode's hover needs to diverge again
-       later. */
-    .btn-delete-url.locked:hover {
-      color: var(--text-muted);
-      background: none;
-    }
-
-    .empty-state {
-      text-align: center;
-      /* Symmetric so the text still looks centered in its own local space
-         (the card has no fixed height, so there's nothing else to center
-         it against) — but smaller than before, since it still stacks on
-         the card's own bottom padding and a full 32px both sides made the
-         card noticeably more bottom-heavy than top. */
-      padding: 16px 0;
-      color: var(--text-muted);
-      font-size: 0.88rem;
-    }
-
-    /* ─── Upgrade banner ─────────────────────────────────────────────────── */
-    /* Back to flat var(--black) — the gold-tinted gradient (tried after an
-       earlier indigo-tinted version) put a second gold hue across the
-       whole banner, including the left side, competing with ::before's
-       own radial glow instead of leaving that as the only accent. Flat
-       black + the one corner glow is the original, simpler approach. */
-    .upgrade-banner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      background: var(--black);
-      border-radius: var(--radius-card);
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .upgrade-banner::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      right: -50px;
-      transform: translateY(-50%);
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle at center, rgba(119, 65, 200, 0.4) 0%, transparent 70%);
-      pointer-events: none;
-      border-radius: 50%;
-    }
-
-    .upgrade-banner-text {
-      font-size: 0.88rem;
-      color: rgba(255, 255, 255, 0.65);
-      line-height: 1.45;
-      position: relative;
-    }
-
-    .upgrade-banner-text strong {
-      display: block;
-      color: var(--white);
-      font-size: 0.95rem;
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-
-    .btn-upgrade {
-      flex-shrink: 0;
-      display: inline-block;
-      padding: 9px 18px;
-      background: var(--pro-gold);
-      color: var(--white);
-      font-family: var(--font-ui);
-      font-size: 0.82rem;
-      font-weight: 600;
-      border-radius: 24px;
-      text-decoration: none;
-      transition: opacity 0.15s, box-shadow 0.15s;
-      white-space: nowrap;
-      box-shadow: 0 4px 24px rgba(119, 65, 200, 0.45);
-      position: relative;
-    }
-
-    .btn-upgrade:hover {
-      opacity: 0.9;
-      box-shadow: 0 4px 28px rgba(119, 65, 200, 0.6);
-    }
-
-    /* ─── Toast ──────────────────────────────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--black);
-      color: var(--white);
-      font-size: 0.88rem;
-      font-weight: 400;
-      padding: 12px 24px;
-      border-radius: 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-      pointer-events: none;
-      z-index: 1000;
-      white-space: nowrap;
-    }
-
-    .toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ─── Utility ───────────────────────────────────────────────────────── */
-    .hidden { display: none !important; }
+    /* ─── Schedule ────────────────────────────────────────────────────── */
+    /* The grid sits inside one gray surface; each day is a white column,
+       so no borders are needed to separate anything. Hour lines stay as a
+       faint background because they carry real information. */
+    .sched { --sched-gutter-w: 48px; display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; user-select: none; -webkit-user-select: none; }
+    .sched-palette { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .sched-profiles, .sched-modes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sched-pill, .sched-mode-pill { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    .sched-pill:hover, .sched-mode-pill:hover { color: var(--ink); }
+    .sched-pill.selected, .sched-mode-pill.selected { color: var(--paper); font-weight: 500; }
+    .sched-pill.selected.mode-friction, .sched-mode-pill.selected[data-mode="friction"] { background: var(--friction); }
+    .sched-pill.selected.mode-strict,   .sched-mode-pill.selected[data-mode="strict"]   { background: var(--strict); }
+    .sched-hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+    #schedule-scroll { flex: 1; min-height: 0; overflow-y: auto; background: var(--surface); border-radius: var(--radius-surface); padding: 12px; }
+    /* The seven days form one white box (no column gap); a faint inset
+       line on each column after the first separates the days, same
+       weight as the hour lines. Hour/half-hour lines are drawn at the END
+       of each 1/24 (1/48) cell, so nothing sits on the top edge, and a
+       1px paper overlay hides the one that would land on the bottom edge. */
+    .sched-grid { display: grid; grid-template-columns: var(--sched-gutter-w) repeat(7, 1fr); grid-template-rows: auto 1fr; column-gap: 0; height: 100%; }
+    .sched-head-cell { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 2px 0 10px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+    .sched-col { position: relative; min-height: 460px; background-color: var(--paper); cursor: crosshair; touch-action: none;
+      background-image:
+        linear-gradient(to bottom, transparent calc(100% - 1px), var(--paper) calc(100% - 1px)),
+        repeating-linear-gradient(to bottom, transparent 0 calc(100% / 24 - 1px), rgba(0, 0, 0, 0.06) calc(100% / 24 - 1px) calc(100% / 24)),
+        repeating-linear-gradient(to bottom, transparent 0 calc(100% / 48 - 1px), rgba(0, 0, 0, 0.025) calc(100% / 48 - 1px) calc(100% / 48)); }
+    .sched-col + .sched-col { box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.06); }
+    .sched-gutter + .sched-col { border-radius: var(--radius-field) 0 0 var(--radius-field); }
+    .sched-col:last-child { border-radius: 0 var(--radius-field) var(--radius-field) 0; }
+    .sched-gutter { display: grid; grid-template-rows: repeat(24, 1fr); padding-right: 6px; }
+    .sched-hour { font-size: 11px; color: var(--muted); text-align: right; padding-top: 2px; }
+    .sched-block { position: absolute; left: 3px; right: 3px; display: flex; flex-direction: column; justify-content: center; gap: 1px; overflow: visible; padding: 3px 8px; border-radius: 8px; color: var(--paper); text-align: left; cursor: pointer; transition: background-color 0.15s ease; }
+    .sched-block.mode-friction { background: var(--friction); }
+    .sched-block.mode-strict   { background: var(--strict); }
+    .sched-block-name { font-size: 12px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sched-block-time { font-size: 11px; line-height: 1.2; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sched-ghost { pointer-events: none; opacity: 0.7; }
+    .sched-block-handle { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--ink); opacity: 0; transition: opacity 0.15s ease; cursor: ns-resize; }
+    .sched-block-handle::before { content: ''; position: absolute; inset: -6px; }
+    .sched-block-handle[data-edge="start"] { top: -5px; right: -3px; }
+    .sched-block-handle[data-edge="end"]   { bottom: -5px; left: -3px; }
+    .sched-block:hover .sched-block-handle, .sched-block.selected .sched-block-handle { opacity: 1; }
+    .sched.is-dragging .sched-block { pointer-events: none; }
+    /* A block's start handle hangs 3px past its column's right edge, and
+       the next column (later in the DOM) would paint over it. Lift the
+       column that owns the hovered/selected block above its neighbours
+       (still below the sticky header at z-index 2). */
+    .sched-col:has(.sched-block:hover), .sched-col:has(.sched-block.selected) { z-index: 1; }
+    .sched-pop { position: fixed; z-index: 400; min-width: 200px; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
+    .sched-pop-caption { font-size: 12px; font-weight: 500; color: var(--muted); padding: 8px 12px 6px; }
+    .sched-pop-modes { display: flex; gap: 6px; padding: 4px 6px 6px; }
+    .sched-pop-modes .sched-mode-pill { height: 30px; padding: 0 12px; font-size: 13px; }
+    .sched-pop-sep { height: 6px; }
+    .sched-pop .danger-link { color: var(--muted); }
+    .sched-mobile-note { display: none; }
   </style>
   <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
   <!-- See index.html's copy of this comment for why this is a plain
@@ -1737,8 +323,8 @@
     <!-- Only relevant pre-login — lives inside #auth-screen so it hides
          automatically with it once showApp() runs. -->
     <nav class="public-nav">
-      <a href="index.html">
-        <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="public-nav-logo">
+      <a href="index.html" class="public-nav-brand" aria-label="Please Don’t Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="public-nav-logo"><span class="public-nav-name">Please Don’t Scroll</span>
       </a>
       <div class="public-nav-links">
         <a href="index.html" class="public-nav-link">Home</a>
@@ -1853,6 +439,12 @@
            specific to one section, and gives the two cards below some
            breathing room instead of starting right at the top edge. -->
       <div class="pause-row">
+        <!-- Active blocking mode first: it's the headline state, and the
+             pause switch after it is a control on that state. -->
+        <span class="mode-status" id="mode-status">
+          <span id="mode-status-label"></span>
+          <span class="mode-status-dot"></span>
+        </span>
         <div class="pause-toggle-row" id="pause-toggle-row">
           <button class="pause-toggle" id="pause-toggle" aria-expanded="false" aria-pressed="false" title="Pause blocking">
             <span class="pause-toggle-knob"></span>
@@ -1872,6 +464,7 @@
             </div>
           </div>
         </div>
+        <span class="pause-title" id="pause-title">Blocking on</span>
         <span class="pause-label hidden" id="pause-label"></span>
       </div>
 
@@ -1893,6 +486,12 @@
         <aside class="sidebar" id="sidebar">
           <nav class="sidebar-nav">
             <button class="sidebar-nav-item active" data-section="blocklist">Blocklist</button>
+            <!-- Focus Pro only — renderScheduleNavLock() adds .locked + a
+                 lock icon and reroutes the click to pricing.html for a free
+                 account. Ships unlocked-looking but showSection() guards the
+                 section itself, so there's no window where a free user can
+                 land inside it before premium status resolves. -->
+            <button class="sidebar-nav-item" data-section="schedule" id="nav-schedule">Schedule</button>
             <button class="sidebar-nav-item" data-section="settings">Settings</button>
           </nav>
 
@@ -1944,17 +543,39 @@
             </div>
             <p class="error-msg" id="url-error"></p>
 
+            <div class="quick-add">
+              <span class="quick-add-label">Quick add</span>
+              <div class="quick-add-row" id="quick-add-row"></div>
+            </div>
+
             <div class="blocklist-surface">
-              <div class="quick-add-row">
-                <div class="quick-add-chips" id="quick-add-chips"></div>
-                <span class="mode-pill" id="mode-pill"></span>
-              </div>
               <ul class="url-list" id="url-list">
                 <li class="empty-state" id="url-empty">No sites blocked in this profile yet.</li>
               </ul>
             </div>
 
-            <p class="sync-hint">Blocklist syncs every minute.</p>
+            <p class="sync-hint">Blocklist syncs every minute. To refresh instantly, click the extension icon.</p>
+          </div>
+
+          <!-- Schedule section — a weekly recurring grid the user paints
+               blocks onto, each one assigning a profile + mode to a span of
+               a given day. Frontend only for now: blocks live in the
+               in-memory scheduleBlocks array and are not persisted. The
+               grid itself is built by renderScheduleGrid(). -->
+          <div class="content-section hidden" id="section-schedule">
+            <div class="sched" id="sched">
+              <div class="sched-palette">
+                <div class="sched-profiles" id="sched-profiles"></div>
+                <div class="sched-modes" id="sched-modes"></div>
+              </div>
+              <p class="sched-hint" id="sched-hint">Drag on the grid to schedule a block.</p>
+              <div id="schedule-scroll">
+                <div class="sched-grid" id="schedule-body"></div>
+              </div>
+            </div>
+            <p class="empty-state sched-mobile-note">
+              Scheduling needs a wider screen. Open your dashboard on a computer to paint your week.
+            </p>
           </div>
 
           <!-- Settings section — hidden by default, shown via the sidebar
@@ -2024,7 +645,7 @@
             <div class="upgrade-banner hidden" id="upgrade-banner">
               <div class="upgrade-banner-text">
                 <strong>Unlock Focus Pro</strong>
-                Strict Mode, unlimited profiles &amp; upcoming analytics for $4.99/mo.
+                Strict Mode, unlimited profiles and scheduled blocking for $4.99 a month.
               </div>
               <a href="pricing.html" class="btn-upgrade">See plans</a>
             </div>
@@ -2042,9 +663,11 @@
   <script type="module">
     import { webStorageAdapter } from '../core/auth/storage.js';
     import * as Auth from '../core/auth/session.js';
-    import { fetchProfiles, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
+    import { fetchProfiles, createProfile, switchProfileDetailed, deleteProfile } from '../core/sync/profiles.js';
     import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
-    import { fetchIsPremium, fetchBlockingMode, fetchPauseUntil, setPauseUntil, INDEFINITE_PAUSE_ISO, isIndefinitePause } from '../core/sync/userSettings.js';
+    import { fetchIsPremium, fetchBlockingMode, fetchPauseUntil, setPauseUntil, setTimezoneIfUnset, INDEFINITE_PAUSE_ISO, isIndefinitePause } from '../core/sync/userSettings.js';
+    import { fetchSchedules, createScheduleBlock, updateScheduleBlock, deleteScheduleBlock, applySchedule } from '../core/sync/schedules.js';
+    import { activeBlockAt } from '../core/schedule/active.js';
     import { createPortalSession } from '../core/sync/billing.js';
     import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
@@ -2067,6 +690,18 @@
     // and a bypass.
     let currentBlockingMode = 'friction';
     let currentPausedUntil  = null; // ISO string or null
+
+    // Weekly schedule — rows from the `schedules` table (core/types
+    // Schedule), loaded by loadSchedule() and mutated only through the four
+    // handle*ScheduleBlock() functions further down, which write to Supabase
+    // first and mirror here on success. Enforcement is server-side
+    // (apply_schedule() in 016_schedules.sql), run by the extension every
+    // minute and by this page on load/focus via syncScheduleState().
+    let scheduleBlocks          = [];
+    let schedulePaintProfileId  = null;
+    let schedulePaintMode       = 'friction';
+    let selectedScheduleBlockId = null;
+    let scheduleDrag            = null; // null whenever no drag is in flight
 
     // ─── Extension "poke" ─────────────────────────────────────────────────────
     // Tells the extension's background worker to refresh its blocklist right
@@ -2248,9 +883,88 @@
       // isPremiumUser (set by loadPremiumStatus()) to know which profiles to
       // lock, so premium status must resolve first.
       await loadPremiumStatus();
+      // Before loadProfiles(): apply_schedule() may switch the active
+      // profile (a block in force right now), and the tabs should show the
+      // result, not the state from before it ran. Timezone first, since the
+      // schedule is dormant server-side until the account has one.
+      await ensureTimezone();
+      await applyScheduleQuietly();
       await loadProfiles();
+      // After loadProfiles(): a block's label resolves its profile name out
+      // of `profiles`, so that has to be populated first.
+      await loadSchedule();
       await refreshPauseUI();
       handlePostLoginRedirect();
+    }
+
+    // ─── Schedule enforcement mirror ─────────────────────────────────────────
+
+    /**
+     * Offers this browser's timezone as the account's schedule clock. Only
+     * lands if none is stored yet (setTimezoneIfUnset) — the first client
+     * wins, on purpose: if any client could overwrite it, a second device in
+     * another zone could end a scheduled Strict block early by moving "now".
+     */
+    async function ensureTimezone() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      await setTimezoneIfUnset(accessToken, currentUser.id, zone);
+    }
+
+    /**
+     * Runs the server-side schedule transition (idempotent) and returns its
+     * result, or null. Nothing here is rendered — callers decide what to
+     * reload from the answer.
+     */
+    async function applyScheduleQuietly() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return null;
+      return await applySchedule(accessToken, currentUser.id);
+    }
+
+    /**
+     * applyScheduleQuietly() plus the UI consequences: if the schedule just
+     * moved the active profile, reload the tabs; either way re-read mode and
+     * pause so the mode line and the pause switch tell the truth. The
+     * extension does the same every minute; this is what keeps the
+     * dashboard honest with no extension installed, or between its polls.
+     */
+    async function syncScheduleState() {
+      const result = await applyScheduleQuietly();
+      const activeId = profiles.find(p => p.is_active)?.id ?? null;
+      if (result?.profile_id && result.profile_id !== activeId) await loadProfiles();
+      await refreshPauseUI();
+    }
+
+    /**
+     * The scheduled block in force right now on this browser's clock, or
+     * null. A mirror of the server's schedule_active_block() for instant UI
+     * decisions (which block is frozen, what the pause toast should say);
+     * the server remains the one that actually refuses. Free accounts have
+     * no active block, matching the server exactly.
+     */
+    function activeScheduledBlock() {
+      if (!isPremiumUser || scheduleBlocks.length === 0) return null;
+      return activeBlockAt(scheduleBlocks);
+    }
+
+    /** "11:00 PM" for a block's end today; end_min 1440 reads as 12:00 AM. */
+    function formatBlockEndClock(block) {
+      const end = new Date();
+      end.setHours(0, 0, 0, 0);
+      end.setMinutes(block.end_min);
+      return end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    /**
+     * The scheduled Strict block that is locking the user in right now, or
+     * null — i.e. active, Strict, and the mode really is Strict (the server
+     * only guards mode changes in that exact state).
+     */
+    function scheduledStrictBlock() {
+      const block = activeScheduledBlock();
+      return block && block.mode === 'strict' && currentBlockingMode === 'strict' ? block : null;
     }
 
     // ─── Pause blocking ─────────────────────────────────────────────────────────
@@ -2272,16 +986,23 @@
     let pauseActionToken = 0;
 
     /**
-     * Updates the pill justified right of the quick-add chips to the
-     * active mode, colored to match (teal for Friction, burgundy for
-     * Strict — see the --friction-teal/--strict-burgundy tokens' own
-     * comment). Reads currentBlockingMode directly rather than taking a
-     * parameter, so every refreshPauseUI() caller gets this for free.
+     * Updates the mode line at the right end of .pause-row, above the cards.
+     * The mode's own color (teal for Friction, burgundy for Strict — see the
+     * --friction-teal/--strict-burgundy tokens' comment) lives in the dot;
+     * the text itself stays muted like every other label in that row.
+     * Uppercasing is CSS, so this string stays readable here.
+     * Reads currentBlockingMode directly rather than taking a parameter, so
+     * every refreshPauseUI() caller gets this for free.
      */
     function applyModeIndicator() {
-      const el = document.getElementById('mode-pill');
+      const el = document.getElementById('mode-status');
       const isStrict = currentBlockingMode === 'strict';
-      el.textContent = isStrict ? 'Strict' : 'Friction';
+      // "Mode active: Strict until 11:00 PM" while a scheduled Strict block
+      // is in force — the one place on this page that says why the pause
+      // switch, the profile tabs and the block itself are all refusing.
+      const scheduled = scheduledStrictBlock();
+      document.getElementById('mode-status-label').textContent =
+        `${isStrict ? 'Strict' : 'Friction'}${scheduled ? ` until ${formatBlockEndClock(scheduled)}` : ''}`;
       el.classList.toggle('mode-strict', isStrict);
       el.classList.toggle('mode-friction', !isStrict);
     }
@@ -2325,6 +1046,7 @@
       } else {
         label.classList.add('hidden');
       }
+      document.getElementById('pause-title').classList.toggle('hidden', !!isActive);
 
       // Profile tabs' locked-by-Strict-Mode appearance depends on
       // currentBlockingMode too — re-render so it stays in sync whenever
@@ -2370,7 +1092,10 @@
       toggle.classList.remove('shake'); // restart the animation if already mid-shake
       void toggle.offsetWidth; // force reflow so re-adding the class replays it
       toggle.classList.add('shake');
-      showToast("Blocking can't be paused while in Strict Mode.", true);
+      const scheduled = scheduledStrictBlock();
+      showToast(scheduled
+        ? `Strict Mode is scheduled until ${formatBlockEndClock(scheduled)}. Blocking can't be paused until then.`
+        : "Blocking can't be paused while in Strict Mode.", true);
       setTimeout(() => toggle.classList.remove('shake'), 400);
     }
 
@@ -2472,12 +1197,26 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && currentUser) {
         loadPremiumStatus();
-        refreshPauseUI();
+        // Blocks may have been painted on another device, and one may have
+        // started or ended while this tab was hidden — reload the grid and
+        // let the schedule mirror (which ends in refreshPauseUI()) catch up.
+        loadSchedule();
+        syncScheduleState();
       }
     });
 
-    // ─── Section switching (Blocklist / Settings) ──────────────────────────────
+    // ─── Section switching (Blocklist / Schedule / Settings) ───────────────────
     function showSection(name) {
+      // Scheduling is Focus Pro. Guarded here, not only on the nav item, so
+      // neither a deep link nor a downgrade mid-session can land a free
+      // account inside the section.
+      if (name === 'schedule' && !isPremiumUser) {
+        window.location.href = 'pricing.html';
+        return;
+      }
+
+      closeScheduleBlockPopover();
+
       document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.section === name);
       });
@@ -2556,6 +1295,9 @@
 
       document.getElementById('pro-tag-label').textContent = isPremium ? 'Pro' : 'Free';
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
+      // This function is also re-run on visibilitychange, so upgrading in
+      // another tab unlocks the Schedule tab here without a reload.
+      renderScheduleNavLock();
     }
 
     /**
@@ -2776,6 +1518,12 @@
       const addBtn = document.getElementById('add-profile-btn');
       addBtn.classList.toggle('hidden', !isPremiumUser);
       container.appendChild(addBtn);
+
+      // The Schedule tab's paint palette lists the same profiles. Rendering
+      // it from here means every path that changes the profile list (load,
+      // create, delete, a Strict Mode re-render) keeps the palette in sync
+      // without each one having to remember to.
+      renderSchedulePalette();
     }
 
     /**
@@ -2807,8 +1555,16 @@
       const accessToken = await currentAccessToken();
       if (!accessToken) return;
 
-      const ok = await switchProfile(accessToken, currentUser.id, profileId);
-      if (!ok) { console.error('[PDS] activateProfile failed'); return; }
+      const { ok, error } = await switchProfileDetailed(accessToken, currentUser.id, profileId);
+      if (!ok) {
+        // The server's own reason — "Cannot switch profiles while in Strict
+        // Mode." or, during a scheduled block, "Strict Mode is scheduled
+        // until 11:00 PM." A refusal usually means this tab's idea of the
+        // mode was stale, so resync it too.
+        showToast(error || 'Could not switch profiles. Please try again.', true);
+        await refreshPauseUI();
+        return;
+      }
 
       // Update local state.
       profiles = profiles.map(p => ({ ...p, is_active: p.id === profileId }));
@@ -2837,6 +1593,14 @@
       if (!ok) { console.error('[PDS] deleteProfile failed'); return; }
 
       profiles = profiles.filter(p => p.id !== profileId);
+
+      // schedules.profile_id cascades server-side (ON DELETE CASCADE, see
+      // 016_schedules.sql); mirror that locally so the grid updates without
+      // a re-fetch. A Strict block in force can't be reached from here — its
+      // profile is the active one, which the guard above already refuses.
+      scheduleBlocks = scheduleBlocks.filter(b => b.profile_id !== profileId);
+      renderScheduleGrid();
+      pokeExtension();
 
       // If we deleted the selected profile, fall back to the active one.
       if (selectedProfile?.id === profileId) {
@@ -2959,7 +1723,7 @@
           const fallback = document.createElement('span');
           fallback.className = 'url-favicon-fallback';
           fallback.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
               <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.6"/>
               <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/>
@@ -3041,7 +1805,7 @@
     // treatment a plain chip gets, no menu built at all, rather than
     // presenting a menu that looks available but has nothing actionable in it.
     function renderQuickAddChips() {
-      const row = document.getElementById('quick-add-chips');
+      const row = document.getElementById('quick-add-row');
       if (!row) return;
       row.innerHTML = '';
 
@@ -3076,7 +1840,7 @@
         // unselected-pill text color) and color: var(--white) on hover/
         // menu-open, so this one svg definition follows both states.
         chip.innerHTML = `
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             ${site.icon}
           </svg>
         `;
@@ -3348,6 +2112,725 @@
       pokeExtension();
     }
 
+    // ─── Schedule (weekly paint grid) ──────────────────────────────────────────
+
+    /**
+     * One painted block on the weekly grid.
+     *
+     * @typedef  {Object} ScheduleBlock
+     * @property {string} id           crypto.randomUUID() for now, a Supabase
+     *                                 uuid once persisted. Nothing may depend
+     *                                 on it being client-generated.
+     * @property {string} profile_id
+     * @property {number} day_of_week  0 = Monday ... 6 = Sunday. NOTE this
+     *                                 diverges from JS Date#getDay() and
+     *                                 Postgres EXTRACT(DOW), which are both
+     *                                 0 = Sunday — converting is one
+     *                                 (d.getDay() + 6) % 7 at whatever reads a
+     *                                 real clock later. Keeping 0 = Monday here
+     *                                 means day_of_week IS the column index, so
+     *                                 no lookup table sits in the render loop,
+     *                                 the paint handler, or the corridor math.
+     * @property {number} start_min    minutes from local midnight, 0..1440
+     * @property {number} end_min      minutes from local midnight, 0..1440,
+     *                                 always greater than start_min
+     * @property {'friction'|'strict'} mode
+     *
+     * Times are integer minutes rather than an "09:15" string (or a future
+     * Postgres `time` column) for one decisive reason: `time` can't express
+     * midnight as an *end*. A 22:00 -> 00:00 block breaks start < end and
+     * every comparison downstream, and for an app about late-night scrolling
+     * that is the single most important block anyone will paint. end_min =
+     * 1440 is just a number. Integer math also keeps parsing off the
+     * per-pointermove path, and minutes-from-local-midnight is DST-correct by
+     * construction, since a block means "9am wall clock," not an instant.
+     */
+
+    const SCHED_SNAP_MIN      = 15;
+    const SCHED_SLOTS_PER_DAY = (24 * 60) / SCHED_SNAP_MIN; // 96
+    const SCHED_MIN_SLOTS     = 2;                          // 30 minutes
+    const SCHED_LABEL_SLOTS   = 4;                          // show the range at >= 1h
+    const SCHED_DAYS          = [0, 1, 2, 3, 4, 5, 6];
+    const SCHED_DAY_LABELS    = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const slotToMinutes = (slot) => slot * SCHED_SNAP_MIN;
+    const minutesToSlot = (min)  => min / SCHED_SNAP_MIN;
+
+    function clampNum(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+
+    // toLocaleTimeString so these follow the viewer's own locale, matching
+    // how the pause label formats its own time.
+    function formatMinutes(min) {
+      return new Date(2000, 0, 1, Math.floor(min / 60), min % 60)
+        .toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function formatHourLabel(hour) {
+      return new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric' });
+    }
+
+    /** En dash, not an em dash — docs/ARCHITECTURE.md bans em dashes in user-facing copy. */
+    function formatSlotRange(startMin, endMin) {
+      // Compact when both ends land on the hour and share a period, which
+      // is what fits in a day column ("9 – 11 AM" instead of
+      // "9:00 AM – 11:00 AM"). Anything else falls back to the full form.
+      const a = formatMinutes(startMin), b = formatMinutes(endMin);
+      const m = (s) => s.match(/^(\d{1,2}):00\s?(AM|PM)$/i);
+      const ma = m(a), mb = m(b);
+      if (ma && mb && ma[2].toUpperCase() === mb[2].toUpperCase()) return `${ma[1]} – ${mb[1]} ${mb[2].toUpperCase()}`;
+      if (ma && mb) return `${ma[1]} ${ma[2].toUpperCase()} – ${mb[1]} ${mb[2].toUpperCase()}`;
+      return `${a} – ${b}`;
+    }
+
+    function scheduleProfileName(profileId) {
+      return profiles.find(p => p.id === profileId)?.name ?? 'Deleted profile';
+    }
+
+    function scheduleScrollEl() { return document.getElementById('schedule-scroll'); }
+
+    /**
+     * Occupied [start, end) slot intervals for one day, sorted and — by
+     * construction, since painting can never produce an overlap — themselves
+     * non-overlapping.
+     */
+    function scheduleIntervalsForDay(day, excludeId) {
+      return scheduleBlocks
+        .filter(b => b.day_of_week === day && b.id !== excludeId)
+        .map(b => ({ start: minutesToSlot(b.start_min), end: minutesToSlot(b.end_min) }))
+        .sort((a, b) => a.start - b.start);
+    }
+
+    /**
+     * The single free run of slots containing anchorSlot. This is the entire
+     * overlap mechanism: existing intervals never overlap each other, so the
+     * free run around any anchor is unique, and clamping every candidate edge
+     * into [lower, upper] is both necessary and sufficient to guarantee an
+     * overlap can never be produced. That's why there's no collision-detection
+     * pass and no reject-on-save anywhere in this feature — a drag physically
+     * cannot leave its corridor, so it simply stops at the neighbor's edge.
+     *
+     * Computed once, at pointerdown: nothing else moves mid-drag, so
+     * recomputing per frame would be slower and no more correct.
+     */
+    function freeCorridor(day, anchorSlot, excludeId) {
+      let lower = 0;
+      let upper = SCHED_SLOTS_PER_DAY;
+      for (const iv of scheduleIntervalsForDay(day, excludeId)) {
+        if (iv.end <= anchorSlot) {
+          lower = Math.max(lower, iv.end);
+        } else if (iv.start > anchorSlot) {
+          upper = Math.min(upper, iv.start);
+          break;
+        } else {
+          return { lower: anchorSlot, upper: anchorSlot }; // anchor sits inside a block
+        }
+      }
+      return { lower, upper };
+    }
+
+    /**
+     * A Strict block that is in effect right now can't be edited or deleted,
+     * which is the whole point of scheduling one. Client mirror of the
+     * BEFORE UPDATE/DELETE guard in 016_schedules.sql, evaluated on this
+     * browser's clock; the server (on the account's stored timezone) is the
+     * one that actually refuses, and its message is what the toast shows if
+     * the two ever disagree.
+     */
+    function isScheduleBlockLocked(block) {
+      if (!block || block.mode !== 'strict') return false;
+      return activeScheduledBlock()?.id === block.id;
+    }
+
+    /** Builds one .sched-block element. The paint ghost reuses this too. */
+    function renderScheduleBlockEl(block) {
+      const startSlot = minutesToSlot(block.start_min);
+      const span      = minutesToSlot(block.end_min) - startSlot;
+      const name      = scheduleProfileName(block.profile_id);
+
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = `sched-block mode-${block.mode}${block.id === selectedScheduleBlockId ? ' selected' : ''}`;
+      el.dataset.blockId = block.id;
+      el.style.top    = `${(startSlot / SCHED_SLOTS_PER_DAY) * 100}%`;
+      el.style.height = `${(span / SCHED_SLOTS_PER_DAY) * 100}%`;
+      el.title = `${name}, ${formatSlotRange(block.start_min, block.end_min)}`;
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'sched-block-name';
+      nameEl.textContent = name;
+      el.appendChild(nameEl);
+
+      // Under an hour there's no room for a second line at this density. The
+      // range is still reachable from the title above and the edit popover.
+      if (span >= SCHED_LABEL_SLOTS) {
+        const timeEl = document.createElement('span');
+        timeEl.className = 'sched-block-time';
+        timeEl.textContent = formatSlotRange(block.start_min, block.end_min);
+        el.appendChild(timeEl);
+      }
+
+      ['start', 'end'].forEach((edge) => {
+        const handle = document.createElement('span');
+        handle.className = 'sched-block-handle';
+        handle.dataset.edge = edge;
+        el.appendChild(handle);
+      });
+
+      return el;
+    }
+
+    /**
+     * Full teardown and rebuild, same no-diffing approach as renderUrlList() —
+     * a week's worth of blocks is a short list.
+     */
+    function renderScheduleGrid() {
+      const body = document.getElementById('schedule-body');
+      body.innerHTML = '';
+
+      // Header row: an empty cell above the hour gutter, then the day names.
+      // It lives inside the same grid as the columns so the two can never
+      // drift apart (see .sched-grid's own comment).
+      const corner = document.createElement('div');
+      corner.className = 'sched-head-cell';
+      body.appendChild(corner);
+
+      SCHED_DAYS.forEach((day) => {
+        const head = document.createElement('div');
+        head.className = 'sched-head-cell';
+        head.textContent = SCHED_DAY_LABELS[day];
+        body.appendChild(head);
+      });
+
+      const gutter = document.createElement('div');
+      gutter.className = 'sched-gutter';
+      for (let hour = 0; hour < 24; hour++) {
+        const label = document.createElement('div');
+        label.className = 'sched-hour';
+        label.textContent = formatHourLabel(hour);
+        gutter.appendChild(label);
+      }
+      body.appendChild(gutter);
+
+      // Each column carries its own day_of_week, so nothing ever infers the
+      // day from a column's position — that's what keeps a future single-day
+      // narrow-screen view a small diff rather than a rewrite.
+      SCHED_DAYS.forEach((day) => {
+        const col = document.createElement('div');
+        col.className = 'sched-col';
+        col.dataset.day = String(day);
+        scheduleBlocks
+          .filter(b => b.day_of_week === day)
+          .forEach(b => col.appendChild(renderScheduleBlockEl(b)));
+        body.appendChild(col);
+      });
+
+      document.getElementById('sched-hint').classList.toggle('hidden', scheduleBlocks.length > 0);
+    }
+
+    /**
+     * The paint palette: which profile and which mode the next drag will
+     * paint. Rendered from renderProfileTabs() as well, so adding or deleting
+     * a profile keeps this in sync automatically.
+     */
+    function renderSchedulePalette() {
+      const profileRow = document.getElementById('sched-profiles');
+      const modeRow    = document.getElementById('sched-modes');
+      profileRow.innerHTML = '';
+      modeRow.innerHTML = '';
+
+      if (schedulePaintProfileId && !profiles.some(p => p.id === schedulePaintProfileId)) {
+        schedulePaintProfileId = null;
+      }
+      if (!schedulePaintProfileId) schedulePaintProfileId = profiles[0]?.id ?? null;
+
+      profiles.forEach((profile) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        const isSelected = profile.id === schedulePaintProfileId;
+        pill.className = `sched-pill${isSelected ? ` selected mode-${schedulePaintMode}` : ''}`;
+        pill.textContent = profile.name;
+        pill.addEventListener('click', () => {
+          schedulePaintProfileId = profile.id;
+          renderSchedulePalette();
+        });
+        profileRow.appendChild(pill);
+      });
+
+      [['friction', 'Friction'], ['strict', 'Strict']].forEach(([mode, label]) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = `sched-mode-pill${schedulePaintMode === mode ? ' selected' : ''}`;
+        pill.dataset.mode = mode;
+        pill.textContent = label;
+        pill.addEventListener('click', () => {
+          schedulePaintMode = mode;
+          renderSchedulePalette();
+        });
+        modeRow.appendChild(pill);
+      });
+    }
+
+    /**
+     * Scheduling is Focus Pro. Same "still clickable, routes to pricing"
+     * treatment a Pro-locked profile tab gets rather than hiding the tab —
+     * the feature should stay discoverable. UI only; real enforcement lands
+     * server-side once there's a schedules table.
+     */
+    function renderScheduleNavLock() {
+      const nav = document.getElementById('nav-schedule');
+      const locked = !isPremiumUser;
+
+      nav.classList.toggle('locked', locked);
+      nav.querySelector('.sidebar-nav-lock')?.remove();
+      nav.title = locked ? 'Unlock scheduling with Focus Pro' : '';
+      if (!locked) return;
+
+      const lock = document.createElement('span');
+      lock.className = 'sidebar-nav-lock';
+      // Same lock icon the profile tabs and the popup's Strict toggle use.
+      lock.innerHTML = `
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+        </svg>
+      `;
+      nav.appendChild(lock);
+    }
+
+    /**
+     * Fractional slot under a pointer position. The scrollTop term keeps this
+     * correct while the grid is scrolled (only reachable on short viewports,
+     * since the whole day normally fits): colRect is cached at drag start in
+     * viewport coordinates, so when the container scrolls by d the column's
+     * real rect.top moves by -d and this adds exactly +d back.
+     *
+     * Deliberately does NOT re-read the column's rect per frame — doing that
+     * *and* keeping this term double-counts the scroll, and it forces a layout
+     * pass on every pointermove. Cached-plus-delta instead, with the drag
+     * cancelled on window resize, the only thing that invalidates the cache.
+     */
+    function scheduleSlotAt(clientY) {
+      const d = scheduleDrag;
+      const y = clientY - d.colRect.top + (scheduleScrollEl().scrollTop - d.scrollTop0);
+      return (y / d.colRect.height) * SCHED_SLOTS_PER_DAY;
+    }
+
+    function handleSchedulePointerDown(e) {
+      if (e.button !== 0) return;      // primary button only
+      if (scheduleDrag) return;        // a drag is already in flight
+
+      const col = e.target.closest('.sched-col');
+      if (!col) return;
+      const day = Number(col.dataset.day);
+
+      const handleEl = e.target.closest('.sched-block-handle');
+      const blockEl  = e.target.closest('.sched-block');
+
+      if (blockEl) {
+        const block = scheduleBlocks.find(b => b.id === blockEl.dataset.blockId);
+        if (!block) return;
+        if (isScheduleBlockLocked(block)) {
+          shakeElement(blockEl);
+          showToast(`This block is active until ${formatBlockEndClock(block)} and cannot be changed.`, true);
+          return;
+        }
+        if (handleEl) {
+          beginScheduleDrag(e, {
+            kind: handleEl.dataset.edge === 'start' ? 'resize-start' : 'resize-end',
+            day, col, block, blockEl, captureEl: handleEl,
+          });
+        } else {
+          // A click on the body selects and opens the editor, it never drags.
+          // Dragging a whole block to move it is deliberately not in this
+          // phase: it isn't specified, it makes body-click ambiguous, and its
+          // constraint is a different problem ("find a gap that fits span N").
+          openScheduleBlockPopover(block, blockEl);
+        }
+        return;
+      }
+
+      beginScheduleDrag(e, { kind: 'paint', day, col, captureEl: col });
+    }
+
+    function beginScheduleDrag(e, { kind, day, col, block, blockEl, captureEl }) {
+      if (kind === 'paint' && !schedulePaintProfileId) return;
+
+      const colRect = col.getBoundingClientRect();
+      if (!colRect.height) return;
+
+      const rawSlot = ((e.clientY - colRect.top) / colRect.height) * SCHED_SLOTS_PER_DAY;
+
+      // For a resize the corridor is anchored inside the block's own span
+      // (with the block itself excluded), which resolves to the free run
+      // surrounding it — exactly the room that edge is allowed to move in.
+      const anchorSlot = kind === 'paint'
+        ? clampNum(Math.floor(rawSlot), 0, SCHED_SLOTS_PER_DAY - 1)
+        : Math.floor((minutesToSlot(block.start_min) + minutesToSlot(block.end_min)) / 2);
+
+      const corridor = freeCorridor(day, anchorSlot, block?.id);
+      // No room for a legal block here. Silent no-op, deliberately not a
+      // toast — one on every stray click in a tight gap is worse than nothing.
+      if (corridor.upper - corridor.lower < SCHED_MIN_SLOTS) return;
+
+      closeScheduleBlockPopover();
+
+      scheduleDrag = {
+        kind,
+        day,
+        blockId: block?.id ?? null,
+        pointerId: e.pointerId,
+        colRect,
+        scrollTop0: scheduleScrollEl().scrollTop,
+        corridor,
+        anchorSlot,
+        fixedSlot: kind === 'resize-start' ? minutesToSlot(block.end_min)
+                 : kind === 'resize-end'   ? minutesToSlot(block.start_min)
+                 : null,
+        profileId: kind === 'paint' ? schedulePaintProfileId : block.profile_id,
+        mode:      kind === 'paint' ? schedulePaintMode      : block.mode,
+        startSlot: 0,
+        endSlot: 0,
+        el: null,
+        lastClientY: e.clientY,
+      };
+
+      if (kind === 'paint') {
+        // A ghost, not a real block — it isn't in scheduleBlocks until the
+        // pointer comes up.
+        const ghost = renderScheduleBlockEl({
+          id: '',
+          profile_id: schedulePaintProfileId,
+          day_of_week: day,
+          start_min: 0,
+          end_min: slotToMinutes(SCHED_MIN_SLOTS),
+          mode: schedulePaintMode,
+        });
+        ghost.classList.add('sched-ghost');
+        col.appendChild(ghost);
+        scheduleDrag.el = ghost;
+      } else {
+        // Resizing mutates the real element's inline geometry in place. Safe
+        // because the grid is never re-rendered mid-drag (see the pointerup
+        // handler), and cancelScheduleDrag() re-renders to undo it.
+        scheduleDrag.el = blockEl;
+      }
+
+      captureEl.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      document.getElementById('sched').classList.add('is-dragging');
+      handleScheduleDragMove(e.clientY);
+    }
+
+    /** Takes clientY rather than the event, so any caller can drive it. */
+    function handleScheduleDragMove(clientY) {
+      const d = scheduleDrag;
+      if (!d) return;
+      d.lastClientY = clientY;
+
+      const { lower, upper } = d.corridor;
+
+      if (d.kind === 'paint') {
+        // Paint asks "which cell am I in" and paints the inclusive range
+        // between the anchor cell and this one. Normalising with min/max of
+        // two slot indices is also what makes an upward drag past the origin
+        // the exact same code path — direction is never tracked.
+        const cur = clampNum(Math.floor(scheduleSlotAt(clientY)), 0, SCHED_SLOTS_PER_DAY - 1);
+        let a = Math.max(Math.min(d.anchorSlot, cur), lower);
+        let b = Math.min(Math.max(d.anchorSlot, cur) + 1, upper);
+
+        // Grow away from the anchor so a tiny drag still yields a legal
+        // block, then clamp back into the corridor. The corridor was verified
+        // at least MIN slots wide at pointerdown, so this terminates.
+        if (b - a < SCHED_MIN_SLOTS) {
+          if (cur >= d.anchorSlot) b = a + SCHED_MIN_SLOTS;
+          else                     a = b - SCHED_MIN_SLOTS;
+          if (b > upper) { b = upper; a = b - SCHED_MIN_SLOTS; }
+          if (a < lower) { a = lower; b = a + SCHED_MIN_SLOTS; }
+        }
+
+        d.startSlot = a;
+        d.endSlot   = b;
+      } else {
+        // Resize asks "which gridline am I nearest" instead — a moving edge
+        // should snap to the closest boundary, not to the cell containing it.
+        // The two genuinely feel different, so they round differently on
+        // purpose; don't unify them.
+        const cur = clampNum(Math.round(scheduleSlotAt(clientY)), lower, upper);
+        if (d.kind === 'resize-start') {
+          d.startSlot = Math.min(cur, d.fixedSlot - SCHED_MIN_SLOTS);
+          d.endSlot   = d.fixedSlot;
+        } else {
+          d.startSlot = d.fixedSlot;
+          d.endSlot   = Math.max(cur, d.fixedSlot + SCHED_MIN_SLOTS);
+        }
+      }
+
+      applyScheduleDragGeometry();
+    }
+
+    /** Writes the drag's current geometry onto its element. Nothing else. */
+    function applyScheduleDragGeometry() {
+      const d = scheduleDrag;
+      if (!d || !d.el) return;
+
+      const span     = d.endSlot - d.startSlot;
+      const startMin = slotToMinutes(d.startSlot);
+      const endMin   = slotToMinutes(d.endSlot);
+
+      d.el.style.top    = `${(d.startSlot / SCHED_SLOTS_PER_DAY) * 100}%`;
+      d.el.style.height = `${(span / SCHED_SLOTS_PER_DAY) * 100}%`;
+      d.el.title = `${scheduleProfileName(d.profileId)}, ${formatSlotRange(startMin, endMin)}`;
+
+      // The range label appears and disappears as the block crosses an hour,
+      // matching what renderScheduleBlockEl() would have built at this size.
+      let timeEl = d.el.querySelector('.sched-block-time');
+      if (span >= SCHED_LABEL_SLOTS && !timeEl) {
+        timeEl = document.createElement('span');
+        timeEl.className = 'sched-block-time';
+        d.el.insertBefore(timeEl, d.el.querySelector('.sched-block-handle'));
+      } else if (span < SCHED_LABEL_SLOTS && timeEl) {
+        timeEl.remove();
+        timeEl = null;
+      }
+      if (timeEl) timeEl.textContent = formatSlotRange(startMin, endMin);
+    }
+
+    async function handleSchedulePointerUp(e) {
+      const d = scheduleDrag;
+      if (!d || e.pointerId !== d.pointerId) return;
+
+      const { kind, day, blockId, profileId, mode, startSlot, endSlot, el } = d;
+
+      // Clear the drag state and drop the ghost BEFORE mutating anything: the
+      // mutators re-render the grid, and a re-render while the drag is still
+      // live would destroy the pointer-captured element and strand the drag
+      // with no pointerup ever firing. This ordering is the whole guard.
+      scheduleDrag = null;
+      document.getElementById('sched').classList.remove('is-dragging');
+      if (kind === 'paint' && el) el.remove();
+
+      const start_min = slotToMinutes(startSlot);
+      const end_min   = slotToMinutes(endSlot);
+
+      if (kind === 'paint') {
+        await handleCreateScheduleBlock({ profile_id: profileId, day_of_week: day, start_min, end_min, mode });
+      } else {
+        await handleUpdateScheduleBlock(blockId, { start_min, end_min });
+      }
+    }
+
+    function cancelScheduleDrag() {
+      const d = scheduleDrag;
+      if (!d) return;
+
+      scheduleDrag = null;
+      document.getElementById('sched').classList.remove('is-dragging');
+      if (d.kind === 'paint') {
+        if (d.el) d.el.remove();
+      } else {
+        // A resize wrote straight to the real element's inline style; a
+        // re-render from scheduleBlocks is what puts it back.
+        renderScheduleGrid();
+      }
+    }
+
+    function closeScheduleBlockPopover() {
+      document.querySelectorAll('.sched-pop').forEach(el => el.remove());
+      if (!selectedScheduleBlockId) return;
+      selectedScheduleBlockId = null;
+      document.querySelectorAll('.sched-block.selected').forEach(el => el.classList.remove('selected'));
+    }
+
+    function openScheduleBlockPopover(block, blockEl) {
+      closeScheduleBlockPopover();
+      selectedScheduleBlockId = block.id;
+      blockEl.classList.add('selected');
+
+      const pop = document.createElement('div');
+      pop.className = 'sched-pop';
+
+      const caption = document.createElement('div');
+      caption.className = 'sched-pop-caption';
+      caption.textContent = `${SCHED_DAY_LABELS[block.day_of_week]} ${formatSlotRange(block.start_min, block.end_min)}`;
+      pop.appendChild(caption);
+
+      profiles.forEach((profile) => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        const isCurrent = profile.id === block.profile_id;
+        // .added is this file's existing "already the case, informational
+        // only" row treatment, same as an already-blocked quick-add section.
+        row.className = `site-options-menu-item${isCurrent ? ' added' : ''}`;
+        row.textContent = profile.name;
+        if (!isCurrent) {
+          row.addEventListener('click', async () => {
+            closeScheduleBlockPopover();
+            await handleUpdateScheduleBlock(block.id, { profile_id: profile.id });
+          });
+        }
+        pop.appendChild(row);
+      });
+
+      const sepModes = document.createElement('div');
+      sepModes.className = 'sched-pop-sep';
+      pop.appendChild(sepModes);
+
+      const modes = document.createElement('div');
+      modes.className = 'sched-pop-modes';
+      [['friction', 'Friction'], ['strict', 'Strict']].forEach(([mode, label]) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = `sched-mode-pill${block.mode === mode ? ' selected' : ''}`;
+        pill.dataset.mode = mode;
+        pill.textContent = label;
+        if (block.mode !== mode) {
+          pill.addEventListener('click', async () => {
+            closeScheduleBlockPopover();
+            await handleUpdateScheduleBlock(block.id, { mode });
+          });
+        }
+        modes.appendChild(pill);
+      });
+      pop.appendChild(modes);
+
+      const sepDelete = document.createElement('div');
+      sepDelete.className = 'sched-pop-sep';
+      pop.appendChild(sepDelete);
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'site-options-menu-item danger-link';
+      del.textContent = 'Delete block';
+      del.addEventListener('click', async () => {
+        closeScheduleBlockPopover();
+        await handleDeleteScheduleBlock(block.id);
+      });
+      pop.appendChild(del);
+
+      document.body.appendChild(pop);
+
+      // Anchored off the block's own rect (visible by definition at click
+      // time), flipped to the block's other side when it would overflow.
+      const blockRect = blockEl.getBoundingClientRect();
+      const popRect   = pop.getBoundingClientRect();
+
+      let left = blockRect.right + 8;
+      if (left + popRect.width > window.innerWidth - 8) left = blockRect.left - popRect.width - 8;
+      pop.style.left = `${Math.max(8, left)}px`;
+
+      let top = blockRect.top;
+      if (top + popRect.height > window.innerHeight - 8) top = window.innerHeight - popRect.height - 8;
+      pop.style.top = `${Math.max(8, top)}px`;
+    }
+
+    // ─── Schedule mutations ────────────────────────────────────────────────────
+    // Pessimistic: write to Supabase, then mirror the server's row here, then
+    // render — the same order handleAddUrl()/handleDeleteUrl() use, and the
+    // direction that needs no rollback logic. A rejection shows the server's
+    // own message (the triggers in 016 raise user-readable text: an overlap,
+    // a frozen Strict block) and re-fetches the grid, since a rejection
+    // usually means this tab was stale — a block painted on another device,
+    // or one that has since become active. After every successful change,
+    // the extension is poked so it re-arms its boundary alarm, and the
+    // schedule is re-applied so a block that covers right now takes effect
+    // immediately instead of on the next poll.
+
+    async function loadSchedule() {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+      const rows = await fetchSchedules(accessToken);
+      if (rows === null) {
+        showToast('Could not load your schedule. Please refresh.', true);
+      } else {
+        scheduleBlocks = rows;
+      }
+      renderSchedulePalette();
+      renderScheduleGrid();
+    }
+
+    /** Shared failure path: explain, then resync the grid from the server. */
+    async function recoverScheduleAfter(error, fallback) {
+      showToast(error || fallback, true);
+      await loadSchedule();
+    }
+
+    /** Shared success path: extension poke + immediate enforcement check. */
+    async function afterScheduleChange() {
+      renderScheduleGrid();
+      pokeExtension();
+      await syncScheduleState();
+    }
+
+    async function handleCreateScheduleBlock(draft) {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+      const { row, error } = await createScheduleBlock(accessToken, {
+        userId:    currentUser.id,
+        profileId: draft.profile_id,
+        dayOfWeek: draft.day_of_week,
+        startMin:  draft.start_min,
+        endMin:    draft.end_min,
+        mode:      draft.mode,
+      });
+      if (!row) { await recoverScheduleAfter(error, 'Could not save that block. Please try again.'); return; }
+      scheduleBlocks.push(row);
+      await afterScheduleChange();
+    }
+
+    async function handleUpdateScheduleBlock(id, patch) {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+      const { row, error } = await updateScheduleBlock(accessToken, id, patch);
+      // No row and no error means the block no longer exists (deleted
+      // elsewhere) — the re-fetch in the recovery path clears it here too.
+      if (!row) { await recoverScheduleAfter(error, 'Could not update that block. Please try again.'); return; }
+      const index = scheduleBlocks.findIndex(b => b.id === id);
+      if (index === -1) scheduleBlocks.push(row); else scheduleBlocks[index] = row;
+      await afterScheduleChange();
+    }
+
+    async function handleDeleteScheduleBlock(id) {
+      const accessToken = await currentAccessToken();
+      if (!accessToken) return;
+      const { ok, error } = await deleteScheduleBlock(accessToken, id);
+      if (!ok) { await recoverScheduleAfter(error, 'Could not delete that block. Please try again.'); return; }
+      scheduleBlocks = scheduleBlocks.filter(b => b.id !== id);
+      if (selectedScheduleBlockId === id) selectedScheduleBlockId = null;
+      await afterScheduleChange();
+    }
+
+    // Pointer events are delegated on the grid body. A captured pointer still
+    // bubbles from its capture target, so these cover every drag without any
+    // per-drag listener bookkeeping on window or document.
+    const scheduleBodyEl = document.getElementById('schedule-body');
+    scheduleBodyEl.addEventListener('pointerdown', handleSchedulePointerDown);
+    scheduleBodyEl.addEventListener('pointermove', (e) => {
+      if (scheduleDrag && e.pointerId === scheduleDrag.pointerId) handleScheduleDragMove(e.clientY);
+    });
+    scheduleBodyEl.addEventListener('pointerup', handleSchedulePointerUp);
+    scheduleBodyEl.addEventListener('pointercancel', cancelScheduleDrag);
+    // Fires after a normal pointerup too, where scheduleDrag is already null
+    // and this is a no-op. It's here for the abnormal cases (the element
+    // losing capture some other way), which would otherwise wedge the drag.
+    scheduleBodyEl.addEventListener('lostpointercapture', cancelScheduleDrag);
+
+    // The cached column rect goes stale on a resize, and a fixed popover
+    // can't follow a block that just scrolled away underneath it.
+    window.addEventListener('resize', cancelScheduleDrag);
+    scheduleScrollEl().addEventListener('scroll', closeScheduleBlockPopover);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (scheduleDrag) cancelScheduleDrag();
+      else closeScheduleBlockPopover();
+    });
+
+    // Same outside-click shape as closeAllSiteMenus()'s own listener.
+    document.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.sched-pop') || e.target.closest('.sched-block')) return;
+      closeScheduleBlockPopover();
+    });
+
     // ─── Event wiring ──────────────────────────────────────────────────────────
 
     // Auth
@@ -3558,6 +3041,8 @@
       currentUser = null;
       profiles    = [];
       selectedProfile = null;
+      scheduleBlocks = [];
+      schedulePaintProfileId = null;
       showAuthScreen();
     });
 

@@ -3,1320 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plans | Please Don't Scroll</title>
+  <title>Please Don’t Scroll | Pricing</title>
+  <meta name="description" content="Please Don't Scroll is free forever. Focus Pro adds Strict Mode and unlimited profiles for $4.99 a month.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-
-  <!-- ─── Stripe.js ─────────────────────────────────────────────────── -->
-  <!-- Stripe.js is loaded for potential future use (Elements, etc.).    -->
-  <!-- Checkout itself is Stripe-hosted via the edge function redirect.  -->
-  <script src="https://js.stripe.com/v3/" async></script>
-
-  <style>
-    /* ─── Design Tokens ──────────────────────────────────────────────── */
-    :root {
-      /* Back to pure #000000, matching dashboard.html's own token —
-         --black and --text stay equal on purpose (a consolidation, not a
-         new value: one less near-black in the token set). */
-      --black:        #000000;
-      --white:        #ffffff;
-      --text:         #000000;
-      --text-muted:   #6e6e73;
-      --text-faint:   #aeaeb2;
-      --bg:           #ffffff;
-      --border:       rgba(0, 0, 0, 0.09);
-      --border-mid:   rgba(0, 0, 0, 0.14);
-
-      /* --accent-teal covers general/neutral accents that aren't
-         specifically about the Pro plan (the hero eyebrow, the comparison
-         table's checkmarks — those appear in both the Free and Pro
-         columns, so they're not a Pro signal specifically); --pro-gold
-         covers everywhere this page is actually marking "this is the Pro
-         plan" (the Pro plan card, its badge, its CTA button, its own
-         feature checkmarks). Kept as two separate tokens for what they
-         mean, even though they're now the same color.
-         Went teal → gold → burgundy ("Crimson Bordeaux") → royal blue →
-         this: purple/violet, the dominant "Pro tier" SaaS color archetype
-         (Discord Nitro, Twitch Prime, Grammarly Premium) — tests well for
-         subscription conversion specifically, without the urgency/alarm
-         connotation warmer colors (orange/red) carry, which would cut
-         against this product's "no manipulative dark patterns"
-         positioning anyway. Same value as index.html's own accent now.
-         Strict Mode's own indicator color (popup.css/blocked.css's
-         --strict) deliberately stayed on the burgundy value — that's a
-         distinct meaning (an alarm/lockout color), not a brand accent, so
-         it didn't move with this. Glow alphas (--accent-teal-glow/
-         --pro-gold-glow/--shadow-pro's ring) were bumped 0.22 → 0.38,
-         0.18 → 0.32 at one point, matching index.html, then reverted back
-         to the original 0.22/0.18 here too. */
-      --accent-teal:      #7741c8;
-      --accent-teal-dim:  rgba(119, 65, 200, 0.12);
-      --accent-teal-glow: rgba(119, 65, 200, 0.22);
-      --pro-gold:         #7741c8;
-      --pro-gold-dim:     rgba(119, 65, 200, 0.12);
-      --pro-gold-glow:    rgba(119, 65, 200, 0.22);
-
-      --radius-card:  24px;
-      --radius-btn:   50px;
-      --radius-tag:   8px;
-      --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(119, 65, 200, 0.18);
-
-      --font-ui:      'DM Sans', -apple-system, sans-serif;
-      --font-serif:   'Lora', serif;
-    }
-
-    /* ─── Reset ──────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      font-family: var(--font-ui);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    /* ─── Entrance animations ────────────────────────────────────────── */
-    /* Same split as index.html's own "Entrance animations" block (see its
-       comment there for the full reasoning) — duplicated here rather than
-       shared, matching this codebase's existing no-shared-component-system
-       convention. Content always in the first viewport (hero, the two
-       plan cards — both inside .pricing-top's first-viewport layout) uses
-       a plain @keyframes animation that just runs on load, not an
-       IntersectionObserver — the observer-driven version of this wasn't
-       consistently replaying the same way on every refresh. [data-reveal]
-       + IntersectionObserver (kept below, wired up in this page's own
-       <script>) is reserved for what's actually below the fold: the
-       comparison table, quote, FAQ, and closing CTA. */
-    @media (prefers-reduced-motion: no-preference) {
-      @keyframes fade-in-up {
-        from { opacity: 0; transform: translateY(28px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Only used by .plan-card.pro below — same fade-up, but ending at
-         that card's own permanent translateY(-8px) lift instead of 0. */
-      @keyframes fade-in-up-lifted {
-        from { opacity: 0; transform: translateY(20px); }
-        to   { opacity: 1; transform: translateY(-8px); }
-      }
-
-      /* 0.8s/0.15s-stagger read as rushed per the founder — slowed to a
-         1.4s animation and a 0.28s stagger, both roughly double, for a
-         calmer, more deliberate feel instead of a quick snap-in. */
-      .enter {
-        opacity: 0;
-        animation: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-
-      .plan-card.pro.enter { animation-name: fade-in-up-lifted; }
-
-      /* 0.5s before anything starts, then each element +0.28s after the
-         previous — headline, sub, then the two plan cards in order. */
-      .enter-1 { animation-delay: 0.5s; }
-      .enter-2 { animation-delay: 0.78s; }
-      .enter-3 { animation-delay: 1.06s; }
-      .enter-4 { animation-delay: 1.34s; }
-
-      /* ── Scroll-triggered reveal, for content below the first viewport ── */
-      /* Same slower 1.4s duration as .enter above, for the same reason. */
-      .reveal {
-        opacity: 0;
-        transform: translateY(28px);
-        transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      .reveal.in-view {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ─── Nav ────────────────────────────────────────────────────────── */
-    /* Same scroll-driven gradual blur as index.html — see that page's
-       identical .nav rule and its own <script> for the full reasoning
-       (duplicated here, not shared, matching this codebase's existing
-       no-shared-component-system convention). */
-    .nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 40px;
-      background: rgba(255, 255, 255, var(--nav-bg-alpha, 0));
-      backdrop-filter: blur(var(--nav-blur, 0px));
-      -webkit-backdrop-filter: blur(var(--nav-blur, 0px));
-    }
-
-    .nav-logo {
-      height: 24px;
-      width: auto;
-      filter: invert(1);
-      position: relative;
-      top: 2px;
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
-       clean flip. Counter-clockwise; the cubic-bezier above gives a
-       slow-start/fast-middle/slow-end feel. */
-    .nav-logo:hover {
-      transform: rotate(-180deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-link {
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 24px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-link:hover {
-      color: var(--text);
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .nav-link.active {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .nav-cta {
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: var(--white);
-      background: var(--black);
-      text-decoration: none;
-      padding: 8px 18px;
-      border-radius: var(--radius-btn);
-      transition: opacity 0.15s;
-    }
-
-    .nav-cta:hover { opacity: 0.78; }
-
-    /* ─── Account menu (shown instead of the nav-cta pill once logged in,
-       same pattern duplicated on index.html and dashboard.html — no shared
-       component system in this build-free codebase) ────────────────── */
-    .account-menu { position: relative; }
-
-    .account-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--black);
-      color: var(--white);
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .account-avatar:hover { opacity: 0.82; }
-
-    .account-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      min-width: 200px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-card);
-      padding: 8px;
-      display: none;
-      z-index: 200;
-    }
-
-    .account-dropdown.open { display: block; }
-
-    .account-dropdown-header {
-      padding: 8px 12px 10px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 6px;
-    }
-
-    .account-dropdown-email {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      word-break: break-all;
-    }
-
-    .account-dropdown-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.86rem;
-      color: var(--text);
-      text-decoration: none;
-      padding: 9px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .account-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
-
-    .hidden { display: none !important; }
-
-    /* ─── Page sections ───────────────────────────────────────────────── */
-    .page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 32px;
-    }
-
-    /* ─── Hero + plan cards background band ─────────────────────────────── */
-    /* Same background-image trick as index.html's .hero — see that file's
-       own comment for the full reasoning (why ::before + the
-       left:50%/width:100vw/translateX(-50%) break-out is needed instead of
-       a plain background-image, since .pricing-top sits inside .page's
-       max-width:1100px column). Applied to a wrapper around BOTH .hero and
-       .plans-grid, not just .hero itself, so the image runs continuously
-       behind the plan cards too rather than stopping right after the
-       headline — the plan cards' own opaque backgrounds (white/black)
-       simply cover it where they sit, so it only actually shows through in
-       the surrounding negative space.
-       padding-bottom (not .plans-grid's own margin-bottom, see that rule's
-       own comment) — a child's bottom margin collapses straight through a
-       parent that has no border/padding of its own, which left
-       .pricing-top's real box 80px short of the "Full comparison"
-       divider (.section's border-top): the ::before background stopped
-       there instead of reaching the line, leaving a flat white gap that
-       had nothing to do with the image's resolution. Padding can't
-       collapse away like that. */
-    /* min-height: 100vh — without this, .pricing-top's height is just
-       whatever the hero + plan cards content needs, which on a tall/wide
-       monitor (e.g. a 2K 27") is shorter than the actual viewport, so the
-       top of "Full comparison" is already visible on load instead of the
-       background image filling the whole first screen. Flex + centering
-       keeps the hero/cards vertically centered in that taller box instead
-       of pinned to the top with a large gap opening up below them. */
-    .pricing-top {
-      position: relative;
-      padding-bottom: 80px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .pricing-top::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 100vw;
-      transform: translateX(-50%);
-      background:
-        linear-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)),
-        url('assets/images/pricing-painting.png') center 00% / cover no-repeat;
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    /* ─── Hero ───────────────────────────────────────────────────────── */
-    .hero {
-      padding: 160px 0 80px;
-      text-align: center;
-      /* Shifts the whole hero+cards group up within .pricing-top's
-         vertically-centered flex box, without touching padding-bottom's
-         own job of making the background reach the "Full comparison"
-         divider exactly (see .pricing-top's/.plans-grid's own comments) —
-         a negative margin on the first flex item moves the whole visual
-         group by that amount since it's still accounted for in the
-         centering math. */
-      margin-top: -40px;
-    }
-
-    .hero-eyebrow {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent-teal);
-      background: var(--accent-teal-dim);
-      border: 1px solid rgba(119, 65, 200, 0.2);
-      padding: 5px 14px;
-      border-radius: var(--radius-btn);
-      margin-bottom: 28px;
-    }
-
-    .hero h1 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(3rem, 6vw, 5.5rem);
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      color: var(--black);
-      margin: 0 0 24px;
-    }
-
-    .hero h1 em {
-      font-style: italic;
-      color: var(--text-muted);
-    }
-
-    .hero-sub {
-      font-size: clamp(1rem, 1.6vw, 1.2rem);
-      font-weight: 400;
-      color: var(--text-muted);
-      max-width: 520px;
-      margin: 0 auto 48px;
-      line-height: 1.6;
-    }
-
-    /* ─── Pricing cards ───────────────────────────────────────────────── */
-    /* Bottom spacing before "Full comparison" moved to .pricing-top's own
-       padding-bottom instead of a margin here — see that rule's comment;
-       a margin on the last child inside an unbordered/unpadded parent
-       collapses straight through it. */
-    .plans-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 860px;
-      /* Negative top margin pulls the cards up slightly, tightening the
-         gap under .hero and shifting the cards' weight higher within
-         .pricing-top's vertically-centered flex box. */
-      margin: -24px auto 0;
-      align-items: start;
-    }
-
-    @media (max-width: 680px) {
-      .plans-grid {
-        grid-template-columns: 1fr;
-        max-width: 460px;
-      }
-    }
-
-    /* ── Free card ── */
-    /* Glassy, not flat white — matches index.html's .feature-card recipe
-       exactly (same translucent-white + blur + inset-sheen approach), and
-       for the same reason it works there: .pricing-top's background image
-       runs behind these cards (see .pricing-top::before above), which is
-       what backdrop-filter actually has to blur for the effect to read as
-       real glass rather than just a lighter flat card. */
-    .plan-card {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border-radius: var(--radius-card);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      padding: 36px 32px;
-      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    }
-
-    /* ── Pro card ── */
-    /* Same glass tint as the free card now, not a dark/black variant —
-       no background declared here at all, so it's literally the same
-       rgba(255,255,255,0.55) value inherited from .plan-card above rather
-       than a second copy that could drift out of sync. The free/pro split
-       now reads through a single purple border, not a glow — the corner
-       radial glow and bottom shimmer (::before/::after) were removed, and
-       box-shadow no longer pulls in --shadow-pro's purple ring (that
-       token's still used elsewhere, e.g. index.html's Strict Mode card —
-       left alone, just not referenced here anymore); this card's shadow is
-       the same black drop-shadow --shadow-pro also carries, spelled out
-       directly, plus the same inset sheen the free card gets. The CTA
-       button (.btn-plan.pro-btn below) is solid black now too, not purple.
-       Every plan-name/price/tagline/feature-text override that used to
-       exist purely to keep white text readable on black is still gone —
-       they fall through to the same dark text the free card's text
-       already uses. position: relative/overflow: hidden are gone too —
-       both existed only to host and clip the now-removed pseudo-elements. */
-    .plan-card.pro {
-      border-color: var(--pro-gold-glow);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-      /* Slightly elevated visually */
-      transform: translateY(-8px);
-    }
-
-    .plan-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      border-radius: var(--radius-btn);
-      margin-bottom: 24px;
-    }
-
-    .plan-badge.free-badge {
-      color: var(--text-muted);
-      background: rgba(0, 0, 0, 0.05);
-      border: 1px solid var(--border-mid);
-    }
-
-    .plan-badge.pro-badge {
-      color: var(--pro-gold);
-      background: rgba(119, 65, 200, 0.15);
-      border: 1px solid rgba(119, 65, 200, 0.3);
-    }
-
-    .plan-badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-      animation: pulse-dot 2.4s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.5; transform: scale(0.75); }
-    }
-
-    .plan-name {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1.75rem;
-      letter-spacing: -0.02em;
-      margin: 0 0 8px;
-      color: var(--text);
-    }
-
-    .plan-tagline {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      margin: 0 0 28px;
-      line-height: 1.5;
-    }
-
-    .plan-price {
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      margin-bottom: 32px;
-    }
-
-    .plan-price-amount {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 3.5rem;
-      letter-spacing: -0.04em;
-      line-height: 1;
-      color: var(--text);
-    }
-
-    .plan-price-currency {
-      font-size: 1.25rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      align-self: flex-start;
-      margin-top: 8px;
-    }
-
-    .plan-price-period {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-
-    /* CTA button on each card */
-    .btn-plan {
-      display: block;
-      width: 100%;
-      padding: 14px 20px;
-      text-align: center;
-      font-family: var(--font-ui);
-      font-size: 0.92rem;
-      font-weight: 500;
-      border-radius: var(--radius-btn);
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      transition: opacity 0.18s, transform 0.18s;
-      margin-bottom: 32px;
-      letter-spacing: 0.01em;
-    }
-
-    .btn-plan:hover:not(:disabled) {
-      opacity: 0.82;
-      transform: translateY(-1px);
-    }
-
-    .btn-plan:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* Went white pill → solid purple → solid black, each time per the
-       founder's own feedback — solid black still read too heavy next to
-       "Start for free"'s quiet gray-fill treatment, so pro-btn shares
-       free-btn's exact fill/text/border now rather than getting its own
-       color. */
-    .btn-plan.free-btn,
-    .btn-plan.pro-btn {
-      background: rgba(0, 0, 0, 0.06);
-      color: var(--text);
-      border: 1px solid var(--border-mid);
-    }
-
-    /* One small purple touch left on the CTA itself — everything else
-       about the two buttons is now identical, so this soft glow is the
-       only thing marking "Get Focus Pro" as the pro action at a glance.
-       Much fainter than the 0.45/0.6-alpha glow the solid-purple version
-       of this button had before — "slight" per the founder's own word for
-       it, sitting closer to the same quiet alpha the card's border/badge/
-       checkmark/divider purple accents already use. */
-    .btn-plan.pro-btn {
-      box-shadow: 0 4px 20px rgba(119, 65, 200, 0.2);
-    }
-
-    /* Divider inside card */
-    .plan-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0 0 24px;
-    }
-
-    /* Purple-tinted rather than the plain gray .plan-divider uses — one
-       more small, deliberate spot of the accent color inside the pro
-       card now that the card itself is no longer black. */
-    .plan-card.pro .plan-divider { background: rgba(119, 65, 200, 0.15); }
-
-    /* Feature list */
-    .plan-features {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .plan-feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 0.88rem;
-      line-height: 1.45;
-      color: var(--text-muted);
-    }
-
-    .plan-feature-icon {
-      flex-shrink: 0;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      margin-top: 1px;
-    }
-
-    .plan-feature-icon.check {
-      background: rgba(0, 0, 0, 0.07);
-      color: var(--text);
-    }
-
-    .plan-card.pro .plan-feature-icon.check {
-      background: rgba(119, 65, 200, 0.2);
-      color: var(--pro-gold);
-    }
-
-    /* ─── Comparison table ────────────────────────────────────────────── */
-    .section {
-      padding: 80px 0;
-      border-top: 1px solid var(--border);
-    }
-
-    .section-label {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: -0.03em;
-      color: var(--black);
-      margin: 0 0 56px;
-    }
-
-    .comparison-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .comparison-table th {
-      text-align: left;
-      font-family: var(--font-ui);
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      padding: 0 0 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .comparison-table th:not(:first-child) {
-      text-align: center;
-    }
-
-    .comparison-table td {
-      padding: 18px 0;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    .comparison-table tr:last-child td { border-bottom: none; }
-
-    .comparison-table td:first-child {
-      font-size: 0.9rem;
-      color: var(--text);
-      font-weight: 400;
-      max-width: 420px;
-    }
-
-    .comparison-table td:not(:first-child) {
-      text-align: center;
-    }
-
-    .comparison-table td small {
-      display: block;
-      font-size: 0.78rem;
-      color: var(--text-faint);
-      margin-top: 2px;
-    }
-
-    /* --accent-teal, not --pro-gold — this appears in both the Free and
-       Pro comparison-table columns (it just means "this row is included
-       here"), so it's a general "yes" indicator, not a Pro-specific one. */
-    .check-yes {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      font-size: 0.7rem;
-      background: rgba(119, 65, 200, 0.1);
-      color: var(--accent-teal);
-    }
-
-    .check-partial {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .check-no {
-      width: 14px;
-      height: 1px;
-      background: var(--border-mid);
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    /* ─── Quote / testimonial ─────────────────────────────────────────── */
-    .quote-section {
-      padding: 100px 0;
-      text-align: center;
-      border-top: 1px solid var(--border);
-    }
-
-    .quote-mark {
-      font-family: var(--font-serif);
-      font-size: 5rem;
-      line-height: 0.8;
-      color: var(--border-mid);
-      margin-bottom: 16px;
-      display: block;
-    }
-
-    .quote-text {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-style: italic;
-      font-size: clamp(1.5rem, 3vw, 2.2rem);
-      letter-spacing: -0.02em;
-      line-height: 1.35;
-      color: var(--black);
-      max-width: 720px;
-      margin: 0 auto 32px;
-    }
-
-    .quote-attribution {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 400;
-    }
-
-    .quote-attribution strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    /* ─── FAQ ─────────────────────────────────────────────────────────── */
-    .faq-section {
-      padding: 80px 0;
-      max-width: 680px;
-      border-top: 1px solid var(--border);
-    }
-
-    .faq-item {
-      padding: 24px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-    }
-
-    .faq-item:last-child { border-bottom: none; }
-
-    .faq-question {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .faq-q-text {
-      font-size: 0.98rem;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1.4;
-    }
-
-    .faq-toggle {
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 1px solid var(--border-mid);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
-    }
-
-    .faq-item.open .faq-toggle {
-      transform: rotate(45deg);
-      background: var(--black);
-      border-color: var(--black);
-      color: var(--white);
-    }
-
-    .faq-answer {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-      margin-top: 0;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.25s ease;
-    }
-
-    .faq-item.open .faq-answer {
-      max-height: 300px;
-      margin-top: 16px;
-    }
-
-    /* ─── Bottom CTA ──────────────────────────────────────────────────── */
-    .bottom-cta {
-      padding: 100px 0 80px;
-      text-align: center;
-      border-top: 1px solid var(--border);
-    }
-
-    .bottom-cta h2 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(2.2rem, 5vw, 4rem);
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      color: var(--black);
-      margin: 0 0 20px;
-    }
-
-    .bottom-cta h2 em {
-      font-style: normal;
-      color: var(--text-muted);
-    }
-
-    .bottom-cta p {
-      font-size: 1rem;
-      color: var(--text-muted);
-      margin: 0 0 40px;
-    }
-
-    .btn-cta-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 16px 36px;
-      background: var(--black);
-      color: var(--white);
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      font-weight: 500;
-      border-radius: var(--radius-btn);
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.18s, transform 0.18s, box-shadow 0.18s;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
-      letter-spacing: 0.01em;
-    }
-
-    .btn-cta-primary:hover {
-      opacity: 0.82;
-      transform: translateY(-2px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn-cta-note {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--text-faint);
-      margin-top: 16px;
-    }
-
-    /* ─── Footer ──────────────────────────────────────────────────────── */
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 48px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .footer-brand {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 24px;
-    }
-
-    .footer-links a {
-      font-size: 0.82rem;
-      color: var(--text-faint);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .footer-links a:hover { color: var(--text); }
-
-    .footer-copy {
-      font-size: 0.78rem;
-      color: var(--text-faint);
-    }
-
-    /* ─── Toast ───────────────────────────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--black);
-      color: var(--white);
-      font-size: 0.88rem;
-      font-weight: 400;
-      padding: 12px 24px;
-      border-radius: var(--radius-btn);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-      pointer-events: none;
-      z-index: 1000;
-      white-space: nowrap;
-    }
-
-    .toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ─── Responsive ──────────────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .nav { padding: 16px 24px; }
-      .nav-links { gap: 4px; }
-      .nav-link { display: none; }
-      .page { padding: 0 20px; }
-      .hero { padding: 120px 0 60px; }
-      .comparison-table th:nth-child(2),
-      .comparison-table td:nth-child(2) { display: none; }
-      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
-    }
-  </style>
-  <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
-  <!-- See index.html's copy of this comment for why this is a plain
-       script tag, not the @vercel/analytics npm package. -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
+  <link rel="stylesheet" href="site.css">
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
   <nav class="nav">
-    <a href="index.html">
-      <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-    </a>
-    <div class="nav-links">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="dashboard.html" class="nav-cta" id="nav-cta">Get started</a>
-      <div class="account-menu hidden" id="account-menu">
-        <button class="account-avatar" id="account-avatar-btn"></button>
-        <div class="account-dropdown" id="account-dropdown">
-          <div class="account-dropdown-header">
-            <div class="account-dropdown-email" id="account-email"></div>
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="nav__links">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="dashboard.html" class="btn btn--ink" id="nav-cta">Get started free</a>
+        <div class="account hidden" id="account-menu">
+          <button class="account__avatar" id="account-avatar-btn" aria-label="Account menu"></button>
+          <div class="account__menu" id="account-dropdown">
+            <div class="account__email" id="account-email"></div>
+            <a href="dashboard.html" class="account__item">Dashboard</a>
+            <a href="dashboard.html#settings-card" class="account__item">Settings</a>
+            <button class="account__item" id="account-signout-btn">Sign out</button>
           </div>
-          <a href="dashboard.html" class="account-dropdown-item">Dashboard</a>
-          <a href="dashboard.html#settings-card" class="account-dropdown-item">Settings</a>
-          <button class="account-dropdown-item" id="account-signout-btn">Sign out</button>
         </div>
       </div>
     </div>
   </nav>
 
-  <div class="page">
+  <main id="main">
 
-    <!-- ─── Hero + plan cards share one background image (see
-         .pricing-top::before) — wrapped together so the image runs
-         continuously from under the nav down to just above "Full
-         comparison," not just behind the hero text. ─────────────────── -->
-    <div class="pricing-top">
-
-    <!-- ─── Hero ────────────────────────────────────────────────────────── -->
-    <section class="hero">
-      <h1 class="enter enter-1">Less distraction.<br><em>More free time.</em></h1>
-      <p class="hero-sub enter enter-2">
-        Start free. Upgrade when you're ready for the full experience.
-        No hidden fees, no tracking, no tricks.
-      </p>
+    <section class="hero" style="padding-bottom: 0">
+      <div class="container" style="text-align: center; display: grid; gap: 22px; justify-items: center">
+        <h1 class="display">Less distraction.<br>More free time.</h1>
+        <p class="lede" style="text-align: center">Start free. Upgrade when you’re ready for the full experience. No hidden fees, no tracking, no tricks.</p>
+      </div>
     </section>
 
-    <!-- ─── Plan cards ───────────────────────────────────────────────────── -->
-    <div class="plans-grid">
+    <section class="section" id="plans">
+      <div class="container">
+        <div class="plans">
 
-      <!-- Free card -->
-      <div class="plan-card enter enter-3">
-        <div class="plan-badge free-badge">Free forever</div>
-        <h2 class="plan-name">Free</h2>
-        <p class="plan-tagline">The essentials to break the scroll habit and reclaim your focus.</p>
+          <div class="plan">
+            <h2 class="visually-hidden">Free plan</h2>
+            <div class="plan__head">
+              <span class="tag">Free forever</span>
+              <div class="plan__price">$0 <small>/ month</small></div>
+              <p class="plan__desc">Everything you need to get started.</p>
+            </div>
+            <ul class="plan__list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Block unlimited distracting websites</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span><span class="nowrap">30-second</span> breathing pause on blocked sites</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>1 blocking profile</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Works across all your Chrome tabs</span></li>
+            </ul>
+            <a href="dashboard.html" class="btn btn--ink">Get started free</a>
+          </div>
 
-        <div class="plan-price">
-          <span class="plan-price-currency">$</span>
-          <span class="plan-price-amount">0</span>
-          <span class="plan-price-period">&nbsp;/ month</span>
+          <div class="plan plan--pro">
+            <h2 class="visually-hidden">Focus Pro plan</h2>
+            <div class="plan__head">
+              <span class="tag tag--pro-solid">Focus Pro</span>
+              <div class="plan__price">$4.99 <small>/ month</small></div>
+              <p class="plan__desc">Everything in Free, plus the tools for the days you need more than a pause.</p>
+            </div>
+            <ul class="plan__list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Everything in Free</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Strict Mode</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Unlimited blocking profiles</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Scheduled blocking</span></li>
+            </ul>
+            <button class="btn btn--paper" id="pro-cta">Get Focus Pro</button>
+          </div>
+
         </div>
-
-        <a href="dashboard.html" class="btn-plan free-btn" id="free-cta">Start for free</a>
-
-        <div class="plan-divider"></div>
-
-        <ul class="plan-features">
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Block unlimited distracting websites
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            30-second breathing friction on blocked sites
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            1 blocking profile
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Works across all your Chrome tabs
-          </li>
-        </ul>
       </div>
-
-      <!-- Pro card -->
-      <div class="plan-card pro enter enter-4">
-        <div class="plan-badge pro-badge">
-          <span class="plan-badge-dot"></span>
-          Focus Pro
-        </div>
-        <h2 class="plan-name">Focus Pro</h2>
-        <p class="plan-tagline">The complete mindfulness stack for people serious about their attention.</p>
-
-        <div class="plan-price">
-          <span class="plan-price-currency">$</span>
-          <span class="plan-price-amount">4.99</span>
-          <span class="plan-price-period">&nbsp;/ month</span>
-        </div>
-
-        <button class="btn-plan pro-btn" id="pro-cta">Get Focus Pro</button>
-
-        <div class="plan-divider"></div>
-
-        <ul class="plan-features">
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Everything in Free
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Strict mode
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Unlimited blocking profiles
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Focus analytics (coming soon)
-          </li>
-          <li class="plan-feature">
-            <span class="plan-feature-icon check">&#10003;</span>
-            Scheduled blocking (coming soon)
-          </li>
-        </ul>
-      </div>
-
-    </div>
-
-    </div><!-- /.pricing-top -->
-
-    <!-- ─── Comparison table ──────────────────────────────────────────────── -->
-    <section class="section" data-reveal>
-      <p class="section-label">Full comparison</p>
-      <h2 class="section-title">What you get</h2>
-
-      <table class="comparison-table">
-        <thead>
-          <tr>
-            <th>Feature</th>
-            <th>Free</th>
-            <th>Focus Pro</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Site blocking</td>
-            <td><span class="check-yes">&#10003;</span></td>
-            <td><span class="check-yes">&#10003;</span></td>
-          </tr>
-          <tr>
-            <td>Breathing friction (30-second unlock)</td>
-            <td><span class="check-yes">&#10003;</span></td>
-            <td><span class="check-yes">&#10003;</span></td>
-          </tr>
-          <tr>
-            <td>Blocking profiles</td>
-            <td><span class="check-partial">1 profile</span></td>
-            <td><span class="check-yes">&#10003;</span> <small>Unlimited</small></td>
-          </tr>
-          <tr>
-            <td>Focus analytics</td>
-            <td><span class="check-no"></span></td>
-            <td><span class="check-yes">&#10003;</span> <small>Coming soon</small></td>
-          </tr>
-          <tr>
-            <td>Scheduled blocking</td>
-            <td><span class="check-no"></span></td>
-            <td><span class="check-yes">&#10003;</span> <small>Coming soon</small></td>
-          </tr>
-          <tr>
-            <td>iOS app access (when available)</td>
-            <td><span class="check-no"></span></td>
-            <td><span class="check-yes">&#10003;</span></td>
-          </tr>
-          <tr>
-            <td>Priority support</td>
-            <td><span class="check-no"></span></td>
-            <td><span class="check-yes">&#10003;</span></td>
-          </tr>
-          <tr>
-            <td>Price</td>
-            <td><span class="check-partial">Free</span></td>
-            <td><span class="check-partial">$4.99 / month</span></td>
-          </tr>
-        </tbody>
-      </table>
     </section>
 
-    <!-- ─── Quote ────────────────────────────────────────────────────────── -->
-    <section class="quote-section" data-reveal>
-      <span class="quote-mark">&ldquo;</span>
-      <p class="quote-text">
-        My screen time report used to say 4 hours a day without fail. A month into using
-        this, it's under an hour. That's basically getting a full day of my week back.
-      </p>
-      <p class="quote-attribution">
-        <strong>Daniel R.</strong>, Designer, San Francisco
-      </p>
+    <section class="section" id="faq">
+      <div class="container">
+        <h2 class="display" data-reveal style="text-align:center; margin-bottom: clamp(32px, 4vw, 48px)">Frequently asked</h2>
+        <div class="faq" data-reveal>
+          <details>
+            <summary>Can I cancel anytime?</summary>
+            <p>Yes. Cancel from your billing portal at any time. You keep Pro access until the end of your current billing period, then your account moves to the Free tier. No penalties, no questions asked.</p>
+          </details>
+          <details>
+            <summary>Is my data private? Do you sell it?</summary>
+            <p>Never. Your blocklist and activity data stay in your personal account. We do not sell, share, or analyze your data for advertising purposes. The whole point of Please Don’t Scroll is to protect your attention, and that principle extends to how we handle your information.</p>
+          </details>
+          <details>
+            <summary>What happens to my profiles if I downgrade to Free?</summary>
+            <p>Your profiles are preserved. The extension will fall back to your first profile. If you re-subscribe later, all your custom profiles are exactly where you left them.</p>
+          </details>
+          <details>
+            <summary>Does the extension work without a Pro subscription?</summary>
+            <p>Absolutely. The core blocking and breathing friction experience is free forever. Focus Pro adds convenience and depth: multiple profiles, Strict Mode, and upcoming analytics. The fundamental tool for reclaiming your attention costs nothing.</p>
+          </details>
+        </div>
+      </div>
     </section>
 
-    <!-- ─── FAQ ──────────────────────────────────────────────────────────── -->
-    <section class="faq-section" data-reveal>
-      <p class="section-label">Questions</p>
-      <h2 class="section-title">Frequently asked</h2>
-
-      <div class="faq-item">
-        <div class="faq-question">
-          <span class="faq-q-text">Can I cancel anytime?</span>
-          <span class="faq-toggle">+</span>
+    <section class="section section--tight">
+      <div class="container">
+        <div class="cta" data-reveal>
+          <img src="assets/images/logo-no-bg.png" alt="" class="cta__logo">
+          <h2 class="display">Your attention is worth defending.</h2>
+          <p class="lede" style="text-align:center">Focus Pro is $4.99 a month. Cancel anytime, keep your profiles.</p>
+          <button class="btn btn--ink btn--lg" id="bottom-cta-btn">Get Focus Pro</button>
         </div>
-        <p class="faq-answer">
-          Yes. Cancel from your billing portal at any time. You keep Pro access until the end of your current billing period, then your account moves to the Free tier. No penalties, no questions asked.
-        </p>
       </div>
-
-      <div class="faq-item">
-        <div class="faq-question">
-          <span class="faq-q-text">Is my data private? Do you sell it?</span>
-          <span class="faq-toggle">+</span>
-        </div>
-        <p class="faq-answer">
-          Never. Your blocklist and activity data stay in your personal Supabase account. We do not sell, share, or analyze your data for advertising purposes. The whole point of PDS is to protect your attention, and that principle extends to how we handle your information.
-        </p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question">
-          <span class="faq-q-text">What happens to my profiles if I downgrade to Free?</span>
-          <span class="faq-toggle">+</span>
-        </div>
-        <p class="faq-answer">
-          Your profiles are preserved. The extension will fall back to your Default profile. If you re-subscribe later, all your custom profiles are exactly where you left them.
-        </p>
-      </div>
-
-      <div class="faq-item">
-        <div class="faq-question">
-          <span class="faq-q-text">Does the extension work without a Pro subscription?</span>
-          <span class="faq-toggle">+</span>
-        </div>
-        <p class="faq-answer">
-          Absolutely. The core blocking and breathing friction experience is free forever. Focus Pro adds convenience and depth: multiple profiles, Strict Mode, and upcoming analytics. The fundamental tool for reclaiming your attention costs nothing.
-        </p>
-      </div>
-
     </section>
 
-    <!-- ─── Bottom CTA ────────────────────────────────────────────────────── -->
-    <section class="bottom-cta" data-reveal>
-      <h2>Your attention is<br><span style="color: var(--text-muted)">worth defending.</span></h2>
-      <p>Join thousands of people taking back their time.</p>
-      <button class="btn-cta-primary" id="bottom-cta-btn">
-        Get Focus Pro &nbsp;&rarr;
-      </button>
-      <span class="btn-cta-note">Cancel anytime &middot; $4.99 / month</span>
-    </section>
+  </main>
 
-    <!-- ─── Footer ────────────────────────────────────────────────────────── -->
-    <footer class="footer">
-      <span class="footer-brand">Please Don't Scroll</span>
-      <div class="footer-links">
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="footer__links">
         <a href="index.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="privacy.html">Privacy</a>
         <a href="mailto:hello@pleasedontscroll.com">Contact</a>
       </div>
-      <span class="footer-copy">&copy; 2025 Please Don't Scroll. All rights reserved.</span>
-    </footer>
+      <div class="footer__copy">&copy; 2026 Please Don’t Scroll. All rights reserved.</div>
+    </div>
+  </footer>
 
-  </div><!-- /.page -->
-
-  <!-- ─── Toast ────────────────────────────────────────────────────────── -->
-  <div class="toast" id="toast"></div>
-
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="site.js"></script>
   <script type="module">
+    import { showToast } from './site.js'
     import { webStorageAdapter } from '../core/auth/storage.js'
     import * as Auth from '../core/auth/session.js'
     import { createCheckoutSession, createPortalSession } from '../core/sync/billing.js'
     import { fetchIsPremium } from '../core/sync/userSettings.js'
 
-    // ─── CONFIGURE THIS ────────────────────────────────────────────────────────
-    // Fill in your Stripe publishable key and the price ID for the Focus Pro plan.
-    // Find the price ID in Stripe Dashboard → Products → Focus Pro → Price ID.
-    // The publishable key starts with pk_live_ (production) or pk_test_ (test mode).
-    const STRIPE_PUBLISHABLE_KEY = 'pk_live_51Ty2UCIT8NkEPl0llC1wcLadkrthQvmra3FM1314hcWpnEkVPUfmLA3bzAAiInbUMB3ivaXKtLM1HEeTSMkb4PCO00FyFu8Bd7'
-    const FOCUS_PRO_PRICE_ID     = 'price_1TzRXUIT8NkEPl0llMOlI4re'
-    // ──────────────────────────────────────────────────────────────────────────
+    // Same checkout wiring as the current pricing page, verbatim apart from
+    // the dashboard path (this folder sits beside /web, so the dashboard is
+    // one level up). Focus Pro price ID from Stripe Dashboard > Products.
+    const FOCUS_PRO_PRICE_ID = 'price_1TzRXUIT8NkEPl0llMOlI4re'
+    const DASHBOARD = 'dashboard.html'
 
-    // ─── Toast helper ──────────────────────────────────────────────────────────
-    function showToast(msg, duration = 3500) {
-      const el = document.getElementById('toast')
-      el.textContent = msg
-      el.classList.add('visible')
-      setTimeout(() => el.classList.remove('visible'), duration)
-    }
-
-    // ─── Checkout flow ─────────────────────────────────────────────────────────
-
-    // Set by checkProCtaState() below — flips both CTA buttons over to the
-    // "already subscribed" path instead of creating a second Checkout
-    // Session. create-checkout-session also re-checks this server-side
-    // (defense in depth, same reasoning as the Strict Mode gating), so this
-    // is UX, not the actual enforcement.
+    // Flips both CTAs to the billing-portal path for an already-subscribed
+    // user. create-checkout-session re-checks this server-side too.
     let isPremiumUser = false
 
     async function handleUpgrade(e) {
       if (isPremiumUser) return handleManageSubscription(e)
-
       const btn = e.currentTarget
-
-      // Check if the user has an active session
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
-
       if (!accessToken) {
-        // Not logged in — redirect to dashboard login with a redirect param
-        // so after login the user continues to the checkout flow.
-        window.location.href = 'dashboard.html?redirect=upgrade'
+        window.location.href = DASHBOARD + '?redirect=upgrade'
         return
       }
-
-      // Disable button while we create the session
       const originalText = btn.textContent
       btn.textContent = 'Preparing checkout…'
       btn.disabled = true
-
       const { url, error } = await createCheckoutSession(accessToken, FOCUS_PRO_PRICE_ID)
-
       if (error || !url) {
         console.error('[PDS] Checkout error:', error)
         showToast(error || 'Something went wrong. Please try again.')
@@ -1324,27 +180,20 @@
         btn.disabled = false
         return
       }
-
-      // Redirect to Stripe-hosted checkout
       window.location.href = url
     }
 
-    // Redirects an already-Pro user to Stripe's Billing Portal (cancel /
-    // update payment method) instead of creating another subscription.
     async function handleManageSubscription(e) {
       const btn = e.currentTarget
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
       if (!accessToken) {
-        window.location.href = 'dashboard.html'
+        window.location.href = DASHBOARD
         return
       }
-
       const originalText = btn.textContent
       btn.textContent = 'Opening billing portal…'
       btn.disabled = true
-
       const { url, error } = await createPortalSession(accessToken)
-
       if (error || !url) {
         console.error('[PDS] Billing portal error:', error)
         showToast(error || 'Something went wrong. Please try again.')
@@ -1352,125 +201,22 @@
         btn.disabled = false
         return
       }
-
       window.location.href = url
     }
 
-    // Checks premium status and relabels both CTA buttons if the signed-in
-    // user is already subscribed — runs alongside updateNavCta() below.
     async function checkProCtaState() {
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
       if (!accessToken) return
-
       const session = await Auth.getStoredSession(webStorageAdapter)
       isPremiumUser = await fetchIsPremium(accessToken, session.user.id)
       if (!isPremiumUser) return
-
       document.getElementById('pro-cta').textContent = 'Manage subscription'
       document.getElementById('bottom-cta-btn').textContent = 'Manage subscription'
     }
 
-    // ─── Wire up all CTA buttons ───────────────────────────────────────────────
     document.getElementById('pro-cta').addEventListener('click', handleUpgrade)
     document.getElementById('bottom-cta-btn').addEventListener('click', handleUpgrade)
     checkProCtaState()
-
-    // ─── FAQ accordion ─────────────────────────────────────────────────────────
-    document.querySelectorAll('.faq-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const isOpen = item.classList.contains('open')
-        // Close all
-        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'))
-        // Toggle clicked
-        if (!isOpen) item.classList.add('open')
-      })
-    })
-
-    // ─── Account menu — shows the nav-cta pill when logged out, or an
-    // avatar + dropdown (Dashboard / Settings / Sign out) when logged in.
-    // Same pattern duplicated on index.html and dashboard.html.
-    async function initAccountMenu() {
-      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
-      const navCta = document.getElementById('nav-cta')
-      const menu = document.getElementById('account-menu')
-
-      if (!accessToken) {
-        menu.classList.add('hidden')
-        navCta.classList.remove('hidden')
-        return
-      }
-
-      const session = await Auth.getStoredSession(webStorageAdapter)
-      navCta.classList.add('hidden')
-      menu.classList.remove('hidden')
-      document.getElementById('account-email').textContent = session.user.email
-      document.getElementById('account-avatar-btn').textContent =
-        session.user.email.charAt(0).toUpperCase()
-    }
-
-    document.getElementById('account-avatar-btn').addEventListener('click', (e) => {
-      e.stopPropagation()
-      document.getElementById('account-dropdown').classList.toggle('open')
-    })
-
-    document.addEventListener('click', () => {
-      document.getElementById('account-dropdown').classList.remove('open')
-    })
-
-    document.getElementById('account-signout-btn').addEventListener('click', async () => {
-      await Auth.signOut(webStorageAdapter)
-      window.location.href = 'index.html'
-    })
-
-    initAccountMenu()
-
-    // ─── Entrance reveal ──────────────────────────────────────────────────
-    // Pairs with the [data-reveal]/.reveal/.in-view CSS (see the "Entrance
-    // reveal" comment near the top of this page's <style> block) — same
-    // code as index.html's own copy, see that page's comment for the full
-    // reasoning behind the reduced-motion check ordering.
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
-      const revealEls = document.querySelectorAll('[data-reveal]')
-      revealEls.forEach((el) => el.classList.add('reveal'))
-
-      const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          entry.target.classList.add('in-view')
-          revealObserver.unobserve(entry.target)
-        })
-      }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' })
-
-      revealEls.forEach((el) => revealObserver.observe(el))
-    }
-
-    // ─── Nav scroll blur ──────────────────────────────────────────────────
-    // Same code as index.html's own copy — see that page's identical block
-    // for the full reasoning (not gated behind reduced-motion, since this
-    // is a direct 1:1 response to scroll input, not an autoplaying effect).
-    const navEl = document.querySelector('.nav')
-    const NAV_SCROLL_RANGE = 120
-    const NAV_MAX_BLUR = 20
-    const NAV_MAX_BG_ALPHA = 0.82
-
-    function updateNavOnScroll() {
-      const progress = Math.min(window.scrollY / NAV_SCROLL_RANGE, 1)
-      navEl.style.setProperty('--nav-blur', `${(progress * NAV_MAX_BLUR).toFixed(2)}px`)
-      navEl.style.setProperty('--nav-bg-alpha', (progress * NAV_MAX_BG_ALPHA).toFixed(3))
-    }
-
-    let navScrollTicking = false
-    window.addEventListener('scroll', () => {
-      if (navScrollTicking) return
-      navScrollTicking = true
-      requestAnimationFrame(() => {
-        updateNavOnScroll()
-        navScrollTicking = false
-      })
-    }, { passive: true })
-
-    updateNavOnScroll()
   </script>
-
 </body>
 </html>

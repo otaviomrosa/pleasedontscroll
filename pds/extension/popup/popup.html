@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
   <title>Please Don't Scroll</title>
 </head>
@@ -23,15 +23,21 @@
       <button class="btn-ghost" id="logout-btn">Sign out</button>
     </div>
 
-    <div class="divider"></div>
-
     <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
     <!-- Friction/Strict is a per-user setting, not a profile property —
          any profile can run in either mode. -->
     <div class="mode-section">
       <span class="mode-label">Mode</span>
       <div class="mode-toggle" id="mode-toggle">
-        <button class="mode-option" data-mode="friction" id="mode-friction-btn">Friction</button>
+        <button class="mode-option" data-mode="friction" id="mode-friction-btn">
+          Friction
+          <!-- Shown only while a scheduled Strict block is in force — the
+               schedule, not Focus Pro, is what locks this one. -->
+          <svg class="lock-icon hidden" id="friction-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+          </svg>
+        </button>
         <button class="mode-option" data-mode="strict" id="mode-strict-btn">
           Strict
           <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -40,9 +46,13 @@
           </svg>
         </button>
       </div>
+      <!-- One quiet line under the toggle, hidden at rest. Two jobs, both
+           set by popup.js: a standing "Scheduled Strict until 11:00 PM"
+           while a scheduled block is in force, and a few-second notice
+           when the server refuses a mode/profile change (those used to
+           fail silently). -->
+      <p class="mode-status hidden" id="mode-status"></p>
     </div>
-
-    <div class="divider"></div>
 
     <!-- ─── Profile switcher ────────────────────────────────────────── -->
     <!-- Switching only — creating/deleting profiles is dashboard-only now
@@ -59,8 +69,6 @@
         <span class="profile-pill-skeleton"></span>
       </div>
     </div>
-
-    <div class="divider"></div>
 
     <!-- ─── Status block — moved to the bottom (was first): Mode and
          Profile are the only two things you actually act on in this
@@ -91,8 +99,6 @@
       </div>
     </div>
 
-    <div class="divider"></div>
-
     <p class="confirm-label">Leaving Strict Mode</p>
 
     <div class="confirm-ring">
@@ -107,7 +113,7 @@
       Are you sure about this? Remember why you activated Strict Mode.
     </p>
 
-    <button class="btn-ghost" id="confirm-cancel-btn">Stay in Strict Mode</button>
+    <button class="btn-light" id="confirm-cancel-btn">Stay in Strict Mode</button>
   </div>
 
   <!-- ─── Unauthenticated view ───────────────────────────────────────── -->
@@ -117,8 +123,6 @@
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
       </div>
     </div>
-
-    <div class="divider"></div>
 
     <p class="auth-headline">Sign in to activate<br>your blocklist.</p>
 

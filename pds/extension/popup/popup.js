@@ -61,6 +61,18 @@ function setResendResult(el, msg, isError) {
 
 // ─── Profile pill rendering ───────────────────────────────────────────────────
 
+// The last profile list rendered, so applyState() can re-render the pills
+// when the mode or premium flag changes after they were first drawn
+// (renderAppView() fetches profiles and state concurrently, so the first
+// render can't know either yet).
+let lastProfiles = null;
+
+// Same lock glyph the mode toggle uses (popup.html) — currentColor.
+const LOCK_SVG = `<svg class="lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+  <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+</svg>`;
+
 /**
  * Renders profile pills into #profile-pills.
  * Clicking an inactive pill sends SWITCH_PROFILE to the service worker.
@@ -68,6 +80,7 @@ function setResendResult(el, msg, isError) {
  * @param {Array<{id: string, name: string, is_active: boolean}>} profiles
  */
 function renderProfilePills(profiles) {
+  lastProfiles = profiles;
   const container = document.getElementById('profile-pills');
   container.innerHTML = '';
 
@@ -79,24 +92,40 @@ function renderProfilePills(profiles) {
     return;
   }
 
-  // profiles[0] is the oldest (fetchProfiles orders by created_at.asc) —
-  // the one free-tier account keeps. Anything after it is Focus-Pro-only;
-  // locked here for free users. Real enforcement is the trigger in
-  // 007_profile_limit.sql, not this.
+  // Two unrelated reasons a pill can be locked, same as the dashboard's
+  // tabs: profiles[0] is the oldest (fetchProfiles orders by
+  // created_at.asc) — the one a free account keeps; anything after it is
+  // Focus-Pro-only (enforced by 007_profile_limit.sql, not here). And in
+  // Strict Mode switching is simply unavailable (switch_active_profile()
+  // refuses it, 011/016), so a non-active pill isn't clickable at all —
+  // it used to send the request and show the refusal afterwards. Pro
+  // takes priority when both apply, since pricing is the useful click.
   profiles.forEach((profile, index) => {
-    const locked = !isPremium && index > 0;
+    const proLocked  = !isPremium && index > 0;
+    const modeLocked = !proLocked && currentBlockingMode === 'strict' && !profile.is_active;
 
     const pill = document.createElement('button');
-    pill.className = `profile-pill${profile.is_active ? ' active' : ''}${locked ? ' locked' : ''}`;
-    pill.textContent = profile.name;
+    pill.className = `profile-pill${profile.is_active ? ' active' : ''}${(proLocked || modeLocked) ? ' locked' : ''}${modeLocked ? ' mode-locked' : ''}`;
     pill.dataset.profileId = profile.id;
-    // .profile-pill truncates with an ellipsis past 140px (see popup.css),
-    // so the full name is still reachable via this native tooltip.
+
+    // .profile-pill-name truncates with an ellipsis (see popup.css), so
+    // the full name is still reachable via the native tooltip.
+    const name = document.createElement('span');
+    name.className = 'profile-pill-name';
+    name.textContent = profile.name;
+    pill.appendChild(name);
     pill.title = profile.name;
 
-    if (locked) {
+    if (proLocked || modeLocked) pill.insertAdjacentHTML('beforeend', LOCK_SVG);
+
+    if (proLocked) {
       pill.title = 'Unlock more profiles with Focus Pro';
       pill.addEventListener('click', () => chrome.tabs.create({ url: PRICING_URL }));
+    } else if (modeLocked) {
+      pill.title = scheduledStrictUntil !== null
+        ? scheduledStrictMessage()
+        : 'Leave Strict Mode to switch profiles';
+      pill.setAttribute('aria-disabled', 'true');
     } else if (!profile.is_active) {
       pill.addEventListener('click', () => handleSwitchProfile(profile.id));
     }
@@ -121,7 +150,10 @@ async function handleSwitchProfile(profileId) {
     }
   });
 
-  await chrome.runtime.sendMessage({ type: 'SWITCH_PROFILE', profileId });
+  const response = await chrome.runtime.sendMessage({ type: 'SWITCH_PROFILE', profileId });
+  // A refusal (Strict Mode, or a scheduled Strict block until X) used to
+  // just snap the pills back with no explanation.
+  if (response && !response.ok) showModeNotice(response.error || 'Could not switch profile.');
 
   // Re-fetch profiles and re-render to pick up any server-side changes.
   const accessToken = await getValidAccessToken();
@@ -147,9 +179,64 @@ const MODE_HINT_LOCKED = 'Strict Mode is a Focus Pro feature.';
 // this only controls what the popup shows/allows, not the source of truth.
 let isPremium = false;
 
+// Also from GET_STATE. Read by renderProfilePills(): in Strict Mode the
+// other profiles render locked instead of clickable.
+let currentBlockingMode = 'friction';
+
+// Epoch ms when the scheduled Strict block currently in force ends, or
+// null when none is (from GET_STATE's scheduledStrictUntil). While set,
+// the Friction option is locked: the server refuses to leave Strict until
+// the block ends, so offering the 30s hold would be a lie.
+let scheduledStrictUntil = null;
+
+function formatClock(ms) {
+  return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function scheduledStrictMessage() {
+  return `Scheduled Strict until ${formatClock(scheduledStrictUntil)}`;
+}
+
+let modeNoticeTimer = null;
+
+/**
+ * Renders #mode-status: the standing schedule line when a block is in
+ * force, otherwise hidden — unless a transient notice is showing.
+ */
+function renderModeStatus() {
+  if (modeNoticeTimer) return; // a notice is on screen; it restores this when it clears
+  const el = document.getElementById('mode-status');
+  el.classList.remove('notice');
+  if (scheduledStrictUntil) {
+    el.textContent = scheduledStrictMessage();
+    el.classList.remove('hidden');
+  } else {
+    el.textContent = '';
+    el.classList.add('hidden');
+  }
+}
+
+/**
+ * Shows a short-lived message in the same line (a refused mode or profile
+ * change, with the server's own reason), then hands the line back to
+ * renderModeStatus().
+ */
+function showModeNotice(message) {
+  const el = document.getElementById('mode-status');
+  clearTimeout(modeNoticeTimer);
+  el.textContent = message;
+  el.classList.add('notice');
+  el.classList.remove('hidden');
+  modeNoticeTimer = setTimeout(() => {
+    modeNoticeTimer = null;
+    renderModeStatus();
+  }, 4000);
+}
+
 /**
  * Reflects the given mode in the toggle buttons, plus the Strict Mode
- * lock icon/tooltip based on the last-known isPremium value.
+ * lock icon/tooltip based on the last-known isPremium value, and the
+ * Friction lock while a scheduled Strict block is in force.
  * @param {'friction' | 'strict'} mode
  */
 function renderModeToggle(mode) {
@@ -161,17 +248,26 @@ function renderModeToggle(mode) {
   strictBtn.classList.toggle('locked', !isPremium);
   strictBtn.title = isPremium ? '' : MODE_HINT_LOCKED;
   document.getElementById('strict-lock-icon').classList.toggle('hidden', isPremium);
+
+  const frictionLocked = scheduledStrictUntil !== null && mode === 'strict';
+  const frictionBtn = document.getElementById('mode-friction-btn');
+  frictionBtn.classList.toggle('locked', frictionLocked);
+  frictionBtn.title = frictionLocked ? scheduledStrictMessage() : '';
+  document.getElementById('friction-lock-icon').classList.toggle('hidden', !frictionLocked);
+
+  renderModeStatus();
 }
 
 /**
  * Sends SET_BLOCKING_MODE to the background service worker and reflects
- * the result (or reverts the UI if the write failed).
+ * the result (or reverts the UI and explains why if the write failed).
  * @param {'friction' | 'strict'} mode
  */
 async function handleSetMode(mode) {
   renderModeToggle(mode); // optimistic
   const response = await chrome.runtime.sendMessage({ type: 'SET_BLOCKING_MODE', mode });
   renderModeToggle(response?.ok ? response.blockingMode : (response?.blockingMode ?? mode));
+  if (response && !response.ok && response.error) showModeNotice(response.error);
 
   // Switching into Strict Mode also clears any active pause server-side
   // (see background/index.js's SET_BLOCKING_MODE handler) — refresh the
@@ -229,9 +325,18 @@ function cancelFrictionConfirm() {
  * its live re-check completes (see the onMessage listener below).
  */
 function applyState(state) {
+  const wasPremium = isPremium;
+  const prevMode   = currentBlockingMode;
   isPremium = state.isPremium === true;
+  currentBlockingMode = state.blockingMode === 'strict' ? 'strict' : 'friction';
+  scheduledStrictUntil = typeof state.scheduledStrictUntil === 'number' ? state.scheduledStrictUntil : null;
   document.getElementById('pro-tag').classList.toggle('hidden', !isPremium);
-  renderModeToggle(state.blockingMode ?? 'friction');
+  renderModeToggle(currentBlockingMode);
+
+  // The pills depend on both flags; redraw them if either just changed.
+  if (lastProfiles && (wasPremium !== isPremium || prevMode !== currentBlockingMode)) {
+    renderProfilePills(lastProfiles);
+  }
 
   const statLine = document.getElementById('stat-line');
 
@@ -417,6 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const current = document.querySelector('.mode-option.active')?.dataset.mode;
       if (current === 'strict' && btn.dataset.mode === 'friction') {
+        // A scheduled Strict block can't be left until it ends — the
+        // server would refuse after the 30s hold anyway, so say so now
+        // instead of making the user sit through a hold that can't succeed.
+        if (scheduledStrictUntil !== null) {
+          showModeNotice(`Strict Mode is scheduled until ${formatClock(scheduledStrictUntil)}.`);
+          return;
+        }
         startFrictionConfirm();
       } else {
         handleSetMode(btn.dataset.mode);

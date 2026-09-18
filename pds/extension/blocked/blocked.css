@@ -1,36 +1,38 @@
-/* blocked.css — Friction / Strict intercept screen */
+/* blocked.css — Friction / Strict intercept screen
+   Same language as /web and popup.css: flat, no borders or shadows,
+   pill controls, DM Sans for UI and Plus Jakarta Sans for the one
+   headline, color only for the mode. Own token set (separate document),
+   values copied from web/dashboard.html's :root on purpose. Every id
+   and class blocked.js touches is unchanged. */
 
-/* ─── Design tokens (matches web/index.html, pricing.html, dashboard.html) ────── */
+/* ─── Tokens ────────────────────────────────────────────────────────────────── */
 :root {
-  /* Back to pure #000000, matching dashboard.html's own token —
-     --black and --text stay equal on purpose (a consolidation, not a
-     new value). */
-  --black:        #000000;
-  --white:        #ffffff;
-  --text:         #000000;
-  --text-muted:   #8e8e93;
+  --ink:          #000000;
+  --paper:        #ffffff;
+  --black:        var(--ink);
+  --white:        var(--paper);
+  --text:         var(--ink);
+  --surface:      #f5f5f7;
+  --surface-deep: #e8e8ed;
+  --muted:        #6e6e73;
+  --text-muted:   var(--muted);
 
-  /* Both modes get their own color, matching popup.css's mode toggle.
-     Settled palette: teal for Friction, burgundy/wine ("Crimson
-     Bordeaux") for Strict — same tokens/values as popup.css's own
-     --friction/--strict. Naturalistic earth tones (sage, terracotta)
-     were explored and dropped in favor of these. */
-  --friction:     #4a90a4;
-  --friction-dim: rgba(74, 144, 164, 0.1);
-  --strict:       #b0203f;
-  --strict-dim:   rgba(176, 32, 63, 0.1);
+  --friction:     #296ce2;
+  --strict:       #d72f2f;
 
-  --radius-btn:   50px;
+  --radius-pill:  999px;
 
-  /* Progress ring (Friction Mode countdown) — neutral, not accent-colored */
-  --ring-track:   rgba(0, 0, 0, 0.10);
-  --ring-fill:    rgba(0, 0, 0, 0.65);
-  --ring-size:    180px;
+  /* Progress ring (Friction Mode countdown) — neutral, not mode-colored:
+     the mode pill above it already carries the color. */
+  --ring-track:   var(--surface-deep);
+  --ring-fill:    var(--ink);
+  --ring-size:    190px;
   --ring-radius:  100;            /* must match SVG r attribute */
   --ring-circum:  628.318;        /* 2π × 100  */
 
-  --font-ui:      'DM Sans', system-ui, sans-serif;
-  --font-serif:   'Lora', Georgia, serif;
+  --font-ui:      'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Reset / base ───────────────────────────────────────────────────────────── */
@@ -47,9 +49,15 @@ html, body {
 
 body {
   font-family: var(--font-ui);
-  color: var(--text);
-  background: var(--white);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
 }
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────────── */
 .scene {
@@ -71,10 +79,11 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 340px;
+  max-width: 380px;
 }
 
 /* ─── Logo ───────────────────────────────────────────────────────────────────── */
+/* The PNG is white-on-transparent; invert makes it ink on paper. */
 .logo {
   height: 26px;
   width: auto;
@@ -83,53 +92,45 @@ body {
 }
 
 /* ─── Mode pill ──────────────────────────────────────────────────────────────── */
-/* Base styling is Friction Mode's own look now (teal) — .strict
-   below overrides it for Strict Mode, same "base = friction, modifier =
-   strict" pattern blocked.js's classList.toggle('strict', ...) already
-   uses (it only ever adds/removes .strict, never a .friction class). */
+/* Solid mode color with white text — the same treatment as the popup's
+   active mode option, so "which mode am I in" looks identical in both
+   places. Base = Friction; blocked.js only ever toggles .strict. */
 .mode-pill {
-  display: inline-block;
-  font-family: var(--font-ui);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--friction);
-  background: var(--friction-dim);
-  border: 1px solid rgba(74, 144, 164, 0.3);
-  padding: 6px 16px;
-  border-radius: 100px;
-  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--friction);
+  margin-bottom: 22px;
 }
 
-.mode-pill.strict {
-  color: var(--strict);
-  background: var(--strict-dim);
-  border-color: rgba(176, 32, 63, 0.3);
-}
+.mode-pill.strict { background: var(--strict); }
 
 /* ─── Title ──────────────────────────────────────────────────────────────────── */
 .block-title {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: clamp(1.6rem, 4vw, 2.1rem);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
   margin-bottom: 12px;
 }
 
 /* ─── Site label ─────────────────────────────────────────────────────────────── */
 .site-label {
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--muted);
   margin-bottom: 2.25rem;
 }
 
 .site-name {
   font-weight: 500;
-  color: var(--text);
+  color: var(--ink);
 }
 
 /* ─── Circle assembly (Friction Mode countdown ring) ─────────────────────────── */
@@ -153,13 +154,13 @@ body {
 .progress-ring__track {
   fill: none;
   stroke: var(--ring-track);
-  stroke-width: 2;
+  stroke-width: 4;
 }
 
 .progress-ring__fill {
   fill: none;
   stroke: var(--ring-fill);
-  stroke-width: 2;
+  stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: var(--ring-circum);
   stroke-dashoffset: 0;        /* JS sets this to drain */
@@ -179,56 +180,52 @@ body {
 }
 
 .countdown {
-  font-family: var(--font-ui);
-  font-size: 2.1rem;
-  font-weight: 300;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   line-height: 1;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .countdown-label {
-  font-family: var(--font-ui);
-  font-size: 0.66rem;
-  font-weight: 400;
-  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 /* ─── Instruction / strict copy ──────────────────────────────────────────────── */
 .instruction,
 .strict-copy {
   font-size: 0.95rem;
-  font-weight: 400;
-  color: var(--text-muted);
+  color: var(--muted);
   line-height: 1.5;
-  max-width: 260px;
+  max-width: 280px;
   margin: 0 auto 2.25rem;
 }
 
 /* ─── Leave button ───────────────────────────────────────────────────────────── */
 .btn-leave {
-  background: var(--black);
-  color: var(--white);
-  border: none;
-  border-radius: var(--radius-btn);
-  font-family: var(--font-ui);
-  font-size: 0.9375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 28px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 14px 32px;
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
-  transition: opacity 0.18s, transform 0.18s;
-  letter-spacing: -0.01em;
+  transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
 }
 
-.btn-leave:hover  { opacity: 0.85; transform: translateY(-1px); }
-.btn-leave:active { opacity: 0.7; transform: translateY(0); }
+.btn-leave:hover  { opacity: 0.86; transform: translateY(-1px); }
+.btn-leave:active { transform: scale(0.98); }
 
 /* ─── Completion overlay ─────────────────────────────────────────────────────── */
-/*
-  Fades in when the 30s are up. JS adds .visible to trigger the transition.
-*/
+/* Fades in when the 30s are up. JS adds .visible to trigger the transition. */
 .completion-overlay {
   position: fixed;
   inset: 0;
@@ -238,7 +235,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
@@ -252,17 +249,21 @@ body {
 }
 
 .completion-message {
-  font-family: var(--font-serif);
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
-  font-weight: 400;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink);
   text-align: center;
-  letter-spacing: -0.01em;
 }
 
 .completion-sub {
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--muted);
   text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-leave, .completion-overlay, .progress-ring__fill { transition: none; }
 }

@@ -1,7 +1,7 @@
 // Queries against the `profiles` table. Used by the extension (background +
 // popup) and the web dashboard identically — see /core/types for the row shape.
 
-import { supabaseFetch } from './restClient.js';
+import { supabaseFetch, supabaseFetchDetailed } from './restClient.js';
 
 /** All profiles owned by the current user, oldest first. */
 export async function fetchProfiles(accessToken) {
@@ -43,12 +43,21 @@ export async function createProfile(accessToken, userId, name) {
  * SECURITY DEFINER and bypasses RLS — see that migration's comments.
  */
 export async function switchProfile(accessToken, userId, profileId) {
-  const result = await supabaseFetch('/rest/v1/rpc/switch_active_profile', accessToken, {
+  return (await switchProfileDetailed(accessToken, userId, profileId)).ok;
+}
+
+/**
+ * Same call as switchProfile(), but resolves to { ok, error } where `error`
+ * is the server's own rejection text — switch_active_profile() raises with
+ * a specific reason (Strict Mode, or a scheduled Strict block with its end
+ * time, see 011 and 016) that the popup shows verbatim.
+ */
+export async function switchProfileDetailed(accessToken, userId, profileId) {
+  const { error } = await supabaseFetchDetailed('/rest/v1/rpc/switch_active_profile', accessToken, {
     method: 'POST',
     body: JSON.stringify({ p_user_id: userId, p_profile_id: profileId }),
   });
-
-  return result !== null;
+  return { ok: error === null, error };
 }
 
 /** Deletes a profile. Its blocked_urls rows cascade-delete via the FK. */

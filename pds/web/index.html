@@ -3,1151 +3,333 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Please Don't Scroll</title>
-
+  <title>Please Don’t Scroll</title>
+  <meta name="description" content="Block the sites that eat your day. A 30-second pause before you open them, or a full lock. Profiles for work and evenings. Free to start on Chrome.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-
-  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg" />
-  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png" />
-  <link rel="manifest" href="assets/icons/favicon/site.webmanifest" />
-
-  <style>
-    /* ─── Design Tokens (matches dashboard.html / pricing.html) ─────────── */
-    :root {
-      /* Back to pure #000000, matching dashboard.html's/pricing.html's own
-         token — --black and --text stay equal on purpose (a
-         consolidation, not a new value: one less near-black in the
-         token set). */
-      --black:        #000000;
-      --white:        #ffffff;
-      --text:         #000000;
-      --text-muted:   #6e6e73;
-      --text-faint:   #aeaeb2;
-      --bg:           #ffffff;
-      --border:       rgba(0, 0, 0, 0.09);
-      --border-mid:   rgba(0, 0, 0, 0.14);
-
-      /* --accent-teal (general brand accent: hero eyebrow, section
-         eyebrows, the manifesto's closing line, the CTA band glow) and
-         --pro-gold (Pro-tier signaling: the Pro feature card, the Pro
-         plans-teaser card) — kept as two separate tokens for what they
-         mean, even though they're now the same color.
-         Went burgundy → royal blue → icy blue → two teal-cyan points on a
-         blue-to-teal hue-rotation strip → a muted violet (~264°, ~25%
-         saturation) → this: same violet hue, saturation raised to ~55%
-         (less muted, more vivid) — purple/violet is the dominant "Pro
-         tier" SaaS color archetype (Discord Nitro, Twitch Prime,
-         Grammarly Premium) and tests well for subscription conversion
-         specifically, without the urgency/alarm connotation warmer colors
-         (orange/red) carry. Same value extended to dashboard.html/
-         pricing.html too (their own --pro-gold/--accent-teal tokens).
-         Glow alphas (--accent-teal-glow/--pro-gold-glow/--shadow-pro's
-         ring) were bumped 0.22 → 0.38, 0.18 → 0.32 at one point, then
-         reverted back to the original 0.22/0.18 here — back to how it
-         started. */
-      --accent-teal:      #7741c8;
-      --accent-teal-dim:  rgba(119, 65, 200, 0.12);
-      --accent-teal-glow: rgba(119, 65, 200, 0.22);
-      --pro-gold:         #7741c8;
-      --pro-gold-dim:     rgba(119, 65, 200, 0.12);
-      --pro-gold-glow:    rgba(119, 65, 200, 0.22);
-
-      --radius-card:  24px;
-      --radius-btn:   50px;
-      --shadow-card:  0 4px 32px rgba(0, 0, 0, 0.06);
-      --shadow-pro:   0 24px 80px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(119, 65, 200, 0.18);
-
-      --font-ui:      'DM Sans', -apple-system, sans-serif;
-      --font-serif:   'Lora', serif;
-    }
-
-    /* ─── Reset ──────────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      font-family: var(--font-ui);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    /* ─── Entrance animations ────────────────────────────────────────── */
-    /* Two separate mechanisms now, not one — the original single
-       IntersectionObserver-driven system (used for both "on load" and "on
-       scroll" content, on the theory that already-visible elements would
-       just fire almost instantly) turned out unreliable for the
-       above-the-fold case in practice: whether the hero/cards' initial
-       intersection check actually fires before first paint depends on
-       exact layout timing, and it wasn't consistently replaying the same
-       way on every load the founder tested. Content that's *always* in
-       the first viewport (hero text, the three feature cards) doesn't
-       need "did this scroll into view" logic at all, so it's a plain
-       @keyframes animation now — runs unconditionally on load, same
-       result every single refresh, and lets the delay/order be set
-       exactly (animation-delay per element) instead of relying on
-       transition-delay racing an observer callback. [data-reveal] +
-       IntersectionObserver (below) is kept for what it's actually suited
-       for: manifesto/teaser/CTA sections further down, genuinely outside
-       the first viewport, where "wait for an actual scroll" is the whole
-       point. */
-    @media (prefers-reduced-motion: no-preference) {
-      @keyframes fade-in-up {
-        from { opacity: 0; transform: translateY(28px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-
-      /* Only used by .feature-card.pro below — same fade-up, but ending
-         at that card's own permanent translateY(-8px) lift instead of 0,
-         so the entrance doesn't flatten it back out once finished. */
-      @keyframes fade-in-up-lifted {
-        from { opacity: 0; transform: translateY(20px); }
-        to   { opacity: 1; transform: translateY(-8px); }
-      }
-
-      /* 0.8s/0.15s-stagger read as rushed per the founder — slowed to a
-         1.4s animation and a 0.28s stagger, both roughly double, for a
-         calmer, more deliberate feel instead of a quick snap-in. */
-      .enter {
-        opacity: 0;
-        animation: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-
-      .feature-card.pro.enter { animation-name: fade-in-up-lifted; }
-
-      /* 0.5s before anything starts, then each hero element +0.28s after
-         the previous so they appear one at a time in reading order
-         (headline, tagline, sub, button) rather than all at once. The
-         three cards no longer continue that same one-at-a-time sequence —
-         they all share enter-5, appearing together as one group right
-         after the hero finishes. */
-      .enter-1 { animation-delay: 0.5s; }
-      .enter-2 { animation-delay: 0.78s; }
-      .enter-3 { animation-delay: 1.06s; }
-      .enter-4 { animation-delay: 1.34s; }
-      .enter-5 { animation-delay: 1.62s; }
-
-      /* ── Scroll-triggered reveal, for content below the first viewport ── */
-      /* Same slower 1.4s duration as .enter above, for the same reason. */
-      .reveal {
-        opacity: 0;
-        transform: translateY(28px);
-        transition: opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
-                    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      .reveal.in-view {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ─── Nav ────────────────────────────────────────────────────────── */
-    /* No blur/tint at the very top of the page — both ramp up gradually
-       as the user scrolls, driven by --nav-blur/--nav-bg-alpha custom
-       properties this page's own <script> below sets directly on .nav in
-       proportion to scroll position (see that script's own comment).
-       Deliberately not a CSS transition on backdrop-filter/background —
-       a transition would animate toward whatever the scroll handler last
-       set with its own easing/delay, fighting the continuous scroll-driven
-       updates instead of tracking them; the gradualness here comes from
-       how often the scroll handler itself updates these properties, not
-       from CSS easing. The var() fallbacks (0px/0) are what keep the nav
-       fully transparent and unblurred if JS never runs. */
-    .nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 40px;
-      background: rgba(255, 255, 255, var(--nav-bg-alpha, 0));
-      backdrop-filter: blur(var(--nav-blur, 0px));
-      -webkit-backdrop-filter: blur(var(--nav-blur, 0px));
-    }
-
-    .nav-logo {
-      height: 24px;
-      width: auto;
-      filter: invert(1);
-      opacity: 0.933;
-      position: relative;
-      top: 3px;
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Test: logo is vertically symmetrical, so a 180° hover spin should
-       read as a clean flip rather than a lopsided rotation. Only on
-       index.html for now — roll out to pricing.html/dashboard.html once
-       confirmed it looks good. Counter-clockwise (negative deg); the
-       cubic-bezier gives a slow-start/fast-middle/slow-end feel instead of
-       the flatter default ease-in-out curve. */
-    .nav-logo:hover {
-      transform: rotate(-180deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-link {
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 24px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-link:hover {
-      color: var(--text);
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .nav-cta {
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: var(--white);
-      background: var(--black);
-      text-decoration: none;
-      padding: 8px 18px;
-      border-radius: var(--radius-btn);
-      transition: opacity 0.15s;
-    }
-
-    .nav-cta:hover { opacity: 0.78; }
-
-    /* ─── Account menu (shown instead of the Sign in pill once logged in,
-       same pattern duplicated on pricing.html and dashboard.html — no
-       shared component system in this build-free codebase) ─────────── */
-    .account-menu { position: relative; }
-
-    .account-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--black);
-      color: var(--white);
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .account-avatar:hover { opacity: 0.82; }
-
-    .account-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      right: 0;
-      min-width: 200px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-card);
-      padding: 8px;
-      display: none;
-      z-index: 200;
-    }
-
-    .account-dropdown.open { display: block; }
-
-    .account-dropdown-header {
-      padding: 8px 12px 10px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 6px;
-    }
-
-    .account-dropdown-email {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      word-break: break-all;
-    }
-
-    .account-dropdown-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-family: var(--font-ui);
-      font-size: 0.86rem;
-      color: var(--text);
-      text-decoration: none;
-      padding: 9px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .account-dropdown-item:hover { background: rgba(0, 0, 0, 0.05); }
-
-    .hidden { display: none !important; }
-
-    /* ─── Page sections ───────────────────────────────────────────────── */
-    .page {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 32px;
-    }
-
-    /* ─── Hero ───────────────────────────────────────────────────────── */
-    /* EXPERIMENT — reintroducing a background image, scoped to just this
-       section (see docs/ARCHITECTURE.md §4: full-page gouache backgrounds were tried
-       and dropped for reading inconsistent between pages; this is a much
-       narrower version of that same idea, confined to the hero only). Not
-       a real decision yet.
-       .hero itself stays laid out normally (padding still clears the
-       fixed nav above it); position:relative just gives ::before a
-       containing block. ::before is what actually paints the image, full
-       viewport width via the left:50%/translateX(-50%)/width:100vw
-       "break out of a constrained parent" trick — .hero sits inside .page
-       (max-width:1100px), so a plain background-image on .hero itself
-       would only fill that narrower centered column, not bleed edge to
-       edge the way a hero background normally does. z-index:-1 keeps it
-       behind the hero's own text content without needing z-index on every
-       child. The white gradient wash keeps hero-sub/hero-eyebrow legible
-       regardless of the image's own colors, rather than depending on
-       every future image choice happening to contrast well with black
-       text — soften/remove it if a specific image ends up not needing it. */
-    /* ─── Hero + How it works background band ───────────────────────────── */
-    /* Same trick as pricing.html's .pricing-top — wraps .hero AND #features
-       so the background image runs continuously behind both, not just the
-       hero text, ending exactly where #manifesto begins (that section
-       keeps its own plain white background + top divider, unaffected).
-       min-height: 100vh so the image fills at least the first screen even
-       on a short/tall monitor — see pricing.html's own comment on why;
-       here it mostly only matters on unusually short viewports, since
-       hero + a 3-card grid is already taller than 100vh on most screens.
-       #features' own border-top divider is suppressed (see its own
-       override below) since a line cutting through the middle of one
-       continuous image would look like a mistake, not a real section
-       break. */
-    .index-top {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .index-top::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 100vw;
-      transform: translateX(-50%);
-      background:
-        linear-gradient(rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 0)),
-        url('assets/images/hero-painting.png') center 0% / cover no-repeat;
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    /* margin-top: -40px raises the hero's own content within .index-top's
-       centered flex layout — padding-bottom increased by that same 40px
-       (100px → 140px) so hero's total outer height in the flex calc is
-       unchanged, which keeps #features/the cards exactly where they were
-       instead of also shifting up with it (a plain negative margin alone
-       would've raised the whole group together, same technique used on
-       pricing.html's .hero, which is exactly the effect NOT wanted here). */
-    .hero {
-      padding: 180px 0 100px;
-      margin-top: -100px;
-      text-align: center;
-    }
-
-    .hero-eyebrow {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent-teal);
-      background: var(--accent-teal-dim);
-      border: 1px solid rgba(119, 65, 200, 0.2);
-      padding: 5px 14px;
-      border-radius: var(--radius-btn);
-      margin-bottom: 28px;
-    }
-
-    .hero h1 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(3rem, 6vw, 5.5rem);
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      color: var(--black);
-      margin: 0 0 24px;
-    }
-
-    .hero h1 em {
-      font-style: normal;
-      color: var(--text-muted);
-    }
-
-    /* States plainly what the product is ("browser extension") — nothing
-       on this page said that word anywhere before this. Sits between the
-       h1 and hero-sub: bolder/darker than hero-sub since it's doing the
-       clarity work, but far smaller than the h1 since it's not the
-       headline. */
-    .hero-tagline {
-      font-family: var(--font-ui);
-      font-size: clamp(1.15rem, 2vw, 1.4rem);
-      font-weight: 500;
-      color: var(--text);
-      margin: 0 0 16px;
-    }
-
-    .hero-sub {
-      font-size: clamp(1rem, 1.6vw, 1.2rem);
-      font-weight: 400;
-      color: var(--text-muted);
-      max-width: 560px;
-      margin: 0 auto 40px;
-      line-height: 1.6;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--font-ui);
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: var(--white);
-      background: var(--black);
-      text-decoration: none;
-      padding: 14px 32px;
-      border-radius: var(--radius-btn);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
-      transition: opacity 0.18s, transform 0.18s;
-    }
-
-    /* The real Chrome mark (assets/images/chrome-logo.png), not the
-       hand-built SVG approximation tried first (three colored wedges + two
-       circles) — the founder supplied the actual asset. Full color, not
-       currentColor, since the actual brand mark's colors are the point
-       here (unlike the dashboard's quick-add chip icons, which
-       deliberately avoid exact brand color/detail). */
-    .btn-primary img {
-      flex-shrink: 0;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
-    }
-
-    .hero-secondary-link {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      border-bottom: 1px solid var(--border-mid);
-      padding-bottom: 1px;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .hero-secondary-link:hover {
-      color: var(--text);
-      border-color: var(--text);
-    }
-
-    /* ─── Section shell ──────────────────────────────────────────────── */
-    section.block {
-      border-top: 1px solid var(--border);
-      padding: 88px 0;
-    }
-
-    /* #features sits inside .index-top's continuous background image now
-       (see that class's own comment) — no divider line here, since a
-       border cutting through the middle of one image would read as a
-       mistake, not a real section break. #manifesto right after it keeps
-       its own border-top, marking the actual return to a plain white
-       background. */
-    #features {
-      border-top: none;
-    }
-
-    .section-eyebrow {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent-teal);
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .section-heading {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      color: var(--black);
-      text-align: center;
-      margin: 0 0 60px;
-    }
-
-    /* ─── How it works ───────────────────────────────────────────────── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      /* Pulls the cards up now that the eyebrow/heading above them are
-         gone — #features' own 88px top padding (shared via section.block)
-         alone left them sitting lower than they need to, with no heading
-         to justify the extra space anymore. */
-      margin-top: -100px;
-    }
-
-    @media (max-width: 800px) {
-      .features-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-    }
-
-    /* Glassy, not flat white — these cards sit directly on top of
-       .index-top's hero-painting background image, which is exactly what
-       makes a real frosted-glass effect visible (backdrop-filter blurs
-       whatever's actually behind the card; on a plain white section
-       there'd be nothing there to blur). Semi-transparent white
-       (not opaque var(--white)) is what lets that blurred image show
-       through at all; the inset highlight is a subtle top sheen line, the
-       classic "glass has a lit top edge" cue. Both pro and non-pro cards
-       share this same glass base now — the pro card no longer gets a
-       solid black fill, only its own accent border/glow (see
-       .feature-card.pro below) on top of the same glass. */
-    .feature-card {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      border-radius: var(--radius-card);
-      padding: 32px 28px;
-      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    }
-
-    .feature-index {
-      font-family: var(--font-ui);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 20px;
-    }
-
-    .feature-index.pro { color: var(--pro-gold); }
-
-    .feature-title {
-      font-family: var(--font-ui);
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text);
-      margin: 0 0 10px;
-    }
-
-    .feature-copy {
-      font-size: 0.92rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    /* Strict Mode card — no longer the solid black fill the Pro plan card
-       on pricing.html uses; stays on the same glass base as the other two
-       (backdrop-filter inherited from .feature-card), just with an
-       accent-tinted glass edge standing in for what used to be a
-       color-block distinction. Background alpha and box-shadow now match
-       .feature-card exactly (0.55, --shadow-card) rather than a heavier
-       0.65/--shadow-pro pairing tried first — that heavier, more opaque
-       combination read as a solid lifted card with a shadow under it, not
-       glass, next to the airier side cards; matching their weight exactly
-       (border-color is the only thing still distinguishing this card) is
-       what actually makes it read as the same kind of glass, not just
-       technically using the same backdrop-filter property. box-shadow is
-       still repeated here (not just swapped in) alongside the same inset
-       sheen .feature-card sets, since box-shadow replaces rather than
-       merges with the base rule's value. A corner radial-glow ::before
-       (matching pricing.html's Pro card) was tried and dropped earlier —
-       too much purple on top of the tinted glass border/shadow already
-       doing that distinguishing work. */
-    .feature-card.pro {
-      background: rgba(255, 255, 255, 0.55);
-      border-color: var(--pro-gold-glow);
-      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-      transform: translateY(-8px);
-    }
-
-    /* ─── Manifesto ──────────────────────────────────────────────────── */
-    .manifesto-inner {
-      max-width: 680px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .manifesto-inner p {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      line-height: 1.7;
-      margin: 0 0 24px;
-    }
-
-    .manifesto-inner p:last-of-type { margin-bottom: 0; }
-
-    .manifesto-inner strong { color: var(--text); font-weight: 600; font-size: 1.15rem}
-
-    .manifesto-exit {
-      display: inline-block;
-      margin-top: 40px;
-      font-family: var(--font-serif);
-      font-style: italic;
-      font-size: 1.15rem;
-      color: var(--accent-teal);
-    }
-
-    /* ─── Plans teaser ───────────────────────────────────────────────── */
-    .plans-teaser-inner { max-width: 680px; margin: 0 auto; text-align: center; }
-
-    .plans-teaser-cards {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 0 0 36px;
-    }
-
-    @media (max-width: 540px) {
-      .plans-teaser-cards { grid-template-columns: 1fr; }
-    }
-
-    .teaser-card {
-      border: 1px solid var(--border-mid);
-      border-radius: var(--radius-card);
-      padding: 28px 24px;
-      text-align: left;
-      background: var(--white);
-      box-shadow: var(--shadow-card);
-    }
-
-    .teaser-card-pro {
-      background: var(--black);
-      border-color: var(--pro-gold-glow);
-      box-shadow: var(--shadow-pro);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .teaser-card-pro::before {
-      content: '';
-      position: absolute;
-      top: -60px;
-      right: -60px;
-      width: 220px;
-      height: 220px;
-      background: radial-gradient(circle at center, var(--pro-gold-glow) 0%, transparent 65%);
-      pointer-events: none;
-      border-radius: 50%;
-    }
-
-    .teaser-card-pro > * {
-      position: relative;
-    }
-
-    .teaser-card-plan {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .teaser-card-pro .teaser-card-plan { color: var(--pro-gold); }
-
-    .teaser-card-price {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 2.6rem;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      color: var(--black);
-      margin-bottom: 20px;
-    }
-
-    .teaser-card-price span {
-      font-size: 1rem;
-      font-family: var(--font-ui);
-      font-weight: 400;
-      color: var(--text-muted);
-      letter-spacing: 0;
-    }
-
-    .teaser-card-pro .teaser-card-price { color: var(--white); }
-    .teaser-card-pro .teaser-card-price span { color: rgba(255, 255, 255, 0.4); }
-
-    .teaser-features {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .teaser-features li {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      padding-left: 18px;
-      position: relative;
-    }
-
-    .teaser-features li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.4;
-    }
-
-    .teaser-card-pro .teaser-features li { color: rgba(255, 255, 255, 0.55); }
-
-    .plans-teaser-cta {
-      display: inline-block;
-      font-size: 0.92rem;
-      font-weight: 500;
-      color: var(--text);
-      text-decoration: none;
-      padding: 12px 28px;
-      border-radius: var(--radius-btn);
-      border: 1px solid var(--border-mid);
-      transition: background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
-    }
-
-    .plans-teaser-cta:hover {
-      background: var(--black);
-      color: var(--white);
-      border-color: var(--black);
-      transform: translateY(-1px);
-    }
-
-    /* ─── Closing CTA band ───────────────────────────────────────────── */
-    .cta-band {
-      background: var(--black);
-      position: relative;
-      overflow: hidden;
-      text-align: center;
-      padding: 100px 0;
-    }
-
-    .cta-band::before {
-      content: '';
-      position: absolute;
-      top: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 560px;
-      height: 560px;
-      background: radial-gradient(circle at center, var(--accent-teal-glow) 0%, transparent 65%);
-      pointer-events: none;
-    }
-
-    .cta-band-inner { position: relative; z-index: 1; }
-
-    .cta-band h2 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(2rem, 4.5vw, 3.25rem);
-      letter-spacing: -0.02em;
-      color: var(--white);
-      margin: 0 0 20px;
-    }
-
-    .cta-band p {
-      font-size: 1.02rem;
-      color: rgba(255, 255, 255, 0.55);
-      max-width: 460px;
-      margin: 0 auto 40px;
-      line-height: 1.6;
-    }
-
-    .btn-on-dark {
-      display: inline-block;
-      font-family: var(--font-ui);
-      font-size: 0.98rem;
-      font-weight: 500;
-      color: var(--black);
-      background: var(--white);
-      text-decoration: none;
-      padding: 14px 32px;
-      border-radius: var(--radius-btn);
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.25);
-      transition: opacity 0.18s, transform 0.18s;
-    }
-
-    .btn-on-dark:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
-    }
-
-    /* ─── Footer ─────────────────────────────────────────────────────── */
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 48px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .footer-brand {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    .footer-links { display: flex; gap: 24px; }
-
-    .footer-links a {
-      font-size: 0.82rem;
-      color: var(--text-faint);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .footer-links a:hover { color: var(--text); }
-
-    .footer-copy { font-size: 0.78rem; color: var(--text-faint); }
-
-    /* ─── Responsive ─────────────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .nav { padding: 16px 24px; }
-      .nav-link { display: none; }
-      .page { padding: 0 20px; }
-      .hero { padding: 130px 0 70px; }
-      section.block { padding: 64px 0; }
-      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
-    }
-  </style>
-  <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
-  <!-- Plain script tag, not the @vercel/analytics npm package — that
-       package's framework integrations (e.g. the Next.js one) don't apply
-       here, since this is a build-free static site with no bundler. This
-       is Vercel's own vanilla-HTML integration path. Requires "Web
-       Analytics" enabled for this project in the Vercel dashboard, or the
-       script 404s harmlessly and nothing is tracked. -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="assets/icons/favicon/site.webmanifest">
+  <link rel="stylesheet" href="site.css">
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
+
   <nav class="nav">
-    <a href="index.html">
-      <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-    </a>
-    <div class="nav-links">
-      <a href="pricing.html" class="nav-link">Pricing</a>
-      <a href="dashboard.html" class="nav-cta" id="nav-cta">Sign in</a>
-      <div class="account-menu hidden" id="account-menu">
-        <button class="account-avatar" id="account-avatar-btn"></button>
-        <div class="account-dropdown" id="account-dropdown">
-          <div class="account-dropdown-header">
-            <div class="account-dropdown-email" id="account-email"></div>
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="nav__links">
+        <a href="pricing.html" class="nav__link">Pricing</a>
+        <a href="dashboard.html" class="btn btn--ink" id="nav-cta">Sign in</a>
+        <div class="account hidden" id="account-menu">
+          <button class="account__avatar" id="account-avatar-btn" aria-label="Account menu"></button>
+          <div class="account__menu" id="account-dropdown">
+            <div class="account__email" id="account-email"></div>
+            <a href="dashboard.html" class="account__item">Dashboard</a>
+            <a href="dashboard.html#settings-card" class="account__item">Settings</a>
+            <button class="account__item" id="account-signout-btn">Sign out</button>
           </div>
-          <a href="dashboard.html" class="account-dropdown-item">Dashboard</a>
-          <a href="dashboard.html#settings-card" class="account-dropdown-item">Settings</a>
-          <button class="account-dropdown-item" id="account-signout-btn">Sign out</button>
         </div>
       </div>
     </div>
   </nav>
 
-  <div class="page">
+  <main id="main">
 
-    <!-- ─── Hero + How it works share one background image (see
-         .index-top::before) — wrapped together so the image runs
-         continuously from under the nav down to exactly the 100vh mark,
-         not just behind the hero text. ─────────────────────────────── -->
-    <div class="index-top">
-
-    <!-- ─── Hero ────────────────────────────────────────────────────────── -->
     <section class="hero">
-      <!--<div class="hero-eyebrow">Now on Chrome • iPhone Coming Soon</div> -->
-      <h1 class="enter enter-1">Please Don't Scroll.</h1>
-      <p class="hero-tagline enter enter-2">The website blocker that adapts to your day</p>
-      <p class="hero-sub enter enter-3">
-        Pause before opening social media, or lock it completely. Choose the boundary that fits your day.
-      </p>
-      <div class="hero-actions enter enter-4">
-        <a href="dashboard.html" class="btn-primary">
-          <img src="assets/images/chrome-logo.png" alt="" width="20" height="20">
-          Add to Chrome
-        </a>
-      </div>
-    </section>
-
-    <!-- ─── How it works ────────────────────────────────────────────────── -->
-    <section class="block" id="features">
-      <div class="features-grid">
-        <div class="feature-card enter enter-5">
-          <p class="feature-index">Free</p>
-          <h3 class="feature-title">Friction Mode</h3>
-          <p class="feature-copy">
-            A 30-second breathing hold stands between you and the feed. A genuine
-            interruption, not a tap-through. Enough to break the reflex, every time.
-          </p>
-        </div>
-        <div class="feature-card pro enter enter-5">
-          <p class="feature-index pro">Pro</p>
-          <h3 class="feature-title">Strict Mode</h3>
-          <p class="feature-copy">
-            No countdown, no bypass. Once a site is locked for the session, it stays
-            locked, built for people who've decided negotiating with themselves isn't working.
-          </p>
-        </div>
-        <div class="feature-card enter enter-5">
-          <p class="feature-index">Free</p>
-          <h3 class="feature-title">Built around your day</h3>
-          <p class="feature-copy">
-            Every plan starts with a profile built around how you actually work. Add
-            Deep Work, Evening Unwind, and more on Focus Pro, each with its own
-            blocklist and mode.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    </div><!-- /.index-top -->
-
-    <!-- ─── Manifesto ───────────────────────────────────────────────────── -->
-    <section class="block" id="manifesto">
-      <div class="manifesto-inner" data-reveal>
-        <p><strong>Every feed you use runs on a variable reward loop, the same mechanism as a slot machine.</strong></p>
-        <p>
-          That's not a metaphor, it's the design brief. Teams of engineers are paid to
-          keep you scrolling past the point you meant to stop, and willpower alone
-          doesn't hold up against systems built by people whose only job is to beat it.
-          What works instead is structure: boundaries you don't get to renegotiate in
-          the moment you're most likely to give in.
-        </p>
-        <p><strong>That's the whole premise here.</strong></p>
-        <p>
-          Every scroll you don't take back is an hour you don't get back either: hours
-          that were going toward work that matters, people in your life, or just sleep.
-          Please Don't Scroll treats that time like the asset it is, and gives you two
-          ways to protect it: friction for everyday discipline, and a stricter mode for
-          when discipline needs to be enforced, not negotiated.
-        </p>
-        <span class="manifesto-exit">Decide once. Let the system hold the line.</span>
-      </div>
-    </section>
-
-    <!-- ─── Plans teaser ────────────────────────────────────────────────── -->
-    <section class="block">
-      <div class="plans-teaser-inner" data-reveal>
-        <p class="section-eyebrow">Pricing</p>
-        <h2 class="section-heading">Built to be free.<br>Grown to be powerful.</h2>
-
-        <div class="plans-teaser-cards">
-          <div class="teaser-card">
-            <p class="teaser-card-plan">Free</p>
-            <p class="teaser-card-price">$0<span>/mo</span></p>
-            <ul class="teaser-features">
-              <li>Site blocking</li>
-              <li>Breathing friction</li>
-              <li>1 profile</li>
-            </ul>
-          </div>
-          <div class="teaser-card teaser-card-pro">
-            <p class="teaser-card-plan">Focus Pro</p>
-            <p class="teaser-card-price">$4.99<span>/mo</span></p>
-            <ul class="teaser-features">
-              <li>Strict Mode</li>
-              <li>Unlimited profiles</li>
-              <li>Focus analytics</li>
-            </ul>
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <h1 class="display">Stop scrolling for good.</h1>
+          <p class="lede">Block the sites that eat your day. Take a <span class="nowrap">30-second</span> breath before opening them, or lock them completely.</p>
+          <div class="hero__actions">
+            <a href="dashboard.html" class="btn btn--ink btn--lg">Get started free</a>
+            <a href="#modes" class="textlink">See how it works</a>
           </div>
         </div>
-
-        <a href="pricing.html" class="plans-teaser-cta">View all plans &rarr;</a>
+        <div class="hero__art">
+          <div class="stage">
+            <!-- One burst carrying both mode colors, so there is no second
+                 copy and no rotation. The two arms are the same drawing, the
+                 blue one placed by its own matrix inside the file. Fills are
+                 the tokens rather than the exported hexes, so the drawing
+                 follows the palette instead of pinning it. -->
+            <svg class="burst" viewBox="0 0 145 153" aria-hidden="true">
+              <path d="M41.5 8.06C44.99 11.56 47.19 19.98 49.65 24.54C50.55 26.22 51.9 28.6 49.64 29.8C47.01 31.19 46 28.59 45.18 26.67C43.45 22.66 38.09 13.43 38.17 9.5C39.28 9.02 40.39 8.54 41.5 8.06ZM111.52 21.17C112.66 21.74 114.18 22.64 113.91 24.15C113.53 26.2 103.6 34.4 101.54 36.37C100.17 37.68 98.29 40.48 96.24 38.93C93.47 36.84 96.09 34.89 97.82 33.32C102 29.53 106.44 23.69 111.52 21.17ZM125.83 78.3C127.45 84.34 118.26 81.9 115.15 80.5C115.15 79.46 115.15 78.41 115.15 77.37C118.71 77.68 122.27 77.99 125.83 78.3ZM20.5 79.24C20.95 80.11 21.41 80.97 21.86 81.83C20.97 83.92 15.69 86.98 13.5 87.1C12.27 86.05 11.83 85.13 12.07 83.5C14.88 82.08 17.69 80.66 20.5 79.24ZM72.83 110.25C74.21 115.19 73.8 120.74 74.26 125.83C74.44 127.86 75.39 130.68 74.81 132.66C74.34 134.28 72.47 134.08 71.21 133.83C69.83 131.97 70.08 129.39 69.93 127.17C69.65 122.79 67.5 115.21 68.36 111.19C68.78 109.2 71.54 109.47 72.83 110.25Z" transform="translate(0 5.47088)" fill="var(--strict)" fill-rule="evenodd"/>
+              <path d="M41.5 8.06C44.99 11.56 47.19 19.98 49.65 24.54C50.55 26.22 51.9 28.6 49.64 29.8C47.01 31.19 46 28.59 45.18 26.67C43.45 22.66 38.09 13.43 38.17 9.5C39.28 9.02 40.39 8.54 41.5 8.06ZM111.52 21.17C112.66 21.74 114.18 22.64 113.91 24.15C113.53 26.2 103.6 34.4 101.54 36.37C100.17 37.68 98.29 40.48 96.24 38.93C93.47 36.84 96.09 34.89 97.82 33.32C102 29.53 106.44 23.69 111.52 21.17ZM125.83 78.3C127.45 84.34 118.26 81.9 115.15 80.5C115.15 79.46 115.15 78.41 115.15 77.37C118.71 77.68 122.27 77.99 125.83 78.3ZM20.5 79.24C20.95 80.11 21.41 80.97 21.86 81.83C20.97 83.92 15.69 86.98 13.5 87.1C12.27 86.05 11.83 85.13 12.07 83.5C14.88 82.08 17.69 80.66 20.5 79.24ZM72.83 110.25C74.21 115.19 73.8 120.74 74.26 125.83C74.44 127.86 75.39 130.68 74.81 132.66C74.34 134.28 72.47 134.08 71.21 133.83C69.83 131.97 70.08 129.39 69.93 127.17C69.65 122.79 67.5 115.21 68.36 111.19C68.78 109.2 71.54 109.47 72.83 110.25Z" transform="matrix(-0.23369 -0.97231 0.97231 -0.23369 19.56543 157.7305)" fill="var(--friction)" fill-rule="evenodd"/>
+            </svg>
+            <!-- The drawing carries its own mark and caption. Its first path is the
+                 whole box minus the ink; clipping that to the union of every
+                 artwork region (every subpath after the outer rectangle, which
+                 together make the monitor's footprint including the stand)
+                 fills the body white and leaves the colored ground alone. -->
+            <svg class="ink ink--drawn" viewBox="0 0 1107 1084" role="img" aria-label="A hand-drawn computer monitor showing the Please Don't Scroll mark and the words Website blocked" style="color:#000">
+              <defs>
+                <clipPath id="monitor-body">
+                <path d="M660.47 720.5C672.7 718.61 685.21 721.06 697.5 720.05C713.46 718.74 729.48 719.18 745.5 718.96C759.53 718.76 773.47 717.38 787.5 717.24C794.44 717.18 801.48 717.99 808.5 717.89C820.73 717.72 833.3 716.94 845.5 716.03C851.55 715.57 858.17 715 864.24 715.48C868.05 715.78 871.63 716.32 875.5 716.04C891.16 714.89 908.46 710.21 920.95 700.48C928.7 694.44 931.94 684.82 934.43 675.9C937.43 665.17 936.61 659.36 936.99 648.5C937.13 644.44 938.03 640.61 937.94 636.5C937.88 633.4 936.89 630.57 936.74 627.5C936.43 621.41 937 615.51 937.1 609.5C937.19 604.16 936.61 598.85 936.85 593.5C937.35 582.83 936.43 572.17 936.76 561.5C937.13 549.48 938.59 537.59 938.57 525.5C938.56 519.12 937.4 512.87 937.13 506.5C936.93 501.79 937.69 497.18 937.62 492.5C937.53 486.16 936.39 479.83 936.05 473.5C935.3 459.48 937.3 445.49 936.98 431.5C936.74 421.16 935.17 410.77 935.08 400.5C934.97 388.17 937.1 375.82 937.58 363.48C937.99 352.76 936.09 342.19 936.87 331.5C937.9 317.24 936.85 302.9 936.21 288.5C936.03 284.54 936.67 280.43 936.09 276.5C935.29 271.14 932.68 266.1 931.6 260.83C931.07 258.21 931.22 255.53 930.55 252.88C928.38 244.36 922.45 230.71 915.8 224.73C892.11 203.41 864.59 203.96 834.56 201.6C830.53 201.28 826.54 200.42 822.5 200.16C816.85 199.8 811.15 200.48 805.5 199.89C794.84 198.77 784.18 197.51 773.5 196.72C763.17 195.95 752.83 196.51 742.5 196.21C720.8 195.57 699.23 198.61 677.5 198.21C660.28 197.89 642.76 194.51 625.5 195.9C617.21 196.56 608.83 196.55 600.53 197.29C588.58 198.36 576.52 199.56 564.5 199.52C555.51 199.49 546.38 198.18 537.45 197.32C528.22 196.44 518.77 196.54 509.5 196.17C493.76 195.52 478.16 198.06 462.5 198.04C447.78 198.02 433.22 196.99 418.5 197.09C407.79 197.16 397.17 198.31 386.46 198.55C377.57 198.75 368.38 198.01 359.5 198.93C352.13 199.69 344.84 200.94 337.47 201.75C331.05 202.46 324.62 202.09 318.2 202.52C309.29 203.13 300.36 204.11 291.5 204.83C285.51 205.33 279.48 204.44 273.5 204.4C264.86 204.34 256.06 205.04 247.45 205.62C232.05 206.67 215.43 206.67 201.23 213.69C193.15 217.69 185.73 225.89 182.85 234.46C182.19 236.45 182.47 238.44 181.99 240.44C181.41 242.88 179.79 245.07 179.23 247.57C176.45 259.9 176.62 272.97 175.36 285.5C174.11 297.89 172.56 309.97 172.85 322.5C173.05 331.28 171.02 339.7 171.23 348.5C171.33 352.93 172.25 357.19 172.83 361.53C173.45 366.13 173.25 371.08 173.53 375.71C174.31 389.02 173.11 402.26 173.12 415.5C173.12 423.74 174.27 431.79 174.5 440C174.67 446.16 173.92 452.32 174.06 458.5C174.32 469.86 174.82 481.13 174.21 492.5C173.84 499.52 173.01 506.48 172.85 513.5C172.72 519.25 173.63 524.79 173.87 530.5C174.34 541.45 172.73 552.51 172.78 563.5C172.81 569.95 173.96 576.24 174.61 582.63C175.14 587.81 174.73 593.29 174.9 598.5C175.44 614.61 176.41 630.5 177.78 646.54C178.1 650.28 177.19 653.72 178.06 657.47C178.89 661.05 180.62 664.38 181.52 667.91C185.1 681.99 186.09 694.09 198.58 703.93C209.18 712.27 235.85 716.65 249.26 717.47C253.68 717.74 258 716.86 262.46 717.31C266.8 717.75 271.16 718.61 275.5 718.85C281.83 719.2 288.17 718.56 294.5 718.88C300.54 719.19 306.37 719.98 312.5 719.88C321.83 719.72 331.17 718.66 340.5 718.32C351.64 717.9 362.95 718.46 374.06 717.5C389.48 716.16 405 716.25 420.5 716.62C429.99 716.85 443.14 716.51 452.18 718.5C454.26 723.2 453.78 733 454.12 738.5C454.74 748.67 454.32 758.32 453.9 768.5C453.62 775.15 454.7 781.52 452.5 787.98C436.63 789.51 420.45 789.71 404.5 789.15C393.32 788.76 382.65 788.03 371.5 788.96C357.43 790.14 341.6 790.47 331.59 802.1C327.55 806.79 323.75 817.41 323.06 823.5C322.83 825.49 323.11 827.47 322.82 829.45C322.34 832.65 320.89 835.67 320.49 838.92C320.2 841.19 320.72 843.25 320.73 845.5C320.76 850.22 319.18 854.82 319.16 859.5C319.1 869.08 323.4 878.62 330.49 885.03C339.85 893.5 357.58 894.49 369.5 894.78C374.18 894.9 378.82 895.72 383.5 895.92C393.8 896.36 404.27 894.84 414.5 894.22C423.17 893.69 431.82 894.61 440.5 894.26C448.87 893.91 457.21 895.13 465.53 895.68C479.83 896.62 494.24 896.68 508.53 896.43C511.87 896.38 515.14 897.15 518.5 896.94C523.21 896.64 527.85 895.43 532.5 894.89C535.49 894.54 538.51 895.01 541.5 894.84C549.17 894.42 556.81 893.67 564.5 893.32C586.13 892.33 607.85 891.02 629.5 891.99C633.5 892.16 637.49 893.05 641.47 893.42C645.79 893.83 650.17 893.36 654.5 893.64C666.82 894.43 679.15 895.3 691.5 895.67C702.81 896.01 714.24 894.8 725.5 894.28C730.82 894.04 736.2 894.58 741.5 894.1C745.21 893.77 748.86 892.56 752.55 892.35C757.21 892.08 761.75 892.38 766.2 890.62C787.75 882.09 786.15 866.49 786.06 846.5C786.02 839.06 786.92 831.94 786.01 824.5C784.5 812.14 779.97 797.25 766.35 793.22C742.34 786.12 716.31 787.33 691.5 787.85C680.77 788.07 669.06 790.21 658.5 787.89C656.42 783.15 657.82 778.51 657.72 773.5C657.47 761.79 658.53 750.23 658.63 738.5C658.68 732.87 657.36 725.28 660.47 720.5Z"/>
+                <path d="M617.73 214.43C626.09 213.41 635.13 214.37 643.5 214.89C655.77 215.66 668.2 216.63 680.5 216.71C699.52 216.84 718.49 214.6 737.5 214.73C765.58 214.93 793.67 217.97 821.55 220.66C844.88 222.92 875.11 220.33 894.1 236.43C919.37 257.86 911.07 299.56 912.8 328.5C913.4 338.42 914.11 348.55 913.66 358.5C913.19 368.84 912.07 379.16 911.71 389.5C911.5 395.24 912.48 400.8 912.65 406.5C912.83 412.85 911.82 419.14 911.79 425.5C911.72 438.17 912.62 450.86 913.1 463.5C913.47 473.52 912.67 483.51 912.99 493.5C913.43 506.83 914.79 520.16 915.21 533.5C915.46 541.47 914.22 549.35 913.52 557.23C912.86 564.62 913.15 572.06 913.11 579.5C913.04 592.5 912.63 605.53 912.69 618.5C912.72 624.18 911.89 629.8 912.22 635.5C913.08 650.2 916.1 667.1 906.33 679.82C899.36 688.89 885.11 692.58 874.25 693.53C868.72 694.02 863.06 693.02 857.5 693.01C841.17 692.97 824.83 694.4 808.5 695.15C800.85 695.5 793.14 694.97 785.5 694.83C774.16 694.63 762.84 695.11 751.5 695.13C747.44 695.14 743.53 695.67 739.5 695.88C728.87 696.43 718.15 696.08 707.5 696.28C692.17 696.57 676.83 697.33 661.5 697.12C626.79 696.64 592.19 693.91 557.5 693.23C529.16 692.67 500.83 693.6 472.5 694.34C461.5 694.63 450.5 693.2 439.5 692.97C415.23 692.45 390.7 692.92 366.5 694.56C358.18 695.12 349.82 694.66 341.5 695.21C331.19 695.88 319.74 697.17 309.5 696.87C295.2 696.45 280.81 694.92 266.5 695.03C252.17 695.15 223.67 694.03 212.52 683.99C207.63 679.58 203.43 667.95 201.62 661.78C198.19 650.1 198.64 639.56 198.13 627.5C197.65 616.17 197.6 604.82 197.05 593.5C196.66 585.48 195.59 577.47 195.22 569.5C194.72 558.86 195.51 548.13 195.93 537.5C196.25 529.2 195.77 520.82 195.8 512.5C195.84 500.54 194.64 488.41 195.18 476.5C195.85 461.84 197.34 447.31 197.03 432.5C196.9 426.18 195.88 419.8 196.01 413.5C196.07 410.78 196.88 408.22 196.99 405.5C197.15 401.4 196.26 397.54 195.99 393.5C195.76 390.17 196.25 386.82 195.96 383.5C194.8 370.15 194.23 356.85 194.82 343.5C195.03 338.98 194.58 334.99 195.15 330.5C196.78 317.61 196.46 304.46 197.29 291.52C197.47 288.8 198.42 286.21 198.57 283.44C199.04 274.35 199.12 265.34 200.74 256.4C202.34 247.58 204.32 237.21 212.94 232.46C224.43 226.11 247.33 226.25 260.5 226.05C264.89 225.99 269.13 225.14 273.5 224.94C290.52 224.16 307.51 223.23 324.5 222.02C339.89 220.92 355.13 219.25 370.53 218.34C378.87 217.85 387.19 218.54 395.5 218.28C417.5 217.59 439.49 217.71 461.5 217.1C474.2 216.75 486.81 215.29 499.5 215.24C523.23 215.15 546.84 216.89 570.55 217.54C585.68 217.95 602.74 216.25 617.73 214.43Z"/>
+                <path d="M514.57 260.46C487.47 261.84 460.46 263.27 433.5 266.2C411.95 268.54 390.34 272.79 368.5 270.94C346.88 269.11 325.27 266.46 303.5 266.75C289.22 266.94 274.17 268.18 261.69 276.18C246.47 285.94 237.62 304.87 237.14 322.5C236.76 336.56 240.27 350.52 241.14 364.5C241.68 373.23 240.8 381.82 241.05 390.5C242.76 449.19 232.74 507.73 235.16 566.5C235.61 577.24 236.76 587.81 237.74 598.51C239.37 616.43 239.86 630.52 253.9 643.61C262.74 651.85 274.71 655.38 286.33 657.28C314.78 661.92 343.76 658.48 372.5 660.11C397.8 661.53 423.05 658.19 448.5 658.92C459.52 659.23 470.47 660.41 481.5 660.6C495.48 660.85 509.54 659.44 523.5 659.99C525.87 660.08 528.13 660.72 530.5 660.83C537.16 661.13 543.84 660.42 550.5 660.4C567.83 660.34 585.17 660.57 602.5 660.46C614.85 660.38 627.14 661.13 639.5 660.85C663.83 660.28 688.12 657.13 712.5 657.75C735.18 658.33 757.93 660.33 780.5 662.09C791.76 662.97 802.18 664.42 813.5 663.14C825.94 661.73 839.46 660.59 849.27 651.77C852.39 648.98 860.16 639.78 861.51 636.04C862.21 634.12 861.98 632.09 862.61 630.14C864.05 625.78 866.69 621.95 867.69 617.36C871.36 600.69 871.62 582.43 870.43 565.5C869.98 559.16 868.45 552.83 868.22 546.5C867.84 536.2 868.7 525.79 868.77 515.5C868.84 504.87 868.39 494.15 868.24 483.5C867.97 465.26 865.84 446.88 866.48 428.66C866.89 416.82 868.23 404.96 869.53 393.23C870.25 386.71 869.52 380.03 870.2 373.53C872.96 347.34 878.06 317.84 863.51 293.97C860.83 289.57 856.38 284.16 851.67 281.83C850.5 281.25 849.15 281.12 848.03 280.46C845.5 278.96 843.76 276.78 840.85 275.63C818.61 266.84 792.86 269.61 769.5 268.1C733.67 265.78 698.52 261.5 662.5 259.97C634.85 258.8 607.11 263.19 579.5 262.9C569.49 262.79 559.45 261.44 549.5 260.6C537.85 259.63 526.23 259.87 514.57 260.46Z"/>
+                <path d="M525.58 282.44C542.94 281.61 560.19 284.48 577.5 285.03C605.88 285.93 634.17 282.06 662.47 282.43C676.31 282.61 690.39 283.27 704.2 284.46C707.36 284.74 710.36 285.68 713.5 286.03C729.46 287.77 745.48 289.57 761.5 290.23C773.49 290.73 785.5 291.73 797.5 292.12C815.19 292.69 835.23 292.85 845.12 310.36C853.91 325.91 848.14 355.45 846.31 372.56C845.55 379.64 846.08 386.83 845.48 393.92C844.42 406.45 842.97 418.95 842.32 431.5C841.54 446.75 842.83 462.27 843.36 477.5C843.56 483.16 844.24 488.84 844.34 494.5C844.64 512.48 842.83 530.53 843.68 548.5C844.32 562.02 846.76 574.9 846.15 588.5C845.48 603.56 844.23 615.46 835.62 628.14C834.41 629.92 833.49 631.9 831.86 633.37C821.8 642.45 800.8 640.77 788.5 639.02C780.52 637.89 772.5 637.72 764.5 637.05C743.84 635.33 723.12 634.27 702.45 633.39C699.38 633.26 696.53 633.92 693.5 634.12C684.87 634.69 676.16 635.17 667.5 635.63C645.54 636.78 623.51 637.4 601.5 637.61C578.17 637.84 554.83 636.59 531.5 636.57C514.18 636.55 496.82 637.54 479.5 637.05C464.82 636.63 450.2 635.3 435.5 635.13C418.8 634.93 402.21 636.98 385.5 637.06C370.51 637.14 355.47 635.83 340.5 635.28C329.5 634.88 318.53 635.56 307.5 635.05C293.27 634.39 278.64 633.03 268.6 621.9C263.73 616.5 263.56 609.68 262.54 602.88C260.34 588.27 258.98 573.29 258.25 558.5C256.23 517.64 261.7 476.15 264.81 435.5C266.51 413.21 265.14 390.81 265.69 368.5C266.3 343.09 251.01 307.99 281.13 293.61C293.24 287.83 306.61 289.38 319.5 290.09C337.5 291.08 355.5 293.01 373.5 293.77C396.22 294.74 421.15 290.45 443.72 287.42C453.61 286.09 463.58 286.84 473.5 286.08C490.83 284.76 508.17 283.27 525.58 282.44ZZ"/>
+                </clipPath>
+              </defs>
+              <path d="M0.25 0.25C369.08 0.25 737.92 0.25 1106.75 0.25C1106.75 361.42 1106.75 722.58 1106.75 1083.75C737.92 1083.75 369.08 1083.75 0.25 1083.75C0.25 722.58 0.25 361.42 0.25 0.25ZM660.47 720.5C672.7 718.61 685.21 721.06 697.5 720.05C713.46 718.74 729.48 719.18 745.5 718.96C759.53 718.76 773.47 717.38 787.5 717.24C794.44 717.18 801.48 717.99 808.5 717.89C820.73 717.72 833.3 716.94 845.5 716.03C851.55 715.57 858.17 715 864.24 715.48C868.05 715.78 871.63 716.32 875.5 716.04C891.16 714.89 908.46 710.21 920.95 700.48C928.7 694.44 931.94 684.82 934.43 675.9C937.43 665.17 936.61 659.36 936.99 648.5C937.13 644.44 938.03 640.61 937.94 636.5C937.88 633.4 936.89 630.57 936.74 627.5C936.43 621.41 937 615.51 937.1 609.5C937.19 604.16 936.61 598.85 936.85 593.5C937.35 582.83 936.43 572.17 936.76 561.5C937.13 549.48 938.59 537.59 938.57 525.5C938.56 519.12 937.4 512.87 937.13 506.5C936.93 501.79 937.69 497.18 937.62 492.5C937.53 486.16 936.39 479.83 936.05 473.5C935.3 459.48 937.3 445.49 936.98 431.5C936.74 421.16 935.17 410.77 935.08 400.5C934.97 388.17 937.1 375.82 937.58 363.48C937.99 352.76 936.09 342.19 936.87 331.5C937.9 317.24 936.85 302.9 936.21 288.5C936.03 284.54 936.67 280.43 936.09 276.5C935.29 271.14 932.68 266.1 931.6 260.83C931.07 258.21 931.22 255.53 930.55 252.88C928.38 244.36 922.45 230.71 915.8 224.73C892.11 203.41 864.59 203.96 834.56 201.6C830.53 201.28 826.54 200.42 822.5 200.16C816.85 199.8 811.15 200.48 805.5 199.89C794.84 198.77 784.18 197.51 773.5 196.72C763.17 195.95 752.83 196.51 742.5 196.21C720.8 195.57 699.23 198.61 677.5 198.21C660.28 197.89 642.76 194.51 625.5 195.9C617.21 196.56 608.83 196.55 600.53 197.29C588.58 198.36 576.52 199.56 564.5 199.52C555.51 199.49 546.38 198.18 537.45 197.32C528.22 196.44 518.77 196.54 509.5 196.17C493.76 195.52 478.16 198.06 462.5 198.04C447.78 198.02 433.22 196.99 418.5 197.09C407.79 197.16 397.17 198.31 386.46 198.55C377.57 198.75 368.38 198.01 359.5 198.93C352.13 199.69 344.84 200.94 337.47 201.75C331.05 202.46 324.62 202.09 318.2 202.52C309.29 203.13 300.36 204.11 291.5 204.83C285.51 205.33 279.48 204.44 273.5 204.4C264.86 204.34 256.06 205.04 247.45 205.62C232.05 206.67 215.43 206.67 201.23 213.69C193.15 217.69 185.73 225.89 182.85 234.46C182.19 236.45 182.47 238.44 181.99 240.44C181.41 242.88 179.79 245.07 179.23 247.57C176.45 259.9 176.62 272.97 175.36 285.5C174.11 297.89 172.56 309.97 172.85 322.5C173.05 331.28 171.02 339.7 171.23 348.5C171.33 352.93 172.25 357.19 172.83 361.53C173.45 366.13 173.25 371.08 173.53 375.71C174.31 389.02 173.11 402.26 173.12 415.5C173.12 423.74 174.27 431.79 174.5 440C174.67 446.16 173.92 452.32 174.06 458.5C174.32 469.86 174.82 481.13 174.21 492.5C173.84 499.52 173.01 506.48 172.85 513.5C172.72 519.25 173.63 524.79 173.87 530.5C174.34 541.45 172.73 552.51 172.78 563.5C172.81 569.95 173.96 576.24 174.61 582.63C175.14 587.81 174.73 593.29 174.9 598.5C175.44 614.61 176.41 630.5 177.78 646.54C178.1 650.28 177.19 653.72 178.06 657.47C178.89 661.05 180.62 664.38 181.52 667.91C185.1 681.99 186.09 694.09 198.58 703.93C209.18 712.27 235.85 716.65 249.26 717.47C253.68 717.74 258 716.86 262.46 717.31C266.8 717.75 271.16 718.61 275.5 718.85C281.83 719.2 288.17 718.56 294.5 718.88C300.54 719.19 306.37 719.98 312.5 719.88C321.83 719.72 331.17 718.66 340.5 718.32C351.64 717.9 362.95 718.46 374.06 717.5C389.48 716.16 405 716.25 420.5 716.62C429.99 716.85 443.14 716.51 452.18 718.5C454.26 723.2 453.78 733 454.12 738.5C454.74 748.67 454.32 758.32 453.9 768.5C453.62 775.15 454.7 781.52 452.5 787.98C436.63 789.51 420.45 789.71 404.5 789.15C393.32 788.76 382.65 788.03 371.5 788.96C357.43 790.14 341.6 790.47 331.59 802.1C327.55 806.79 323.75 817.41 323.06 823.5C322.83 825.49 323.11 827.47 322.82 829.45C322.34 832.65 320.89 835.67 320.49 838.92C320.2 841.19 320.72 843.25 320.73 845.5C320.76 850.22 319.18 854.82 319.16 859.5C319.1 869.08 323.4 878.62 330.49 885.03C339.85 893.5 357.58 894.49 369.5 894.78C374.18 894.9 378.82 895.72 383.5 895.92C393.8 896.36 404.27 894.84 414.5 894.22C423.17 893.69 431.82 894.61 440.5 894.26C448.87 893.91 457.21 895.13 465.53 895.68C479.83 896.62 494.24 896.68 508.53 896.43C511.87 896.38 515.14 897.15 518.5 896.94C523.21 896.64 527.85 895.43 532.5 894.89C535.49 894.54 538.51 895.01 541.5 894.84C549.17 894.42 556.81 893.67 564.5 893.32C586.13 892.33 607.85 891.02 629.5 891.99C633.5 892.16 637.49 893.05 641.47 893.42C645.79 893.83 650.17 893.36 654.5 893.64C666.82 894.43 679.15 895.3 691.5 895.67C702.81 896.01 714.24 894.8 725.5 894.28C730.82 894.04 736.2 894.58 741.5 894.1C745.21 893.77 748.86 892.56 752.55 892.35C757.21 892.08 761.75 892.38 766.2 890.62C787.75 882.09 786.15 866.49 786.06 846.5C786.02 839.06 786.92 831.94 786.01 824.5C784.5 812.14 779.97 797.25 766.35 793.22C742.34 786.12 716.31 787.33 691.5 787.85C680.77 788.07 669.06 790.21 658.5 787.89C656.42 783.15 657.82 778.51 657.72 773.5C657.47 761.79 658.53 750.23 658.63 738.5C658.68 732.87 657.36 725.28 660.47 720.5ZM617.73 214.43C626.09 213.41 635.13 214.37 643.5 214.89C655.77 215.66 668.2 216.63 680.5 216.71C699.52 216.84 718.49 214.6 737.5 214.73C765.58 214.93 793.67 217.97 821.55 220.66C844.88 222.92 875.11 220.33 894.1 236.43C919.37 257.86 911.07 299.56 912.8 328.5C913.4 338.42 914.11 348.55 913.66 358.5C913.19 368.84 912.07 379.16 911.71 389.5C911.5 395.24 912.48 400.8 912.65 406.5C912.83 412.85 911.82 419.14 911.79 425.5C911.72 438.17 912.62 450.86 913.1 463.5C913.47 473.52 912.67 483.51 912.99 493.5C913.43 506.83 914.79 520.16 915.21 533.5C915.46 541.47 914.22 549.35 913.52 557.23C912.86 564.62 913.15 572.06 913.11 579.5C913.04 592.5 912.63 605.53 912.69 618.5C912.72 624.18 911.89 629.8 912.22 635.5C913.08 650.2 916.1 667.1 906.33 679.82C899.36 688.89 885.11 692.58 874.25 693.53C868.72 694.02 863.06 693.02 857.5 693.01C841.17 692.97 824.83 694.4 808.5 695.15C800.85 695.5 793.14 694.97 785.5 694.83C774.16 694.63 762.84 695.11 751.5 695.13C747.44 695.14 743.53 695.67 739.5 695.88C728.87 696.43 718.15 696.08 707.5 696.28C692.17 696.57 676.83 697.33 661.5 697.12C626.79 696.64 592.19 693.91 557.5 693.23C529.16 692.67 500.83 693.6 472.5 694.34C461.5 694.63 450.5 693.2 439.5 692.97C415.23 692.45 390.7 692.92 366.5 694.56C358.18 695.12 349.82 694.66 341.5 695.21C331.19 695.88 319.74 697.17 309.5 696.87C295.2 696.45 280.81 694.92 266.5 695.03C252.17 695.15 223.67 694.03 212.52 683.99C207.63 679.58 203.43 667.95 201.62 661.78C198.19 650.1 198.64 639.56 198.13 627.5C197.65 616.17 197.6 604.82 197.05 593.5C196.66 585.48 195.59 577.47 195.22 569.5C194.72 558.86 195.51 548.13 195.93 537.5C196.25 529.2 195.77 520.82 195.8 512.5C195.84 500.54 194.64 488.41 195.18 476.5C195.85 461.84 197.34 447.31 197.03 432.5C196.9 426.18 195.88 419.8 196.01 413.5C196.07 410.78 196.88 408.22 196.99 405.5C197.15 401.4 196.26 397.54 195.99 393.5C195.76 390.17 196.25 386.82 195.96 383.5C194.8 370.15 194.23 356.85 194.82 343.5C195.03 338.98 194.58 334.99 195.15 330.5C196.78 317.61 196.46 304.46 197.29 291.52C197.47 288.8 198.42 286.21 198.57 283.44C199.04 274.35 199.12 265.34 200.74 256.4C202.34 247.58 204.32 237.21 212.94 232.46C224.43 226.11 247.33 226.25 260.5 226.05C264.89 225.99 269.13 225.14 273.5 224.94C290.52 224.16 307.51 223.23 324.5 222.02C339.89 220.92 355.13 219.25 370.53 218.34C378.87 217.85 387.19 218.54 395.5 218.28C417.5 217.59 439.49 217.71 461.5 217.1C474.2 216.75 486.81 215.29 499.5 215.24C523.23 215.15 546.84 216.89 570.55 217.54C585.68 217.95 602.74 216.25 617.73 214.43ZM514.57 260.46C487.47 261.84 460.46 263.27 433.5 266.2C411.95 268.54 390.34 272.79 368.5 270.94C346.88 269.11 325.27 266.46 303.5 266.75C289.22 266.94 274.17 268.18 261.69 276.18C246.47 285.94 237.62 304.87 237.14 322.5C236.76 336.56 240.27 350.52 241.14 364.5C241.68 373.23 240.8 381.82 241.05 390.5C242.76 449.19 232.74 507.73 235.16 566.5C235.61 577.24 236.76 587.81 237.74 598.51C239.37 616.43 239.86 630.52 253.9 643.61C262.74 651.85 274.71 655.38 286.33 657.28C314.78 661.92 343.76 658.48 372.5 660.11C397.8 661.53 423.05 658.19 448.5 658.92C459.52 659.23 470.47 660.41 481.5 660.6C495.48 660.85 509.54 659.44 523.5 659.99C525.87 660.08 528.13 660.72 530.5 660.83C537.16 661.13 543.84 660.42 550.5 660.4C567.83 660.34 585.17 660.57 602.5 660.46C614.85 660.38 627.14 661.13 639.5 660.85C663.83 660.28 688.12 657.13 712.5 657.75C735.18 658.33 757.93 660.33 780.5 662.09C791.76 662.97 802.18 664.42 813.5 663.14C825.94 661.73 839.46 660.59 849.27 651.77C852.39 648.98 860.16 639.78 861.51 636.04C862.21 634.12 861.98 632.09 862.61 630.14C864.05 625.78 866.69 621.95 867.69 617.36C871.36 600.69 871.62 582.43 870.43 565.5C869.98 559.16 868.45 552.83 868.22 546.5C867.84 536.2 868.7 525.79 868.77 515.5C868.84 504.87 868.39 494.15 868.24 483.5C867.97 465.26 865.84 446.88 866.48 428.66C866.89 416.82 868.23 404.96 869.53 393.23C870.25 386.71 869.52 380.03 870.2 373.53C872.96 347.34 878.06 317.84 863.51 293.97C860.83 289.57 856.38 284.16 851.67 281.83C850.5 281.25 849.15 281.12 848.03 280.46C845.5 278.96 843.76 276.78 840.85 275.63C818.61 266.84 792.86 269.61 769.5 268.1C733.67 265.78 698.52 261.5 662.5 259.97C634.85 258.8 607.11 263.19 579.5 262.9C569.49 262.79 559.45 261.44 549.5 260.6C537.85 259.63 526.23 259.87 514.57 260.46ZM525.58 282.44C542.94 281.61 560.19 284.48 577.5 285.03C605.88 285.93 634.17 282.06 662.47 282.43C676.31 282.61 690.39 283.27 704.2 284.46C707.36 284.74 710.36 285.68 713.5 286.03C729.46 287.77 745.48 289.57 761.5 290.23C773.49 290.73 785.5 291.73 797.5 292.12C815.19 292.69 835.23 292.85 845.12 310.36C853.91 325.91 848.14 355.45 846.31 372.56C845.55 379.64 846.08 386.83 845.48 393.92C844.42 406.45 842.97 418.95 842.32 431.5C841.54 446.75 842.83 462.27 843.36 477.5C843.56 483.16 844.24 488.84 844.34 494.5C844.64 512.48 842.83 530.53 843.68 548.5C844.32 562.02 846.76 574.9 846.15 588.5C845.48 603.56 844.23 615.46 835.62 628.14C834.41 629.92 833.49 631.9 831.86 633.37C821.8 642.45 800.8 640.77 788.5 639.02C780.52 637.89 772.5 637.72 764.5 637.05C743.84 635.33 723.12 634.27 702.45 633.39C699.38 633.26 696.53 633.92 693.5 634.12C684.87 634.69 676.16 635.17 667.5 635.63C645.54 636.78 623.51 637.4 601.5 637.61C578.17 637.84 554.83 636.59 531.5 636.57C514.18 636.55 496.82 637.54 479.5 637.05C464.82 636.63 450.2 635.3 435.5 635.13C418.8 634.93 402.21 636.98 385.5 637.06C370.51 637.14 355.47 635.83 340.5 635.28C329.5 634.88 318.53 635.56 307.5 635.05C293.27 634.39 278.64 633.03 268.6 621.9C263.73 616.5 263.56 609.68 262.54 602.88C260.34 588.27 258.98 573.29 258.25 558.5C256.23 517.64 261.7 476.15 264.81 435.5C266.51 413.21 265.14 390.81 265.69 368.5C266.3 343.09 251.01 307.99 281.13 293.61C293.24 287.83 306.61 289.38 319.5 290.09C337.5 291.08 355.5 293.01 373.5 293.77C396.22 294.74 421.15 290.45 443.72 287.42C453.61 286.09 463.58 286.84 473.5 286.08C490.83 284.76 508.17 283.27 525.58 282.44Z" fill="#fff" fill-rule="evenodd" clip-path="url(#monitor-body)"/>
+              <!-- path1 has no region for the stand, so its neck and base are
+                   filled from the ink path's own inner outlines. -->
+              <path d="M632.32 720.5C628.16 719.55 623.95 720 619.69 719.57C608.57 718.45 597.66 718.46 586.5 718.03C563.32 717.13 539.97 716.06 516.74 716.49C512.02 716.58 507.2 716.25 502.5 716.63C499.47 716.88 496.56 717.8 493.5 717.75C488.66 717.67 483.43 715.86 479.42 719.5C478.1 726.95 480.77 739.3 481.06 747.5C481.54 761.07 478.53 774.31 480.5 787.74C487.51 789.04 494.43 788.16 501.5 788.13C510.84 788.08 520.15 788.64 529.51 788.34C536.72 788.1 544.83 788.98 552.06 789.49C561.81 790.18 571.76 789.34 581.5 789.37C590.85 789.39 600.15 789.03 609.5 789.12C616.61 789.19 624.13 789.84 630.9 787.5C632.3 780.34 631.3 772.77 631.14 765.5C630.99 758.21 631.65 750.8 631.88 743.5C632.12 736.15 634.38 727.67 632.32 720.5Z" fill="#fff"/>
+              <path d="M386.79 812.44C377.48 813.58 360.65 811.11 353.13 817.61C349.19 821.01 349.23 825.08 348.39 829.76C346.89 838.07 345.99 846.1 345.71 854.5C345.59 858.29 345.21 862.36 347.94 865.55C349.11 866.91 351.35 867.89 353.03 868.46C358.57 870.36 363.79 870.2 369.5 870.74C392.17 872.9 414.73 869.34 437.49 870.37C454.5 871.15 471.42 872.65 488.5 873.06C494.19 873.2 499.77 874.1 505.5 873.82C512.78 873.46 520.26 873.77 527.5 873.02C533.74 872.38 539.9 871.3 546.1 870.52C560.67 868.69 575.83 868.55 590.5 868.27C615.96 867.79 641.2 870.65 666.5 870.46C676.18 870.39 685.82 871.01 695.5 871.11C702.52 871.18 709.5 870.24 716.5 870.03C723.53 869.82 730.51 870.65 737.5 870.63C740.41 870.63 742.74 869.61 745.55 869.26C755.58 867.99 758.83 868.15 760.51 857.12C761.09 853.24 760.37 849.36 760.28 845.5C760.15 840.1 760.62 834.88 760.26 829.5C759.99 825.56 759.9 820.69 756.87 817.64C752.07 812.79 739.77 813.4 733.5 813.03C714.05 811.89 694.98 812.93 675.5 813.24C666.22 813.39 656.77 813.39 647.5 812.93C644.79 812.79 642.22 812.06 639.5 812.07C622.18 812.11 604.84 813.56 587.5 813.59C567.51 813.62 547.5 812.22 527.5 811.85C514.49 811.61 501.54 813.43 488.5 813.07C482.16 812.89 475.82 812.07 469.5 812.15C455.21 812.33 440.87 813.72 426.5 813.39C416.15 813.15 405.84 812.83 395.5 812.7C392.55 812.66 389.76 812.08 386.79 812.44ZZ" fill="#fff"/>
+              <path d="M660.47 720.5C657.36 725.28 658.68 732.87 658.63 738.5C658.53 750.23 657.47 761.79 657.72 773.5C657.82 778.51 656.42 783.15 658.5 787.89C669.06 790.21 680.77 788.07 691.5 787.85C716.31 787.33 742.34 786.12 766.35 793.22C779.97 797.25 784.5 812.14 786.01 824.5C786.92 831.94 786.02 839.06 786.06 846.5C786.15 866.49 787.75 882.09 766.2 890.62C761.75 892.38 757.21 892.08 752.55 892.35C748.86 892.56 745.21 893.77 741.5 894.1C736.2 894.58 730.82 894.04 725.5 894.28C714.24 894.8 702.81 896.01 691.5 895.67C679.15 895.3 666.82 894.43 654.5 893.64C650.17 893.36 645.79 893.83 641.47 893.42C637.49 893.05 633.5 892.16 629.5 891.99C607.85 891.02 586.13 892.33 564.5 893.32C556.81 893.67 549.17 894.42 541.5 894.84C538.51 895.01 535.49 894.54 532.5 894.89C527.85 895.43 523.21 896.64 518.5 896.94C515.14 897.15 511.87 896.38 508.53 896.43C494.24 896.68 479.83 896.62 465.53 895.68C457.21 895.13 448.87 893.91 440.5 894.26C431.82 894.61 423.17 893.69 414.5 894.22C404.27 894.84 393.8 896.36 383.5 895.92C378.82 895.72 374.18 894.9 369.5 894.78C357.58 894.49 339.85 893.5 330.49 885.03C323.4 878.62 319.1 869.08 319.16 859.5C319.18 854.82 320.76 850.22 320.73 845.5C320.72 843.25 320.2 841.19 320.49 838.92C320.89 835.67 322.34 832.65 322.82 829.45C323.11 827.47 322.83 825.49 323.06 823.5C323.75 817.41 327.55 806.79 331.59 802.1C341.6 790.47 357.43 790.14 371.5 788.96C382.65 788.03 393.32 788.76 404.5 789.15C420.45 789.71 436.63 789.51 452.5 787.98C454.7 781.52 453.62 775.15 453.9 768.5C454.32 758.32 454.74 748.67 454.12 738.5C453.78 733 454.26 723.2 452.18 718.5C443.14 716.51 429.99 716.85 420.5 716.62C405 716.25 389.48 716.16 374.06 717.5C362.95 718.46 351.64 717.9 340.5 718.32C331.17 718.66 321.83 719.72 312.5 719.88C306.37 719.98 300.54 719.19 294.5 718.88C288.17 718.56 281.83 719.2 275.5 718.85C271.16 718.61 266.8 717.75 262.46 717.31C258 716.86 253.68 717.74 249.26 717.47C235.85 716.65 209.18 712.27 198.58 703.93C186.09 694.09 185.1 681.99 181.52 667.91C180.62 664.38 178.89 661.05 178.06 657.47C177.19 653.72 178.1 650.28 177.78 646.54C176.41 630.5 175.44 614.61 174.9 598.5C174.73 593.29 175.14 587.81 174.61 582.63C173.96 576.24 172.81 569.95 172.78 563.5C172.73 552.51 174.34 541.45 173.87 530.5C173.63 524.79 172.72 519.25 172.85 513.5C173.01 506.48 173.84 499.52 174.21 492.5C174.82 481.13 174.32 469.86 174.06 458.5C173.92 452.32 174.67 446.16 174.5 440C174.27 431.79 173.12 423.74 173.12 415.5C173.11 402.26 174.31 389.02 173.53 375.71C173.25 371.08 173.45 366.13 172.83 361.53C172.25 357.19 171.33 352.93 171.23 348.5C171.02 339.7 173.05 331.28 172.85 322.5C172.56 309.97 174.11 297.89 175.36 285.5C176.62 272.97 176.45 259.9 179.23 247.57C179.79 245.07 181.41 242.88 181.99 240.44C182.47 238.44 182.19 236.45 182.85 234.46C185.73 225.89 193.15 217.69 201.23 213.69C215.43 206.67 232.05 206.67 247.45 205.62C256.06 205.04 264.86 204.34 273.5 204.4C279.48 204.44 285.51 205.33 291.5 204.83C300.36 204.11 309.29 203.13 318.2 202.52C324.62 202.09 331.05 202.46 337.47 201.75C344.84 200.94 352.13 199.69 359.5 198.93C368.38 198.01 377.57 198.75 386.46 198.55C397.17 198.31 407.79 197.16 418.5 197.09C433.22 196.99 447.78 198.02 462.5 198.04C478.16 198.06 493.76 195.52 509.5 196.17C518.77 196.54 528.22 196.44 537.45 197.32C546.38 198.18 555.51 199.49 564.5 199.52C576.52 199.56 588.58 198.36 600.53 197.29C608.83 196.55 617.21 196.56 625.5 195.9C642.76 194.51 660.28 197.89 677.5 198.21C699.23 198.61 720.8 195.57 742.5 196.21C752.83 196.51 763.17 195.95 773.5 196.72C784.18 197.51 794.84 198.77 805.5 199.89C811.15 200.48 816.85 199.8 822.5 200.16C826.54 200.42 830.53 201.28 834.56 201.6C864.59 203.96 892.11 203.41 915.8 224.73C922.45 230.71 928.38 244.36 930.55 252.88C931.22 255.53 931.07 258.21 931.6 260.83C932.68 266.1 935.29 271.14 936.09 276.5C936.67 280.43 936.03 284.54 936.21 288.5C936.85 302.9 937.9 317.24 936.87 331.5C936.09 342.19 937.99 352.76 937.58 363.48C937.1 375.82 934.97 388.17 935.08 400.5C935.17 410.77 936.74 421.16 936.98 431.5C937.3 445.49 935.3 459.48 936.05 473.5C936.39 479.83 937.53 486.16 937.62 492.5C937.69 497.18 936.93 501.79 937.13 506.5C937.4 512.87 938.56 519.12 938.57 525.5C938.59 537.59 937.13 549.48 936.76 561.5C936.43 572.17 937.35 582.83 936.85 593.5C936.61 598.85 937.19 604.16 937.1 609.5C937 615.51 936.43 621.41 936.74 627.5C936.89 630.57 937.88 633.4 937.94 636.5C938.03 640.61 937.13 644.44 936.99 648.5C936.61 659.36 937.43 665.17 934.43 675.9C931.94 684.82 928.7 694.44 920.95 700.48C908.46 710.21 891.16 714.89 875.5 716.04C871.63 716.32 868.05 715.78 864.24 715.48C858.17 715 851.55 715.57 845.5 716.03C833.3 716.94 820.73 717.72 808.5 717.89C801.48 717.99 794.44 717.18 787.5 717.24C773.47 717.38 759.53 718.76 745.5 718.96C729.48 719.18 713.46 718.74 697.5 720.05C685.21 721.06 672.7 718.61 660.47 720.5ZM617.73 214.43C602.74 216.25 585.68 217.95 570.55 217.54C546.84 216.89 523.23 215.15 499.5 215.24C486.81 215.29 474.2 216.75 461.5 217.1C439.49 217.71 417.5 217.59 395.5 218.28C387.19 218.54 378.87 217.85 370.53 218.34C355.13 219.25 339.89 220.92 324.5 222.02C307.51 223.23 290.52 224.16 273.5 224.94C269.13 225.14 264.89 225.99 260.5 226.05C247.33 226.25 224.43 226.11 212.94 232.46C204.32 237.21 202.34 247.58 200.74 256.4C199.12 265.34 199.04 274.35 198.57 283.44C198.42 286.21 197.47 288.8 197.29 291.52C196.46 304.46 196.78 317.61 195.15 330.5C194.58 334.99 195.03 338.98 194.82 343.5C194.23 356.85 194.8 370.15 195.96 383.5C196.25 386.82 195.76 390.17 195.99 393.5C196.26 397.54 197.15 401.4 196.99 405.5C196.88 408.22 196.07 410.78 196.01 413.5C195.88 419.8 196.9 426.18 197.03 432.5C197.34 447.31 195.85 461.84 195.18 476.5C194.64 488.41 195.84 500.54 195.8 512.5C195.77 520.82 196.25 529.2 195.93 537.5C195.51 548.13 194.72 558.86 195.22 569.5C195.59 577.47 196.66 585.48 197.05 593.5C197.6 604.82 197.65 616.17 198.13 627.5C198.64 639.56 198.19 650.1 201.62 661.78C203.43 667.95 207.63 679.58 212.52 683.99C223.67 694.03 252.17 695.15 266.5 695.03C280.81 694.92 295.2 696.45 309.5 696.87C319.74 697.17 331.19 695.88 341.5 695.21C349.82 694.66 358.18 695.12 366.5 694.56C390.7 692.92 415.23 692.45 439.5 692.97C450.5 693.2 461.5 694.63 472.5 694.34C500.83 693.6 529.16 692.67 557.5 693.23C592.19 693.91 626.79 696.64 661.5 697.12C676.83 697.33 692.17 696.57 707.5 696.28C718.15 696.08 728.87 696.43 739.5 695.88C743.53 695.67 747.44 695.14 751.5 695.13C762.84 695.11 774.16 694.63 785.5 694.83C793.14 694.97 800.85 695.5 808.5 695.15C824.83 694.4 841.17 692.97 857.5 693.01C863.06 693.02 868.72 694.02 874.25 693.53C885.11 692.58 899.36 688.89 906.33 679.82C916.1 667.1 913.08 650.2 912.22 635.5C911.89 629.8 912.72 624.18 912.69 618.5C912.63 605.53 913.04 592.5 913.11 579.5C913.15 572.06 912.86 564.62 913.52 557.23C914.22 549.35 915.46 541.47 915.21 533.5C914.79 520.16 913.43 506.83 912.99 493.5C912.67 483.51 913.47 473.52 913.1 463.5C912.62 450.86 911.72 438.17 911.79 425.5C911.82 419.14 912.83 412.85 912.65 406.5C912.48 400.8 911.5 395.24 911.71 389.5C912.07 379.16 913.19 368.84 913.66 358.5C914.11 348.55 913.4 338.42 912.8 328.5C911.07 299.56 919.37 257.86 894.1 236.43C875.11 220.33 844.88 222.92 821.55 220.66C793.67 217.97 765.58 214.93 737.5 214.73C718.49 214.6 699.52 216.84 680.5 216.71C668.2 216.63 655.77 215.66 643.5 214.89C635.13 214.37 626.09 213.41 617.73 214.43ZM514.57 260.46C526.23 259.87 537.85 259.63 549.5 260.6C559.45 261.44 569.49 262.79 579.5 262.9C607.11 263.19 634.85 258.8 662.5 259.97C698.52 261.5 733.67 265.78 769.5 268.1C792.86 269.61 818.61 266.84 840.85 275.63C843.76 276.78 845.5 278.96 848.03 280.46C849.15 281.12 850.5 281.25 851.67 281.83C856.38 284.16 860.83 289.57 863.51 293.97C878.06 317.84 872.96 347.34 870.2 373.53C869.52 380.03 870.25 386.71 869.53 393.23C868.23 404.96 866.89 416.82 866.48 428.66C865.84 446.88 867.97 465.26 868.24 483.5C868.39 494.15 868.84 504.87 868.77 515.5C868.7 525.79 867.84 536.2 868.22 546.5C868.45 552.83 869.98 559.16 870.43 565.5C871.62 582.43 871.36 600.69 867.69 617.36C866.69 621.95 864.05 625.78 862.61 630.14C861.98 632.09 862.21 634.12 861.51 636.04C860.16 639.78 852.39 648.98 849.27 651.77C839.46 660.59 825.94 661.73 813.5 663.14C802.18 664.42 791.76 662.97 780.5 662.09C757.93 660.33 735.18 658.33 712.5 657.75C688.12 657.13 663.83 660.28 639.5 660.85C627.14 661.13 614.85 660.38 602.5 660.46C585.17 660.57 567.83 660.34 550.5 660.4C543.84 660.42 537.16 661.13 530.5 660.83C528.13 660.72 525.87 660.08 523.5 659.99C509.54 659.44 495.48 660.85 481.5 660.6C470.47 660.41 459.52 659.23 448.5 658.92C423.05 658.19 397.8 661.53 372.5 660.11C343.76 658.48 314.78 661.92 286.33 657.28C274.71 655.38 262.74 651.85 253.9 643.61C239.86 630.52 239.37 616.43 237.74 598.51C236.76 587.81 235.61 577.24 235.16 566.5C232.74 507.73 242.76 449.19 241.05 390.5C240.8 381.82 241.68 373.23 241.14 364.5C240.27 350.52 236.76 336.56 237.14 322.5C237.62 304.87 246.47 285.94 261.69 276.18C274.17 268.18 289.22 266.94 303.5 266.75C325.27 266.46 346.88 269.11 368.5 270.94C390.34 272.79 411.95 268.54 433.5 266.2C460.46 263.27 487.47 261.84 514.57 260.46ZM525.58 282.44C508.17 283.27 490.83 284.76 473.5 286.08C463.58 286.84 453.61 286.09 443.72 287.42C421.15 290.45 396.22 294.74 373.5 293.77C355.5 293.01 337.5 291.08 319.5 290.09C306.61 289.38 293.24 287.83 281.13 293.61C251.01 307.99 266.3 343.09 265.69 368.5C265.14 390.81 266.51 413.21 264.81 435.5C261.7 476.15 256.23 517.64 258.25 558.5C258.98 573.29 260.34 588.27 262.54 602.88C263.56 609.68 263.73 616.5 268.6 621.9C278.64 633.03 293.27 634.39 307.5 635.05C318.53 635.56 329.5 634.88 340.5 635.28C355.47 635.83 370.51 637.14 385.5 637.06C402.21 636.98 418.8 634.93 435.5 635.13C450.2 635.3 464.82 636.63 479.5 637.05C496.82 637.54 514.18 636.55 531.5 636.57C554.83 636.59 578.17 637.84 601.5 637.61C623.51 637.4 645.54 636.78 667.5 635.63C676.16 635.17 684.87 634.69 693.5 634.12C696.53 633.92 699.38 633.26 702.45 633.39C723.12 634.27 743.84 635.33 764.5 637.05C772.5 637.72 780.52 637.89 788.5 639.02C800.8 640.77 821.8 642.45 831.86 633.37C833.49 631.9 834.41 629.92 835.62 628.14C844.23 615.46 845.48 603.56 846.15 588.5C846.76 574.9 844.32 562.02 843.68 548.5C842.83 530.53 844.64 512.48 844.34 494.5C844.24 488.84 843.56 483.16 843.36 477.5C842.83 462.27 841.54 446.75 842.32 431.5C842.97 418.95 844.42 406.45 845.48 393.92C846.08 386.83 845.55 379.64 846.31 372.56C848.14 355.45 853.91 325.91 845.12 310.36C835.23 292.85 815.19 292.69 797.5 292.12C785.5 291.73 773.49 290.73 761.5 290.23C745.48 289.57 729.46 287.77 713.5 286.03C710.36 285.68 707.36 284.74 704.2 284.46C690.39 283.27 676.31 282.61 662.47 282.43C634.17 282.06 605.88 285.93 577.5 285.03C560.19 284.48 542.94 281.61 525.58 282.44ZM570.69 357.28C581.57 354.4 591.79 366.09 597.63 373.84C604.2 382.56 607.27 395.69 606.37 406.5C605.92 411.95 603.77 417.11 603.12 422.51C602.31 429.2 603.02 436.28 601.44 442.86C599.19 452.19 592.1 463.21 581.49 463.81C570.77 464.41 567.03 454.07 564.9 445.53C562.57 436.23 562.16 426.06 561.32 416.5C560.28 404.58 558.57 392.41 559.82 380.48C560.73 371.89 559.91 360.13 570.69 357.28ZM527.75 358.36C538.3 356.47 542.92 367.26 544.97 375.5C547.92 387.39 548.9 399.35 550.26 411.45C551.33 420.93 552.76 430.65 551.52 440.19C550.47 448.23 550.27 462.55 539.25 463.53C533.29 464.06 527.84 459.32 523.41 456.06C513.48 448.74 505.62 437.1 505.07 424.5C504.57 413.31 508.59 402.47 509.8 391.48C511.12 379.46 512.83 361.03 527.75 358.36ZM793.5 551.24C778.87 560.07 761.59 551.91 769.2 533.7C773.08 524.42 779.12 523.47 787.52 520.5C786.94 514.14 784.59 506.42 786.6 500.19C787.84 496.37 791.42 493.28 795.26 496.25C799 499.14 798.82 506.01 799.45 510.25C800.84 519.69 802.44 529.07 803.93 538.5C804.48 541.93 806.13 545.9 805.68 549.38C804.69 557.12 797.34 555.65 793.5 551.24ZM585.5 506.54C593.35 509.21 592.02 521.57 593.83 528.5C601.31 527.99 605.98 525.43 612.42 532.09C623.53 543.57 612.48 565.97 596.34 563.42C593.48 562.97 589.66 562.15 587.86 559.66C585.8 556.79 585.95 552.71 585.37 549.35C583.88 540.77 583.23 532.1 581.95 523.5C581.04 517.37 578.41 509.34 585.5 506.54ZM619.5 507.04C625.79 507.75 626.2 513 627.28 518.41C629.37 528.98 631.85 539.8 633.08 550.5C633.67 555.64 634.51 560.1 629.5 563.1C622.62 562.46 622.77 557.55 621.6 551.77C619.52 541.4 617.78 530.95 616.15 520.5C615.34 515.29 614.21 510.04 619.5 507.04ZM708.5 528.29C711.19 525.54 715.52 520.51 719.52 519.9C723.13 519.35 726.37 521.65 726.15 525.5C725.92 529.53 720.92 532.24 719.08 535.5C723.02 538.96 736.38 547.43 731.02 553.51C725.5 559.76 716.63 546.71 711.5 545.43C712.19 549.13 713.66 553.88 711.96 557.47C710.06 561.5 705 561.62 702.61 557.89C699.89 553.65 699.67 547.33 698.95 542.5C697.9 535.46 696.41 528.47 695.28 521.44C694.54 516.82 692.87 512.24 696.51 508.5C707.71 506.19 704.15 522.36 708.5 528.29ZM500.5 509.69C507.38 512.19 506.2 521.79 508.5 527.82C512.34 527.8 519.91 526.66 520.21 532.5C520.29 534.16 519.6 535.77 518.34 536.86C516.28 538.63 512.9 538.75 510.5 539.84C510.67 546.43 514.11 553.63 513.5 560.12C513.22 562.97 511.62 566.34 508.4 566.72C505.09 567.1 502.91 564.26 501.98 561.48C499.87 555.2 499.57 547.99 498.2 541.5C493.78 541.01 490.51 541.55 487.84 537.5C487.98 531.43 491.57 531.26 496.56 529.5C496.22 522.74 492.07 512.58 500.5 509.69ZM409.5 512.27C418.79 513.62 417.17 527.51 419.93 534.5C425.92 533.67 430.5 531.65 436.32 535.16C452.53 544.93 440.83 571.8 423 569.49C420.47 569.16 416.27 567.91 414.62 565.87C412.51 563.26 412.5 558.71 411.81 555.55C409.88 546.61 408.21 537.54 406.84 528.5C405.95 522.64 403.12 515.87 409.5 512.27ZM476.71 515.47C483.72 514.88 484.8 525.11 478.09 526.49C470.93 527.96 469.34 516.09 476.71 515.47ZM745.93 543.5C751.78 549.85 758 540.69 762.99 548.5C761.95 557.19 750.49 558.74 743.53 555.95C732.47 551.51 728.64 537.8 734.31 527.79C738.93 519.63 753.07 515.13 758.94 524.61C765.1 534.57 753.26 540.45 745.93 543.5ZM363.5 519.67C368.97 521.35 368.72 525.36 369.06 530.5C369.67 539.76 368.72 549.78 366.34 558.75C365.58 561.62 364.83 564.97 362.44 566.96C353 574.83 345.76 556.05 342.5 550.19C339.07 555.65 338.05 570.68 330.47 572.13C325.42 573.1 322.54 568.81 320.61 564.85C316.57 556.58 313.9 547.5 311.85 538.55C310.83 534.11 309.19 530.23 312.5 526.43C319.62 525 319.76 529.59 321.41 535.2C323.32 541.74 325.32 549.06 328.5 555.06C332.2 548.4 331.78 539.72 335.8 533.31C338.44 529.11 343.55 529.16 346.67 532.8C350.95 537.79 351.56 546.78 356.5 550.69C357.4 544.76 357.65 526.17 359.75 522.28C360.65 520.64 361.89 520.33 363.5 519.67ZM533.81 549.5C539.92 555.38 548.09 546.85 552.66 554.5C550.62 563.89 538.53 565.08 531.03 561.47C520.98 556.64 517.59 543.54 522.49 533.99C526.78 525.62 540.76 519.5 547.24 529.27C554.58 540.33 540.97 545.68 533.81 549.5ZM686.58 534.5C685.15 534.55 683.48 534.16 682.1 534.6C677.98 535.91 676.58 542.16 679.01 545.44C682.98 550.79 696.07 542.29 695.52 551.39C695.02 559.57 679.96 559.16 674.93 556.55C665.04 551.4 664.43 536.75 671.49 529C674.45 525.75 679 523.45 683.43 524.23C689.34 525.28 691.17 530.85 686.58 534.5ZM648.67 525.41C667.48 524.27 670.6 557.52 650.45 558.72C631.34 559.85 630.8 526.49 648.67 525.41ZM467.69 532.5C466.44 538.09 461.15 536.06 458.75 540.5C462.74 543.23 467.88 544.55 470.45 549.05C478.18 562.61 450.11 574.79 445.7 561.5C448.64 553.29 454.84 558.45 459.53 553.5C455.19 549.22 446.2 548.1 446.07 540.5C445.9 530.52 462.32 522.55 467.69 532.5ZM749.11 529.5C745.84 529.3 744.87 530.35 744.27 533.5C746.97 532.82 748.08 531.94 749.11 529.5ZM788.14 532.5C782.41 532.23 778.13 538.1 779.94 543.5C787 544.71 791.16 539.06 788.14 532.5ZM387.5 557.71C393.83 564.76 398.85 555.72 404.7 561.5C405.98 568.84 398.14 571.83 391.7 571.54C381.87 571.1 377.68 564.37 374.3 556.3C373.59 554.63 372.64 553.45 372.84 551.53C374.03 539.95 387.03 527.38 398.33 536.12C400.31 537.66 401.75 539.95 401.97 542.5C402.78 552 392.94 553.36 387.5 557.71ZM480.5 533.43C486.45 536.42 488.47 551.13 488.97 557.5C489.24 560.98 488.42 565.05 484.28 565.61C480.88 566.06 478.77 563.46 477.86 560.51C476.76 556.95 476.43 553.18 475.83 549.53C474.86 543.56 471.77 534.37 480.5 533.43ZM537.59 534.5C534.92 534.61 533.36 535.87 532.5 538.28C535.56 537.72 536.84 537.44 537.59 534.5ZM649.5 536.37C645.57 539.15 645.38 544.11 648.5 547.63C655.98 547.3 655.43 539.24 649.5 536.37ZM601.5 538.3C594.64 539.15 595.12 547.29 598.5 551.85C605.04 550.42 609.2 541.49 601.5 538.3ZM390.68 543.5C387.91 543.27 385.97 544.65 385.5 547.54C388.46 546.97 389.81 546.3 390.68 543.5ZM430 544.5C426.49 543.89 424.99 544.75 422.81 547.5C423.37 550.84 423.94 554.17 424.5 557.51C431.73 557.84 435.14 549.67 430 544.5ZM632.32 720.5C628.16 719.55 623.95 720 619.69 719.57C608.57 718.45 597.66 718.46 586.5 718.03C563.32 717.13 539.97 716.06 516.74 716.49C512.02 716.58 507.2 716.25 502.5 716.63C499.47 716.88 496.56 717.8 493.5 717.75C488.66 717.67 483.43 715.86 479.42 719.5C478.1 726.95 480.77 739.3 481.06 747.5C481.54 761.07 478.53 774.31 480.5 787.74C487.51 789.04 494.43 788.16 501.5 788.13C510.84 788.08 520.15 788.64 529.51 788.34C536.72 788.1 544.83 788.98 552.06 789.49C561.81 790.18 571.76 789.34 581.5 789.37C590.85 789.39 600.15 789.03 609.5 789.12C616.61 789.19 624.13 789.84 630.9 787.5C632.3 780.34 631.3 772.77 631.14 765.5C630.99 758.21 631.65 750.8 631.88 743.5C632.12 736.15 634.38 727.67 632.32 720.5ZM386.79 812.44C377.48 813.58 360.65 811.11 353.13 817.61C349.19 821.01 349.23 825.08 348.39 829.76C346.89 838.07 345.99 846.1 345.71 854.5C345.59 858.29 345.21 862.36 347.94 865.55C349.11 866.91 351.35 867.89 353.03 868.46C358.57 870.36 363.79 870.2 369.5 870.74C392.17 872.9 414.73 869.34 437.49 870.37C454.5 871.15 471.42 872.65 488.5 873.06C494.19 873.2 499.77 874.1 505.5 873.82C512.78 873.46 520.26 873.77 527.5 873.02C533.74 872.38 539.9 871.3 546.1 870.52C560.67 868.69 575.83 868.55 590.5 868.27C615.96 867.79 641.2 870.65 666.5 870.46C676.18 870.39 685.82 871.01 695.5 871.11C702.52 871.18 709.5 870.24 716.5 870.03C723.53 869.82 730.51 870.65 737.5 870.63C740.41 870.63 742.74 869.61 745.55 869.26C755.58 867.99 758.83 868.15 760.51 857.12C761.09 853.24 760.37 849.36 760.28 845.5C760.15 840.1 760.62 834.88 760.26 829.5C759.99 825.56 759.9 820.69 756.87 817.64C752.07 812.79 739.77 813.4 733.5 813.03C714.05 811.89 694.98 812.93 675.5 813.24C666.22 813.39 656.77 813.39 647.5 812.93C644.79 812.79 642.22 812.06 639.5 812.07C622.18 812.11 604.84 813.56 587.5 813.59C567.51 813.62 547.5 812.22 527.5 811.85C514.49 811.61 501.54 813.43 488.5 813.07C482.16 812.89 475.82 812.07 469.5 812.15C455.21 812.33 440.87 813.72 426.5 813.39C416.15 813.15 405.84 812.83 395.5 812.7C392.55 812.66 389.76 812.08 386.79 812.44Z" fill="currentColor" fill-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
       </div>
     </section>
 
-  </div><!-- /.page -->
+    <section class="section" id="modes">
+      <div class="container">
+        <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Pick your boundary.</h2>
+        <div class="modes">
 
-  <!-- ─── Closing CTA ─────────────────────────────────────────────────── -->
-  <section class="cta-band">
-    <div class="cta-band-inner" data-reveal>
-      <h2>Stop negotiating with your own attention.</h2>
-      <p>Start free with Friction Mode. Upgrade to Strict Mode when you're ready to remove the option to give in.</p>
-      <a href="dashboard.html" class="btn-on-dark">Get started free</a>
-    </div>
-  </section>
+          <div class="band" data-reveal>
+            <div class="band__art">
+              <svg class="ink ink--drawn ink--breath" viewBox="0 0 446 446" role="img" aria-label="Hand-drawn concentric circles, like a slow breath" style="color:var(--friction)">
+                <path d="M208.02 6.29C237.54 3.18 269.92 10.04 297.14 20.79C348.6 41.11 395 78.3 417.74 129.85C436.11 171.52 442.88 223.32 431.83 267.82C425.6 292.94 414.61 317.28 399.84 338.56C366.3 386.89 302.1 427.01 243.37 431.87C215.52 434.17 187.69 427.78 161.21 420.18C128.31 410.74 96.74 394.3 72.15 369.98C50.9 348.95 33.25 321.37 24.21 292.93C18.83 276 15.92 258.15 13.81 240.51C9.64 205.71 12.61 169.96 26.22 137.58C51.31 77.89 107.67 31.09 169.35 13.2C181.99 9.54 194.93 7.67 208.02 6.29ZM209.69 27.08C188.59 27.99 167.85 33.34 148.66 41.72C93.35 65.89 51.39 118.17 37.23 176.27C20.46 245.16 47.15 323.9 102.31 368.34C120.9 383.31 141.51 395.35 164.74 401.2C184.76 406.24 210.59 412.01 231.21 410.75C241.26 410.13 251.07 408.02 260.93 406.22C279.67 402.8 297.02 399.15 313.81 389.79C336.15 377.34 353.79 359.67 370.24 340.32C380.63 328.08 390.55 314.98 397.73 300.62C402.8 290.48 406.52 279.85 409.74 269.01C426.52 212.56 409.52 141.44 372.73 96.29C351.57 70.32 323.43 53.51 293.11 40.7C267.25 29.77 237.71 25.87 209.69 27.08ZM210.01 58.03C248.21 56.48 275.95 60.37 308.38 80.79C314.93 84.92 321.74 89.07 327.58 94.19C336.57 102.08 343.66 111.46 351.26 120.61C360.7 131.95 370.28 142.42 375.8 156.31C381.97 171.87 384.36 188.39 385.23 205.08C386.61 231.53 383.67 260.37 372.83 284.64C357.37 319.28 320.89 354.8 285.55 368.82C272.55 373.97 258.93 377.24 244.99 378.8C219.8 381.61 181.89 378.52 158.44 368.8C133.52 358.46 113.65 339.06 96.79 318.43C85.18 304.22 75.13 289.77 69.27 272.26C61.13 247.96 60.86 221.38 63.82 196.11C65.75 179.72 68.9 163.4 76.27 148.56C91.14 118.62 124.57 86.69 154.67 72.2C171.68 64.02 191.01 58.79 210.01 58.03ZM218.6 71.88C199.61 72.32 180.69 76.9 163.5 84.71C146.43 92.46 130.08 103.12 117.19 116.98C103.16 132.08 92.1 149.03 85.2 168.46C67.05 219.56 80.09 279.9 116.34 319.7C131.88 336.76 151.24 348.8 172.44 357.26C189.38 364.01 208.36 367.23 226.67 366.87C268.22 366.06 302.26 348.1 331.2 319.2C344.35 306.06 356.1 291.26 362.79 273.82C367.7 261.05 367.24 246.69 368.1 233.18C369 219.23 370.27 205.53 367.81 191.64C359.81 146.45 327.34 101.26 283.88 84.13C262.89 75.85 241.35 71.36 218.6 71.88ZM215.33 82.87C236.84 81.63 259.16 83.94 279.1 92.2C301.11 101.32 317.19 119.25 331.25 137.77C338.58 147.44 345.5 157.94 349.75 169.33C359.27 194.84 361.52 226.27 354.76 252.72C350.54 269.21 342.15 283.66 332.15 297.32C319.22 314.97 305.18 332.21 285.55 342.76C273.8 349.06 259.78 352.25 246.57 353.78C224.43 356.35 199.62 354.66 178.79 346.44C145.11 333.15 119.76 316.11 102.28 283.22C84.93 250.59 82.29 203.25 96.3 168.98C103.91 150.39 116.12 133.74 130.48 119.7C140.23 110.16 151.72 100.79 164.21 95.16C180.49 87.82 197.4 83.9 215.33 82.87ZM221.47 111.39C177.35 113.91 136.62 139.19 121.2 181.68C96.05 250.98 149.3 329.34 223.81 327.66C270.28 326.61 315.27 296.58 327.79 250.66C341.98 198.63 316.46 134.99 263.01 117.17C249.85 112.78 235.41 110.59 221.47 111.39ZM212.54 128.09C241.41 126.71 271.39 132.11 290.67 155.52C325.45 197.71 317.46 269.55 269.6 298.71C259.48 304.88 247.69 308.29 235.97 309.79C197.22 314.77 158 295.09 143.17 258.26C124.56 212.05 138.59 150.86 189.19 132.81C196.61 130.16 204.62 128.47 212.54 128.09ZM216.56 144.78C176.08 146.44 139 187.46 147.22 228.57C155.26 268.77 197.16 298.29 237.66 292.86C275.48 287.79 307.73 245.61 298.77 207.68C290.12 171.06 254.39 143.24 216.56 144.78Z" fill="currentColor" fill-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="band__copy">
+              <span class="tag">Free</span>
+              <h3 class="display">Friction Mode</h3>
+              <p class="lede">Open a blocked site and you get a <span class="nowrap">30-second</span> breathing pause first. Most of the time, that is all it takes to close the tab.</p>
+            </div>
+          </div>
 
-  <div class="page">
-    <!-- ─── Footer ──────────────────────────────────────────────────────── -->
-    <footer class="footer">
-      <span class="footer-brand">Please Don't Scroll</span>
-      <div class="footer-links">
-        <a href="pricing.html">Plans</a>
+          <div class="band band--flip" data-reveal>
+            <div class="band__art">
+              <svg class="ink ink--drawn" viewBox="0 0 370 362" role="img" aria-label="A hand-drawn padlock inside a circle" style="color:var(--strict)">
+                <path d="M233.46 33.6C232.49 35.55 229.8 36.36 227.91 37.25C221.34 40.32 214.6 40.7 207.39 41.2C184.32 42.8 159.86 43.22 138 51.29C116.06 59.39 96.53 71.32 81.24 89.45C67.79 105.39 58.87 125.15 53.82 145.22C43.13 187.75 46.19 231.28 75.32 265.78C99.81 294.8 144.35 315.46 181.99 318.12C204.19 319.68 227.46 315.9 247.74 307.05C274.83 295.22 296.02 275.24 310.7 249.72C321.46 231.03 325.75 209.01 327.82 187.67C328.69 178.71 329.21 169.64 330.72 160.76C331.21 157.88 330.95 154.31 332.27 151.63C334.11 147.92 337.53 144.81 340.42 141.9C341.99 142.45 343 143.83 344.2 144.95C346.17 146.79 348.76 148.77 349.81 151.35C352.36 157.62 351.46 170.45 351.3 177.31C350.54 210.98 340.84 244.07 321.72 271.76C302.84 299.1 274.56 322.3 243.04 333.08C234.72 335.93 226.05 337.03 217.42 338.52C212.35 339.39 206.83 340.95 201.71 341.19C191.84 341.66 178.83 339.08 168.98 337.46C129.61 331.01 92.42 314.83 64.42 285.7C30.45 250.34 20.52 203.72 29.77 155.92C39.29 106.68 58.03 70.14 102.66 44.33C130.15 28.42 162.91 20.66 194.69 19.98C202.79 19.81 218.22 16.73 224.99 21.19C228.73 23.65 231.64 29.69 233.46 33.6ZM308.38 19.2C318.81 18.61 331.08 20.88 338.78 28.37C352.46 41.67 350.26 71 339.73 85.55C330.09 98.87 311 103.4 295.32 100.84C276.95 97.85 268.72 85.16 267.74 67.35C267.37 60.64 267.82 53.72 270.21 47.41C276.2 31.59 291.4 20.18 308.38 19.2ZM312.05 38.93C299.71 39.02 290.11 48.32 287.72 59.98C286.36 66.6 288.01 75.94 294.96 78.92C305.58 83.46 320.35 78.75 324.74 67.91C329.59 55.96 328.16 38.82 312.05 38.93ZM222.1 160.95C224.4 161.93 227.05 161.84 229.47 162.34C238 164.09 246.94 166.68 252.86 173.46C258.33 179.75 259.64 188.64 260.18 196.68C261.02 209.38 262.35 236.39 254.67 246.8C251.9 250.57 247.76 252.53 243.44 253.94C234.05 257.01 222.82 256.19 213.08 256.19C196 256.19 178.88 256.25 161.89 254.49C152.12 253.48 141.93 253.83 133.59 247.95C119.05 237.7 120.11 207.14 119.96 191.02C119.9 184.31 118.78 174.56 124.17 169.45C131.26 162.72 142.45 167.23 150.74 164.61C152.77 160.25 152.81 149.8 154.23 144.32C159.56 123.71 169.92 109.34 193.02 109.34C201.1 109.34 208.6 111.14 212.76 118.62C218.22 128.46 218.92 140.89 220.74 151.81C221.24 154.82 221.02 158.06 222.1 160.95ZM200.71 163.69C200.81 157.27 199.85 139.86 197.92 134.18C196.67 130.47 192.21 127.82 188.39 129.39C180.71 132.54 174.88 147.31 173.88 154.92C173.46 158.07 172.2 162.54 175.12 164.97C178.79 168.01 185.4 164.79 189.68 164.9C193.19 164.99 197.53 165.55 200.71 163.69ZM141.43 188.68C139.94 191.98 141.01 200.79 141.01 204.72C141 212.81 139.53 223.29 145.32 229.86C149.92 235.09 157.25 234.64 163.61 234.64C177.03 234.64 190.55 235.05 203.97 234.48C212.32 234.12 220.8 235.22 229.12 234.56C233.1 234.24 237.26 233.11 238.81 228.97C240.43 224.62 239 219.53 238.7 215.08C238.16 207.04 243.23 193.29 235.59 187.39C229.5 182.67 218.3 184.24 211.07 184.24C195.66 184.24 180.32 185.83 164.97 186.98C157.99 187.51 147.97 187.09 141.43 188.68Z" fill="currentColor" fill-rule="evenodd"/>
+              </svg>
+            </div>
+            <div class="band__copy">
+              <span class="tag tag--pro">Focus Pro</span>
+              <h3 class="display">Strict Mode</h3>
+              <p class="lede">Blocked means blocked. No timer and no override until you switch modes yourself. For the days you would rather not rely on willpower.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="profiles">
+      <div class="container">
+        <div style="max-width: 40em; display: grid; gap: 18px" data-reveal>
+          <h2 class="display">Built around your day.</h2>
+          <p class="lede">Start with one profile. On Focus Pro, add more, like Deep Work or Evening Unwind, each with its own blocklist. Switch in a click. Try it below.</p>
+        </div>
+        <div class="preview" data-reveal>
+          <div class="preview__row" role="group" aria-label="Example profiles">
+            <button class="pill pill--on" data-profile="Deep Work" aria-pressed="true">Deep Work</button>
+            <button class="pill" data-profile="Evening Unwind" aria-pressed="false">Evening Unwind</button>
+            <button class="pill" data-profile="Weekend" aria-pressed="false">Weekend</button>
+            <span class="pill pill--add" aria-hidden="true">+ New profile</span>
+          </div>
+          <div class="preview__input" aria-hidden="true"><span class="preview__field">e.g. instagram.com</span><span class="preview__btn">Block site</span></div>
+          <div class="preview__quick" aria-hidden="true">
+            <span class="preview__quick-label">Quick add</span>
+            <div class="preview__icons"><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg></span><span class="preview__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></span></div>
+          </div>
+          <div class="preview__sites">
+            <div id="preview-list" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Simple to set up. Easy to live with.</h2>
+        <div class="tiles" data-reveal>
+          <div class="tile">
+            <div class="tile__icons" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></div>
+            <h3>Block any site</h3>
+            <p>Add the usual suspects with one click, or type any address. Block just a section if you like, such as YouTube Shorts on its own.</p>
+          </div>
+          <div class="tile">
+            <div class="tile__switchrow" aria-hidden="true"><span class="switch"></span><span class="tile__durations"><span>30m</span><span>1h</span><span>2h</span><span>6h</span></span></div>
+            <h3>Pause when you need to</h3>
+            <p>Take a break from blocking for half an hour, a few hours, or until you turn it back on. One switch in your dashboard.</p>
+          </div>
+          <div class="tile">
+            <div class="tile__week" aria-hidden="true"><i class="f"></i><i></i><i class="f"></i><i class="s"></i><i class="f"></i><i></i><i class="s"></i></div>
+            <h3>Scheduled blocking</h3>
+            <p>Paint your week: which profile, which mode, which hours. It switches on its own, so you do not have to remember.</p>
+          </div>
+          <div class="tile">
+            <div class="tile__lock" aria-hidden="true">
+              <svg viewBox="0 0 232 229"><path d="M166.5 88.86C170.95 90.62 177.62 89.58 182.44 90.14C190.42 91.06 198.01 94.83 203.74 100.42C215.43 111.83 215.62 127.43 215.71 142.83C215.85 166.02 218.11 189.3 195.48 202.67C183.54 209.73 166.18 207.75 152.83 207.75C130.28 207.75 107.72 207.75 85.17 207.75C72.74 207.75 58.49 209.21 46.42 205.79C16.62 197.35 18.08 168.09 18.29 142.83C18.41 128.43 18.36 113.84 28.3 102.48C34.18 95.76 42.69 91.16 51.56 90.14C56.4 89.58 63.01 90.6 67.5 88.87C68.88 84.9 67.76 78.73 67.76 74.5C67.76 60.49 65.4 44.13 72.2 31.36C81.77 13.36 98 10.25 116.83 10.25C136.76 10.25 153.7 13.51 162.79 33.38C168.48 45.8 166.25 61.49 166.25 74.83C166.25 78.98 165.17 84.96 166.5 88.86ZM146.35 89.17C147.67 84.9 146.67 78.99 146.67 74.5C146.67 63.05 149.51 44.92 141.05 36.12C134.99 29.81 127.01 30.03 118.83 30.03C108.17 30.03 96.65 29.14 90.29 39.45C85.42 47.35 87.34 59.26 87.34 68.17C87.34 74.02 86.03 83.82 87.65 89.17C107.22 89.17 126.78 89.17 146.35 89.17ZM60.21 109.15C56.52 109.32 52.1 109.62 48.73 111.21C34.12 118.14 38 140.39 38.05 153.5C38.08 162.04 36.76 173.35 42.34 180.49C49.79 190.02 64.42 187.87 75.17 187.96C103.83 188.2 132.5 187.98 161.17 187.95C172.67 187.93 187.77 189.46 193.74 177.23C197.25 170.04 195.93 159.59 195.95 151.83C195.99 141.47 198.19 123.48 190.78 115.39C182.43 106.27 165.98 109 154.83 109C123.39 109 91.62 107.7 60.21 109.15ZM100.88 138.8C107.91 137.96 115.42 138.67 122.5 138.67C126.47 138.67 131.24 137.97 135.08 139.12C140.6 140.78 142.79 147.39 140.88 152.41C139.96 154.8 137.43 157.05 135.02 157.84C129.71 159.56 113.27 158.25 106.83 158.25C102.76 158.25 98.69 158.63 95.47 155.7C89.41 150.19 92.89 139.74 100.88 138.8Z" fill="currentColor" fill-rule="evenodd"/></svg>
+            </div>
+            <h3>Private by design</h3>
+            <p>Your browsing never leaves your device. We only ever know the sites you chose to block, and we never sell or share anything.</p>
+            <a href="privacy.html" class="textlink">Read the privacy policy</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="plans">
+      <div class="container">
+        <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Start free. Upgrade when you are ready.</h2>
+        <div class="plans" data-reveal>
+
+          <div class="plan">
+            <h3 class="visually-hidden">Free plan</h3>
+            <div class="plan__head">
+              <span class="tag">Free forever</span>
+              <div class="plan__price">$0 <small>/ month</small></div>
+              <p class="plan__desc">Everything you need to get started.</p>
+            </div>
+            <ul class="plan__list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Block unlimited distracting websites</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span><span class="nowrap">30-second</span> breathing pause</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>1 blocking profile</span></li>
+            </ul>
+            <a href="dashboard.html" class="btn btn--ink">Get started free</a>
+          </div>
+
+          <div class="plan plan--pro">
+            <h3 class="visually-hidden">Focus Pro plan</h3>
+            <div class="plan__head">
+              <span class="tag tag--pro-solid">Focus Pro</span>
+              <div class="plan__price">$4.99 <small>/ month</small></div>
+              <p class="plan__desc">Everything in Free, plus the tools for the days you need more than a pause.</p>
+            </div>
+            <ul class="plan__list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Strict Mode</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Unlimited profiles</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Scheduled blocking</span></li>
+            </ul>
+            <a href="pricing.html" class="btn btn--paper" id="pro-cta">Get Focus Pro</a>
+          </div>
+
+        </div>
+        <p style="margin-top: 22px"><a href="pricing.html" class="textlink">Compare plans in detail</a></p>
+      </div>
+    </section>
+
+    <section class="section section--tight">
+      <div class="container">
+        <div class="cta" data-reveal>
+          <img src="assets/images/logo-no-bg.png" alt="" class="cta__logo">
+          <h2 class="display">Ready to take your time back?</h2>
+          <p class="lede" style="text-align:center">Free to start, and set up in a couple of minutes.</p>
+          <a href="dashboard.html" class="btn btn--ink btn--lg">Get started free</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="footer__links">
+        <a href="pricing.html">Pricing</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="privacy.html">Privacy</a>
-        <a href="https://instagram.com/pleasedontscroll">Instagram</a>
-        <a href="https://tiktok.com/@pleasedontscroll.com">TikTok</a>
+        <a href="https://instagram.com/pleasedontscroll" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://tiktok.com/@pleasedontscroll.com" target="_blank" rel="noopener">TikTok</a>
       </div>
-      <span class="footer-copy">&copy; 2025 Please Don't Scroll. All rights reserved.</span>
-    </footer>
-  </div>
+      <div class="footer__copy">&copy; 2026 Please Don’t Scroll. All rights reserved.</div>
+    </div>
+  </footer>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="site.js"></script>
   <script type="module">
+    import { showToast } from './site.js'
     import { webStorageAdapter } from '../core/auth/storage.js'
     import * as Auth from '../core/auth/session.js'
-    import { DASHBOARD_URL } from '../core/config.js'
+    import { createCheckoutSession, createPortalSession } from '../core/sync/billing.js'
+    import { fetchIsPremium } from '../core/sync/userSettings.js'
 
-    // ─── Defensive fallback for a stray recovery/signup/error hash ──────
-    // dashboard.html's completeRecoveryFlow()/completeSignupConfirmation()
-    // are the only code that knows how to read Supabase's
-    // #access_token=...&type=recovery|signup (or #error=...) hash — this
-    // page has no idea what to do with it. Found from two real reports
-    // (see TODO.md's password-recovery entry) where a recovery/signup link
-    // landed here instead of on /dashboard — most likely a Supabase
-    // Redirect URLs allowlist gap for the www. subdomain specifically —
-    // and the user was left on a normal-looking homepage with the tokens
-    // just sitting inertly in the URL, no indication anything was wrong.
-    // Forwarding to DASHBOARD_URL (not the current host) works regardless
-    // of whichever allowlist gap got us here in the first place — the hash
-    // is already in the browser at this point, so this hop is a plain
-    // client-side redirect, not another Supabase-mediated one that could
-    // hit the same mismatch again.
-    if (/(^|&)(access_token|error)=/.test(window.location.hash.replace(/^#/, ''))) {
-      window.location.replace(DASHBOARD_URL + window.location.hash)
-    }
+    // ─── Focus Pro CTA ──────────────────────────────────────────────────
+    // Straight to Stripe Checkout rather than a detour through the pricing
+    // page, and to the billing portal for someone already subscribed. Same
+    // wiring as pricing.html; create-checkout-session re-checks premium
+    // server-side too, so this is a convenience, not the gate. The anchor
+    // keeps href="pricing.html" as the no-JS fallback, hence preventDefault.
+    const FOCUS_PRO_PRICE_ID = 'price_1TzRXUIT8NkEPl0llMOlI4re'
+    const DASHBOARD = 'dashboard.html'
+    let isPremiumUser = false
 
-    // ─── Account menu — shows the "Sign in" pill when logged out, or an
-    // avatar + dropdown (Dashboard / Settings / Sign out) when logged in.
-    // Same pattern duplicated on pricing.html and dashboard.html.
-    async function initAccountMenu() {
+    async function runBilling(e, { manage }) {
+      e.preventDefault()
+      const btn = e.currentTarget
       const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
-      const navCta = document.getElementById('nav-cta')
-      const menu = document.getElementById('account-menu')
-
       if (!accessToken) {
-        menu.classList.add('hidden')
-        navCta.classList.remove('hidden')
+        window.location.href = manage ? DASHBOARD : DASHBOARD + '?redirect=upgrade'
         return
       }
+      const originalText = btn.textContent
+      btn.textContent = manage ? 'Opening billing portal…' : 'Preparing checkout…'
+      btn.setAttribute('aria-disabled', 'true')
+      const { url, error } = manage
+        ? await createPortalSession(accessToken)
+        : await createCheckoutSession(accessToken, FOCUS_PRO_PRICE_ID)
+      if (error || !url) {
+        console.error('[PDS] Billing error:', error)
+        showToast(error || 'Something went wrong. Please try again.')
+        btn.textContent = originalText
+        btn.removeAttribute('aria-disabled')
+        return
+      }
+      window.location.href = url
+    }
 
+    const proCta = document.getElementById('pro-cta')
+    proCta.addEventListener('click', (e) => runBilling(e, { manage: isPremiumUser }))
+
+    ;(async () => {
+      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
+      if (!accessToken) return
       const session = await Auth.getStoredSession(webStorageAdapter)
-      navCta.classList.add('hidden')
-      menu.classList.remove('hidden')
-      document.getElementById('account-email').textContent = session.user.email
-      document.getElementById('account-avatar-btn').textContent =
-        session.user.email.charAt(0).toUpperCase()
+      isPremiumUser = await fetchIsPremium(accessToken, session.user.id)
+      if (isPremiumUser) proCta.textContent = 'Manage subscription'
+    })()
+
+    // The "Built around your day" preview is a working mini-version of the
+    // dashboard's profile switcher: click a profile, its blocklist shows.
+    const PREVIEW_PROFILES = {
+      'Deep Work':      ['instagram.com', 'tiktok.com', 'youtube.com/shorts'],
+      'Evening Unwind': ['x.com', 'reddit.com'],
+      'Weekend':        [],
     }
-
-    document.getElementById('account-avatar-btn').addEventListener('click', (e) => {
-      e.stopPropagation()
-      document.getElementById('account-dropdown').classList.toggle('open')
-    })
-
-    document.addEventListener('click', () => {
-      document.getElementById('account-dropdown').classList.remove('open')
-    })
-
-    document.getElementById('account-signout-btn').addEventListener('click', async () => {
-      await Auth.signOut(webStorageAdapter)
-      window.location.href = 'index.html'
-    })
-
-    initAccountMenu()
-
-    // ─── Entrance reveal ──────────────────────────────────────────────────
-    // Pairs with the [data-reveal]/.reveal/.in-view CSS (see the "Entrance
-    // reveal" comment near the top of this page's <style> block). The
-    // .reveal class itself is only added here, inside the same
-    // reduced-motion check the CSS uses — so a visitor with that
-    // preference set never has these elements hidden by JS in the first
-    // place, not even for a frame before this runs.
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window) {
-      const revealEls = document.querySelectorAll('[data-reveal]')
-      revealEls.forEach((el) => el.classList.add('reveal'))
-
-      const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          entry.target.classList.add('in-view')
-          revealObserver.unobserve(entry.target)
-        })
-      }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' })
-
-      revealEls.forEach((el) => revealObserver.observe(el))
-    }
-
-    // ─── Nav scroll blur ──────────────────────────────────────────────────
-    // Pairs with .nav's own --nav-blur/--nav-bg-alpha custom properties
-    // (see that rule's comment). Not gated behind prefers-reduced-motion
-    // like the entrance animations above — this isn't an autoplaying
-    // effect, it's a direct 1:1 response to the user's own scroll input,
-    // same category as the browser's native scrollbar. requestAnimationFrame
-    // throttles the update to once per frame regardless of how many
-    // 'scroll' events fire in between, which is what keeps this cheap on a
-    // property (backdrop-filter) that's genuinely expensive to repaint.
-    const navEl = document.querySelector('.nav')
-    const NAV_SCROLL_RANGE = 120  // px of scroll the ramp completes over
-    const NAV_MAX_BLUR = 20       // px — same value the nav used as a constant before
-    const NAV_MAX_BG_ALPHA = 0.82 // matches the frosted-white tint used elsewhere (e.g. the account dropdown)
-
-    function updateNavOnScroll() {
-      const progress = Math.min(window.scrollY / NAV_SCROLL_RANGE, 1)
-      navEl.style.setProperty('--nav-blur', `${(progress * NAV_MAX_BLUR).toFixed(2)}px`)
-      navEl.style.setProperty('--nav-bg-alpha', (progress * NAV_MAX_BG_ALPHA).toFixed(3))
-    }
-
-    let navScrollTicking = false
-    window.addEventListener('scroll', () => {
-      if (navScrollTicking) return
-      navScrollTicking = true
-      requestAnimationFrame(() => {
-        updateNavOnScroll()
-        navScrollTicking = false
+    const pills = document.querySelectorAll('.preview button.pill[data-profile]')
+    const list  = document.getElementById('preview-list')
+    function renderPreview(name) {
+      pills.forEach((p) => {
+        const on = p.dataset.profile === name
+        p.classList.toggle('pill--on', on)
+        p.setAttribute('aria-pressed', String(on))
       })
-    }, { passive: true })
-
-    updateNavOnScroll()
+      const sites = PREVIEW_PROFILES[name]
+      // Same favicon service and row shape as the dashboard's blocklist.
+      const X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+      list.innerHTML = sites.length
+        ? sites.map((s) => `<div class="preview__site"><span class="preview__site-left"><img class="preview__favicon" src="https://icons.duckduckgo.com/ip3/${s.split('/')[0]}.ico" alt="" onerror="this.style.visibility='hidden'"><span>${s}</span></span><span class="preview__site-x" aria-hidden="true">${X}</span></div>`).join('')
+        : '<div class="preview__empty">No sites blocked in this profile yet.</div>'
+    }
+    pills.forEach((p) => p.addEventListener('click', () => renderPreview(p.dataset.profile)))
+    renderPreview('Deep Work')
   </script>
 </body>
 </html>

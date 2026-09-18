@@ -3,347 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy | Please Don't Scroll</title>
+  <title>Please Don’t Scroll | Privacy Policy</title>
+  <meta name="description" content="What Please Don't Scroll collects, why, and what we deliberately don't do with it.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg" />
-  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png" />
-
-  <style>
-    /* ─── Design Tokens (matches index.html / pricing.html / dashboard.html) ──── */
-    :root {
-      /* Back to pure #000000, matching dashboard.html's own token —
-         --black and --text stay equal on purpose (a consolidation, not a
-         new value: one less near-black in the token set). */
-      --black:        #000000;
-      --white:        #ffffff;
-      --text:         #000000;
-      --text-muted:   #6e6e73;
-      --text-faint:   #aeaeb2;
-      --bg:           #ffffff;
-      --border:       rgba(0, 0, 0, 0.09);
-      --border-mid:   rgba(0, 0, 0, 0.14);
-      --indigo:       #6366f1;
-
-      --radius-btn:   50px;
-
-      --font-ui:      'DM Sans', -apple-system, sans-serif;
-      --font-serif:   'Lora', serif;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      font-family: var(--font-ui);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── Nav (same pattern as pricing.html) ────────────────────────────── */
-    .nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 40px;
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-logo {
-      height: 24px;
-      width: auto;
-      filter: invert(1);
-      position: relative;
-      top: 2px;
-      transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-
-    /* Logo is vertically symmetrical, so a 180° hover spin reads as a
-       clean flip. Counter-clockwise; the cubic-bezier above gives a
-       slow-start/fast-middle/slow-end feel. */
-    .nav-logo:hover {
-      transform: rotate(-180deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-link {
-      font-size: 0.88rem;
-      font-weight: 400;
-      color: var(--text-muted);
-      text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 24px;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-link:hover {
-      color: var(--text);
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-
-    /* ─── Page ───────────────────────────────────────────────────────────── */
-    .page {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 32px;
-    }
-
-    .legal-header {
-      padding: 160px 0 40px;
-    }
-
-    .legal-eyebrow {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--indigo);
-      margin: 0 0 16px;
-    }
-
-    .legal-header h1 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: clamp(2rem, 5vw, 2.75rem);
-      letter-spacing: -0.02em;
-      color: var(--black);
-      margin: 0 0 12px;
-    }
-
-    .legal-updated {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      margin: 0;
-    }
-
-    /* ─── Content ────────────────────────────────────────────────────────── */
-    .legal-content {
-      padding-bottom: 100px;
-    }
-
-    .legal-content p {
-      font-size: 1rem;
-      line-height: 1.7;
-      color: var(--text);
-      margin: 0 0 20px;
-    }
-
-    .legal-content h2 {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1.4rem;
-      letter-spacing: -0.01em;
-      color: var(--black);
-      margin: 48px 0 16px;
-    }
-
-    .legal-content ul {
-      margin: 0 0 20px;
-      padding-left: 20px;
-    }
-
-    .legal-content li {
-      font-size: 1rem;
-      line-height: 1.7;
-      color: var(--text);
-      margin-bottom: 10px;
-    }
-
-    .legal-content strong { font-weight: 600; }
-
-    .legal-content a {
-      color: var(--text);
-      text-decoration: underline;
-      text-decoration-color: var(--border-mid);
-      text-underline-offset: 2px;
-    }
-
-    .legal-content a:hover { text-decoration-color: var(--text); }
-
-    /* ─── Footer ─────────────────────────────────────────────────────────── */
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 48px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .footer-brand {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    .footer-links { display: flex; gap: 24px; }
-
-    .footer-links a {
-      font-size: 0.82rem;
-      color: var(--text-faint);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-
-    .footer-links a:hover { color: var(--text); }
-
-    .footer-copy { font-size: 0.78rem; color: var(--text-faint); }
-
-    /* ─── Responsive ─────────────────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .nav { padding: 16px 24px; }
-      .nav-link { display: none; }
-      .page { padding: 0 20px; }
-      .legal-header { padding: 120px 0 32px; }
-      .footer { flex-direction: column; align-items: flex-start; gap: 16px; }
-    }
-  </style>
-  <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
-  <!-- See index.html's copy of this comment for why this is a plain
-       script tag, not the @vercel/analytics npm package. -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+  <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
+  <link rel="stylesheet" href="site.css">
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ─── Nav ──────────────────────────────────────────────────────────── -->
   <nav class="nav">
-    <a href="index.html">
-      <img src="assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="nav-logo">
-    </a>
-    <div class="nav-links">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="pricing.html" class="nav-link">Pricing</a>
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="nav__links">
+        <a href="index.html" class="nav__link">Home</a>
+        <a href="pricing.html" class="nav__link">Pricing</a>
+        <a href="dashboard.html" class="btn btn--ink" id="nav-cta">Sign in</a>
+        <div class="account hidden" id="account-menu">
+          <button class="account__avatar" id="account-avatar-btn" aria-label="Account menu"></button>
+          <div class="account__menu" id="account-dropdown">
+            <div class="account__email" id="account-email"></div>
+            <a href="dashboard.html" class="account__item">Dashboard</a>
+            <a href="dashboard.html#settings-card" class="account__item">Settings</a>
+            <button class="account__item" id="account-signout-btn">Sign out</button>
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
 
-  <div class="page">
+  <main id="main">
+    <section class="hero" style="padding-bottom: 0">
+      <div class="container prose">
+        <h1 class="display">Privacy Policy</h1>
+        <p class="lede">Your data, in plain language.</p>
+        <p class="meta">Last updated: July 22, 2026</p>
+      </div>
+    </section>
 
-    <header class="legal-header">
-      <p class="legal-eyebrow">Privacy Policy</p>
-      <h1>Your data, in plain language.</h1>
-      <p class="legal-updated">Last updated: July 22, 2026</p>
-    </header>
+    <section class="section section--tight">
+      <div class="container prose">
+        <p>
+          Please Don’t Scroll ("PDS", "we", "us") is a Chrome extension and web
+          dashboard that helps you block distracting sites. This page explains
+          what we collect, why, and what we deliberately don’t do with it.
+          It applies to the extension, the dashboard at
+          <a href="https://pleasedontscroll.com">pleasedontscroll.com</a>, and
+          this website.
+        </p>
 
-    <div class="legal-content">
+        <h2>What we collect</h2>
+        <p>When you create an account and use PDS, we store:</p>
+        <ul>
+          <li><strong>Your email address</strong>, to authenticate you. Passwords are handled entirely by our authentication provider (Supabase), and we never see or store your password ourselves.</li>
+          <li><strong>The sites you add to your blocklist</strong>, and the names of any profiles you create (e.g. "Deep Work"), so we can sync them between the extension and your dashboard.</li>
+          <li><strong>Your blocking-mode preference</strong> (Friction or Strict) and whether you have an active Focus Pro subscription.</li>
+          <li><strong>If you subscribe to Focus Pro</strong>, a customer reference ID from our payment processor, Stripe, so we know which account to upgrade. We do not collect or store your card details; those go directly to Stripe.</li>
+        </ul>
 
-      <p>
-        Please Don't Scroll ("PDS", "we", "us") is a Chrome extension and web
-        dashboard that helps you block distracting sites. This page explains
-        what we collect, why, and what we deliberately don't do with it.
-        It applies to the extension, the dashboard at
-        <a href="https://pleasedontscroll.com">pleasedontscroll.com</a>, and
-        this website.
-      </p>
+        <h2>What we don’t do</h2>
+        <p>
+          The extension checks the site a tab is navigating to against your own
+          blocklist locally, in the background. It does not send your general
+          browsing history anywhere. We only know about the specific sites you
+          chose to add to a blocklist, not the rest of what you browse. We do
+          not sell your data, share it with advertisers, or use it for
+          advertising or analytics purposes.
+        </p>
 
-      <h2>What we collect</h2>
-      <p>When you create an account and use PDS, we store:</p>
-      <ul>
-        <li><strong>Your email address</strong>, to authenticate you. Passwords are handled entirely by our authentication provider (Supabase), and we never see or store your password ourselves.</li>
-        <li><strong>The sites you add to your blocklist</strong>, and the names of any profiles you create (e.g. "Deep Work"), so we can sync them between the extension and your dashboard.</li>
-        <li><strong>Your blocking-mode preference</strong> (Friction or Strict) and whether you have an active Focus Pro subscription.</li>
-        <li><strong>If you subscribe to Focus Pro</strong>, a customer reference ID from our payment processor, Stripe, so we know which account to upgrade. We do not collect or store your card details; those go directly to Stripe.</li>
-      </ul>
+        <h2>Where your data lives</h2>
+        <p>
+          Your account and blocklist data are stored in our database, provided
+          by <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>
+          (PostgreSQL with row-level security), so that only your authenticated
+          account can read or write your own rows, not other users, and not us
+          through the application itself. The website is hosted on
+          <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a>.
+          Fonts are loaded from Google Fonts, which, like any web font
+          provider, receives a request from your browser when a page loads.
+          Payments are processed by
+          <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>,
+          subject to Stripe’s own privacy policy.
+        </p>
 
-      <h2>What we don't do</h2>
-      <p>
-        The extension checks the site a tab is navigating to against your own
-        blocklist locally, in the background. It does not send your general
-        browsing history anywhere. We only know about the specific sites you
-        chose to add to a blocklist, not the rest of what you browse. We do
-        not sell your data, share it with advertisers, or use it for
-        advertising or analytics purposes.
-      </p>
+        <h2>Session storage</h2>
+        <p>
+          We don’t use tracking cookies. The web dashboard keeps your session in
+          your browser’s local storage, and the extension keeps it in Chrome’s
+          extension storage. Both stay on your device and are used only to
+          keep you signed in.
+        </p>
 
-      <h2>Where your data lives</h2>
-      <p>
-        Your account and blocklist data are stored in our database, provided
-        by <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>
-        (PostgreSQL with row-level security), so that only your authenticated
-        account can read or write your own rows, not other users, and not us
-        through the application itself. The website is hosted on
-        <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a>.
-        Fonts are loaded from Google Fonts, which, like any web font
-        provider, receives a request from your browser when a page loads.
-        Payments are processed by
-        <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>,
-        subject to Stripe's own privacy policy.
-      </p>
+        <h2>Your rights</h2>
+        <p>
+          You can edit or delete anything in your blocklist and profiles
+          directly from the dashboard at any time. To delete your account and
+          all associated data entirely, use the Delete Account option under
+          Settings in your dashboard. This immediately and permanently removes
+          your account, profiles, and blocklist, and cancels any active
+          subscription. It cannot be undone. If you’d rather we do it for you,
+          email <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>.
+        </p>
 
-      <h2>Session storage</h2>
-      <p>
-        We don't use tracking cookies. The web dashboard keeps your session in
-        your browser's local storage, and the extension keeps it in Chrome's
-        extension storage. Both stay on your device and are used only to
-        keep you signed in.
-      </p>
+        <h2>Children’s privacy</h2>
+        <p>
+          PDS is not directed at children, and we do not knowingly collect
+          information from anyone under 13.
+        </p>
 
-      <h2>Your rights</h2>
-      <p>
-        You can edit or delete anything in your blocklist and profiles
-        directly from the dashboard at any time. To delete your account and
-        all associated data entirely, use the Delete Account option under
-        Settings in your dashboard. This immediately and permanently removes
-        your account, profiles, and blocklist, and cancels any active
-        subscription. It cannot be undone. If you'd rather we do it for you,
-        email
-        <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>.
-      </p>
+        <h2>Changes to this policy</h2>
+        <p>
+          If this policy changes in a way that matters, we’ll update the date
+          at the top of this page. Continued use of PDS after a change means
+          you accept the update.
+        </p>
 
-      <h2>Children's privacy</h2>
-      <p>
-        PDS is not directed at children, and we do not knowingly collect
-        information from anyone under 13.
-      </p>
+        <h2>Contact</h2>
+        <p>
+          Questions about this policy or your data:
+          <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>
+        </p>
+      </div>
+    </section>
+  </main>
 
-      <h2>Changes to this policy</h2>
-      <p>
-        If this policy changes in a way that matters, we'll update the date
-        at the top of this page. Continued use of PDS after a change means
-        you accept the update.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        Questions about this policy or your data:
-        <a href="mailto:hello@pleasedontscroll.com">hello@pleasedontscroll.com</a>
-      </p>
-
-    </div>
-
-    <!-- ─── Footer ────────────────────────────────────────────────────────── -->
-    <footer class="footer">
-      <span class="footer-brand">Please Don't Scroll</span>
-      <div class="footer-links">
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
+        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
+        <span class="nav__name">Please Don’t Scroll</span>
+      </a>
+      <div class="footer__links">
         <a href="index.html">Home</a>
-        <a href="pricing.html">Plans</a>
+        <a href="pricing.html">Pricing</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="mailto:hello@pleasedontscroll.com">Contact</a>
       </div>
-      <span class="footer-copy">&copy; 2026 Please Don't Scroll. All rights reserved.</span>
-    </footer>
+      <div class="footer__copy">&copy; 2026 Please Don’t Scroll. All rights reserved.</div>
+    </div>
+  </footer>
 
-  </div><!-- /.page -->
-
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="site.js"></script>
 </body>
 </html>

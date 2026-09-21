@@ -29,8 +29,8 @@
      which the brighter reds below it do not. --error keeps the old deeper
      red on purpose: it is a separate semantic token, and form errors
      never appear beside a mode pill. */
-  --friction:     #296ce2;
-  --strict:       #d72f2f;
+  --friction:     #0071e3;
+  --strict:       #2a55a5;
 
   --radius-pill:  999px;
   --radius-inner: 14px;

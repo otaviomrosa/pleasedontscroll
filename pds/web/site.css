@@ -26,11 +26,10 @@
   --muted:        #6e6e73;
   --faint:        #aeaeb2;
   --on-ink-muted: rgba(255, 255, 255, 0.68);
-
-  --friction:     #296ce2;
-  --friction-dim: rgba(41, 108, 226, 0.10);
-  --strict:       #d72f2f;
-  --strict-dim:   rgba(215, 47, 47, 0.09);
+  --friction:     #0071e3;
+  --friction-dim: rgba(0, 113, 227, 0.10);
+  --strict:       #2a55a5;
+  --strict-dim:   rgba(42, 85, 165, 0.09);
 
   --radius-surface: 24px;
   --radius-inner:   16px;
@@ -232,49 +231,157 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
 .account__item:hover { background: var(--surface); }
 
 /* ─── Hero ──────────────────────────────────────────────────────────────── */
-/* The burst behind the hero drawing is wider than its column and is
-   rotated, which makes its bounding box wider still, so it would add
-   horizontal page scroll at narrow widths. Clipped here rather than
-   shrunk: rays running off the edge is the intended look. `clip`, not
-   `hidden`, so the vertical axis stays visible and no scroll container
-   is created. */
-.hero { padding: clamp(32px, 5vw, 64px) 0 clamp(56px, 7vw, 96px); overflow-x: clip; }
+.hero { padding: clamp(32px, 5vw, 64px) 0 clamp(56px, 7vw, 96px); }
 .hero__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   gap: clamp(32px, 5vw, 72px);
   align-items: center;
 }
 .hero__copy { display: flex; flex-direction: column; gap: 26px; align-items: flex-start; }
 .hero__actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 
-/* No ground behind the hero drawing: the ink sits straight on the page,
-   so the drawing itself is the shape. Kept as a square box purely to
-   reserve the column's height. */
-.stage {
-  position: relative;
-  aspect-ratio: 1;
+/* ─── Hero: a mock of the blocked page ─────────────────────────────────── */
+/* The chrome reuses the two-surface idea from everywhere else: a gray frame
+   with a white page inside it. No borders, no shadow. Everything is clamped
+   off the viewport so the whole mock scales as one object. */
+.hero__art { display: grid; justify-items: center; gap: clamp(12px, 1.4vw, 18px); }
+/* Reuses the extension's own mode toggle: gray track, the active option
+   filled with that mode's color. */
+.demo-switch { display: inline-flex; gap: 4px; padding: 4px; background: var(--surface); border-radius: var(--radius-pill); }
+.demo-opt {
+  height: 32px; padding: 0 18px; border-radius: var(--radius-pill);
+  font-size: 13.5px; font-weight: 500; color: var(--muted);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.demo-opt:hover { color: var(--ink); }
+.demo-opt[aria-pressed="true"][data-mode="friction"] { background: var(--friction); color: var(--paper); }
+.demo-opt[aria-pressed="true"][data-mode="strict"]   { background: var(--strict);   color: var(--paper); }
+.browser {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-inner);
+  padding: clamp(8px, 1vw, 11px);
   display: grid;
-  place-items: center;
+  /* A real monitor's proportions, not the content's. The page row takes
+     1fr so it absorbs whatever the chrome bar leaves, which is what makes
+     the ratio hold instead of the copy inside dictating the height.
+     4:3 rather than 16:10: a genuine display ratio, but 16:10 read as a
+     letterbox next to this much centered text. */
+  aspect-ratio: 4 / 3;
+  grid-template-rows: auto 1fr;
+  gap: clamp(8px, 1vw, 11px);
 }
-/* A few degrees off square, so a hand-drawn object does not sit like a
-   placed asset. Counter-clockwise reads as set down rather than tilted.
-   Scoped to .ink so the bursts below keep their own sizing. */
-.stage .ink { position: relative; z-index: 1; width: 100%; height: 100%; transform: rotate(-3deg) scale(0.88); }
+.browser__bar { display: flex; align-items: center; gap: 12px; padding: 2px 2px 0; }
+.browser__dots { display: flex; gap: 6px; flex-shrink: 0; padding-left: 4px; }
+/* macOS traffic lights, in their real order and colors: close, minimize,
+   zoom. These are a literal depiction of a window's chrome, the same way
+   the favicons in the blocklist are, so they sit outside the "color is for
+   the two modes only" rule rather than breaking it. Hardcoded hexes on
+   purpose: they are Apple's, not ours, so they must not follow a token. */
+.browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--surface-deep); }
+.browser__dots i:nth-child(1) { background: #ff5f57; }
+.browser__dots i:nth-child(2) { background: #febc2e; }
+.browser__dots i:nth-child(3) { background: #28c840; }
+.browser__url {
+  flex: 1; min-width: 0; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper); border-radius: var(--radius-pill);
+  font-size: clamp(11px, 1vw, 12.5px); color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.browser__page {
+  background: var(--paper);
+  border-radius: var(--radius-nested);
+  padding: clamp(16px, 2vw, 26px) clamp(16px, 2vw, 26px) clamp(14px, 1.8vw, 22px);
+  display: grid; text-align: center;
+  /* minmax(0, 1fr), not the default auto: an auto row grows to its content
+     and spills out of the fixed height the monitor ratio hands down. */
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  position: relative;
+}
+/* One cell, one layer per mode. Friction is taller, so it fixes the height;
+   Strict stretches to that height and centers its own content in it. */
+.browser__page > .bp__view { grid-area: 1 / 1; }
+.bp__view {
+  display: grid; justify-items: center; align-content: center;
+  gap: clamp(6px, 0.8vw, 9px);
+  min-height: 0;
+}
+.bp__pill {
+  display: inline-flex; align-items: center;
+  height: 25px; padding: 0 12px; border-radius: var(--radius-pill);
+  background: var(--friction); color: var(--paper);
+  font-size: clamp(11px, 0.95vw, 12px); font-weight: 500;
+}
+.bp__title {
+  font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em;
+  font-size: clamp(1.05rem, 1.85vw, 1.36rem); line-height: 1.13; margin-top: 2px;
+}
+.bp__sub { font-size: clamp(11.5px, 1.02vw, 13.5px); color: var(--muted); }
+.bp__sub b { font-weight: 500; color: var(--ink); }
+/* The countdown, drawn the way the real one is: an SVG arc that drains via
+   stroke-dashoffset, and a neutral ring rather than a mode-colored one,
+   since the pill above already carries the mode. */
+.bp__ring {
+  position: relative; display: grid; place-items: center;
+  width: clamp(58px, 6.2vw, 80px); aspect-ratio: 1;
+  margin: clamp(2px, 0.4vw, 5px) 0;
+}
+.bp__ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.bp__ring circle { fill: none; stroke-width: 5; }
+.bp__ring-track { stroke: var(--surface-deep); }
+.bp__ring-arc {
+  stroke: var(--ink); stroke-linecap: round;
+  stroke-dasharray: 628.319; stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+@media (prefers-reduced-motion: reduce) { .bp__ring-arc { transition: none; } }
+.bp__ring span {
+  position: relative; z-index: 1;
+  font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em;
+  font-size: clamp(1.1rem, 1.9vw, 1.45rem); line-height: 1;
+}
+.bp__hint, .bp__strict { font-size: clamp(11.5px, 1.02vw, 13.5px); color: var(--muted); max-width: 26em; }
+.bp__view[data-view="strict"] { visibility: hidden; }
+.browser__page.is-strict .bp__view[data-view="friction"] { visibility: hidden; }
+.browser__page.is-strict .bp__view[data-view="strict"]   { visibility: visible; }
+.bp__pill--strict { background: var(--strict); }
+.bp__btn {
+  display: inline-flex; align-items: center;
+  height: clamp(32px, 3vw, 39px); padding: 0 clamp(16px, 1.8vw, 23px);
+  border-radius: var(--radius-pill);
+  background: var(--ink); color: var(--paper);
+  font-size: clamp(12px, 1.05vw, 14px); font-weight: 500;
+  margin-top: 3px;
+}
 
-/* One burst, drawn once. The file carries both mode colors and places the
-   second arm with its own matrix, so there is no second copy to rotate and
-   no interleave angle to solve — the earlier versions needed both. Sized so
-   the rays clear the monitor's corners, which the diagonals point at. */
-.burst {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 205%;
-  aspect-ratio: 145 / 153;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+/* Completion, mirroring the real overlay: fades over the page, does not
+   replace it, so nothing reflows and the frame keeps its height. */
+.bp__done {
+  position: absolute; inset: 0;
+  display: grid; align-content: center; justify-items: center; gap: 8px;
+  padding: 0 clamp(16px, 2vw, 26px);
+  background: var(--paper); border-radius: var(--radius-nested);
+  opacity: 0; pointer-events: none;
+  /* Above the countdown number, which carries z-index 1 of its own to sit
+     over the ring; without this it paints straight through the overlay. */
+  z-index: 2;
 }
+/* A handoff, not a cross-dissolve: whatever is leaving goes first, and what
+   arrives waits for it. Overlapping both at half opacity left the countdown
+   readable through the completion message. */
+.browser__page > :not(.bp__done)         { transition: opacity 0.4s ease 0.3s; }
+.browser__page.is-done > :not(.bp__done) { opacity: 0; transition: opacity 0.3s ease; }
+.bp__done                                { transition: opacity 0.3s ease; }
+.browser__page.is-done .bp__done         { opacity: 1; transition: opacity 0.4s ease 0.3s; }
+.bp__done-msg {
+  font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em;
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem); line-height: 1.15;
+}
+.bp__done-sub { font-size: clamp(12px, 1.1vw, 14px); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .bp__done { transition: none; } }
 
 /* ─── Ink illustrations ─────────────────────────────────────────────────── */
 /* Real hand-drawn artwork now, one filled path per drawing, so the wobble
@@ -298,10 +405,18 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
 .band--flip .band__art { order: 2; }
 .band__art { display: grid; place-items: center; }
 .band__art svg { width: min(100%, 360px); height: auto; }
-.band__art .ink--drawn { width: min(70%, 250px); }
-/* The breath circles read heavier than the padlock at the same width,
-   since they fill their whole viewBox. 7% down evens the two bands. */
-.band__art .ink--breath { width: min(65.1%, 232px); }
+/* Both drawings render their ink at the same ~155px, which is why these
+   two widths differ: the padlock's ink fills 88% of its viewBox while the
+   circles fill 95%, so matching the BOX widths would leave the padlock
+   looking smaller. Match the ink, not the box.
+   Both are also deliberately sized under .band__copy's ~175px, so the text
+   is the tallest thing in the band and sets the card height. That is what
+   keeps the two cards equal and stops a large drawing padding out a card
+   holding three lines of copy. The percentage and the pixel cap encode the
+   same width at the ~357px art column where the cap takes over, so the
+   relationship holds as the column narrows. */
+.band__art .ink--drawn  { width: min(49.3%, 176px); }
+.band__art .ink--breath { width: min(45.7%, 163px); }
 .band__copy { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .band__copy .lede { font-size: 1.05rem; max-width: 30em; }
 
@@ -546,8 +661,21 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   .hero__actions { flex-direction: column; align-items: stretch; gap: 6px; }
   .hero__actions .btn { width: 100%; }
   .hero__actions .textlink { justify-content: center; padding: 12px; }
-  .burst { width: 178%; }
   .preview__icons { gap: 8px; }
 }
 
 .nowrap { white-space: nowrap; }
+
+/* ---------- Closing painting ---------------------------------------------
+   The old site's hero artwork, full bleed under the footer. Anchored to its
+   bottom edge so the mountains are what shows, with a white overlay fading
+   out downward so the band grows out of the page instead of starting on a
+   hard line. The fade's far stop is spelled rgba(255,255,255,0) rather than
+   `transparent`, which some engines interpolate through transparent black
+   and leave a gray haze across the middle of the gradient. */
+.coda {
+  height: clamp(200px, 26vw, 400px);
+  background:
+    linear-gradient(to bottom, var(--paper) 0%, rgba(255, 255, 255, 0) 58%),
+    url('assets/images/hero-painting.jpg') center bottom / cover no-repeat;
+}

@@ -49,6 +49,21 @@ if (avatarBtn) {
 
 initAccountMenu()
 
+// The landing page's .prelude backdrop runs behind the top of the document,
+// and .nav's opaque background would punch a white strip through it. So the
+// nav goes transparent, but only while the page is parked at the very top:
+// the moment anything scrolls, content would otherwise slide through it.
+// Opaque is the CSS default, so this only ever removes the background, never
+// adds it. If this script fails to run the nav stays readable.
+if (document.querySelector('.prelude')) {
+  const nav = document.querySelector('.nav')
+  if (nav) {
+    const sync = () => nav.classList.toggle('nav--over', window.scrollY < 8)
+    sync()
+    window.addEventListener('scroll', sync, { passive: true })
+  }
+}
+
 // Scroll reveal. The .reveal class (which hides an element until it is
 // in view) is only ever added here, inside the same reduced-motion check
 // the CSS uses, so a visitor with that preference never has content hidden

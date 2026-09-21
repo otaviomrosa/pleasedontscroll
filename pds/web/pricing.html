@@ -18,6 +18,11 @@
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
+  <!-- Same opening backdrop as index.html: see docs/ARCHITECTURE.md / site.css for the
+       three things that make it work (page ground on <html>, .nav goes
+       transparent via site.js, .nav__link goes to full ink while on it). -->
+  <div class="prelude" aria-hidden="true"></div>
+
   <nav class="nav">
     <div class="container nav__inner">
       <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
@@ -113,10 +118,12 @@
       </div>
     </section>
 
-    <section class="section section--tight">
+    <!-- Overlaps the footer's artwork, same composed-closing-screen pattern
+         as index.html: see the .section--outro / .cta--art / .footer--art
+         comments in site.css for the full mechanism. -->
+    <section class="section section--tight section--outro">
       <div class="container">
-        <div class="cta" data-reveal>
-          <img src="assets/images/logo-no-bg.png" alt="" class="cta__logo">
+        <div class="cta cta--art" data-reveal>
           <h2 class="display">Your attention is worth defending.</h2>
           <p class="lede" style="text-align:center">Focus Pro is $4.99 a month. Cancel anytime, keep your profiles.</p>
           <button class="btn btn--ink btn--lg" id="bottom-cta-btn">Get Focus Pro</button>
@@ -126,12 +133,8 @@
 
   </main>
 
-  <footer class="footer">
+  <footer class="footer footer--art">
     <div class="container footer__inner">
-      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
-        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
-        <span class="nav__name">Please Don’t Scroll</span>
-      </a>
       <div class="footer__links">
         <a href="index.html">Home</a>
         <a href="dashboard.html">Dashboard</a>

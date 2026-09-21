@@ -5,8 +5,10 @@
    · No hairlines. Sections separate by whitespace and flat surface color,
      never by borders or rules.
    · Monochrome first: paper, ink, one gray surface. Color is emphasis only,
-     and only the two modes get any: deep teal for Friction Mode, Apple
-     system red for Strict Mode (the same hexes the product uses).
+     and only the two modes get any: Apple system blue for Friction Mode,
+     deep navy for Strict Mode (the same hexes the product uses). The one
+     exception is literal depiction, not brand: the mock window's macOS
+     traffic lights, the .prelude sky, and the footer artwork.
      Focus Pro has no color: it is premium by being monochrome, white on
      the black plan tile, like Apple's own "Pro".
    · Shape system: pill for buttons and tags; 24px for surfaces; 16px for
@@ -21,7 +23,7 @@
 :root {
   --ink:          #000000;
   --paper:        #ffffff;
-  --surface:      #f5f5f7;
+  --surface:      #f5f5f9;
   --surface-deep: #e8e8ed;
   --muted:        #6e6e73;
   --faint:        #aeaeb2;
@@ -43,18 +45,21 @@
   --nav-h:     68px;
   --container: 1120px;
   --gutter:    clamp(20px, 4vw, 40px);
-  --section:   clamp(72px, 9vw, 120px);
+  --section:   clamp(52px, 6.4vw, 86px);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* The page ground lives on <html>, not <body>, so .prelude can sit at
+   z-index: -1 and still be visible: in the paint order a non-positioned
+   block's background (body's) covers negative-z-index children, but the
+   root element's propagated canvas background does not. */
+html { -webkit-text-size-adjust: 100%; background: var(--paper); }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 body {
   margin: 0;
-  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 17px;
@@ -162,7 +167,16 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   z-index: 40;
   height: var(--nav-h);
   background: var(--paper);
+  transition: background 0.2s ease;
 }
+/* Only while parked at the very top, and only on a page that has a
+   backdrop to show. site.js adds this; the opaque default is deliberately
+   the fallback, so a JS failure can never leave content scrolling through
+   a see-through nav. */
+.nav--over { background: transparent; }
+/* Over the sky, --muted (a light gray tuned for white) loses far too much
+   contrast. Links go to full ink for the moment they sit on the backdrop. */
+.nav--over .nav__link { color: var(--ink); }
 .nav__inner {
   height: 100%;
   display: flex;
@@ -383,43 +397,6 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
 .bp__done-sub { font-size: clamp(12px, 1.1vw, 14px); color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .bp__done { transition: none; } }
 
-/* ─── Ink illustrations ─────────────────────────────────────────────────── */
-/* Real hand-drawn artwork now, one filled path per drawing, so the wobble
-   is in the geometry. The earlier versions were clean vector shapes run
-   through an SVG displacement filter to fake it; that filter, the Lora
-   italic used for the monitor's caption, and the breathing animation on
-   the old concentric-circle drawing all went with them. */
-.ink { overflow: visible; }
-
-/* ─── Mode bands ────────────────────────────────────────────────────────── */
-.modes { display: grid; gap: 20px; }
-.band {
-  background: var(--surface);
-  border-radius: var(--radius-surface);
-  padding: clamp(28px, 4.5vw, 60px);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-  gap: clamp(28px, 4vw, 56px);
-  align-items: center;
-}
-.band--flip .band__art { order: 2; }
-.band__art { display: grid; place-items: center; }
-.band__art svg { width: min(100%, 360px); height: auto; }
-/* Both drawings render their ink at the same ~155px, which is why these
-   two widths differ: the padlock's ink fills 88% of its viewBox while the
-   circles fill 95%, so matching the BOX widths would leave the padlock
-   looking smaller. Match the ink, not the box.
-   Both are also deliberately sized under .band__copy's ~175px, so the text
-   is the tallest thing in the band and sets the card height. That is what
-   keeps the two cards equal and stops a large drawing padding out a card
-   holding three lines of copy. The percentage and the pixel cap encode the
-   same width at the ~357px art column where the cap takes over, so the
-   relationship holds as the column narrows. */
-.band__art .ink--drawn  { width: min(49.3%, 176px); }
-.band__art .ink--breath { width: min(45.7%, 163px); }
-.band__copy { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
-.band__copy .lede { font-size: 1.05rem; max-width: 30em; }
-
 /* Plan tag: a sentence-case pill, not an uppercase eyebrow. */
 .tag {
   display: inline-flex;
@@ -432,7 +409,6 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   background: var(--surface-deep);
   color: var(--ink);
 }
-.tag--pro      { background: var(--surface-deep); color: var(--ink); }
 .tag--friction { background: var(--friction-dim); color: var(--friction); }
 .tag--strict   { background: var(--strict-dim);   color: var(--strict); }
 .tag--pro-solid { background: var(--paper); color: var(--ink); }
@@ -441,9 +417,17 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
 /* Laid out exactly like the dashboard's Blocklist section: gray pills on
    the white page, the input row, then the gray blocklist surface with the
    quick-add glyphs and the rows sitting directly on it (no per-site card). */
+/* Copy left, the live preview right. The preview used to sit under the copy
+   capped at 760px inside a 1120px container, which left ~280px of the row
+   permanently empty at every desktop width. */
+.profiles__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+.profiles__copy { display: grid; gap: 18px; align-content: center; }
 .preview {
-  margin-top: clamp(36px, 5vw, 56px);
-  max-width: 760px;
   display: grid;
   gap: 16px;
 }
@@ -522,7 +506,9 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .plan--pro .btn--paper { color: var(--ink); }
 
 /* ─── Feature tiles (2 x 2) ─────────────────────────────────────────────── */
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* grid-auto-rows: 1fr so every tile matches the tallest, not just the two
+   sharing its row. Without it the second row ran taller than the first. */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 20px; }
 .tile {
   background: var(--surface);
   border-radius: var(--radius-surface);
@@ -539,8 +525,21 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .tile__switchrow { display: flex; align-items: center; gap: 12px; }
 .tile__durations { display: flex; gap: 6px; }
 .tile__durations span { background: var(--paper); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; color: var(--muted); }
-.tile__lock { color: var(--ink); padding: 2px 0 4px; }
-.tile__lock svg { width: 44px; height: 44px; }
+.tile__lock { color: var(--ink); display: inline-flex; }
+/* Lock and label are one link, sized to its contents so only that pair is
+   the target and not the full width of the tile. Sits in the top row, where
+   the other tiles put their graphic. */
+.tile__lockrow {
+  display: inline-flex; align-items: center; gap: 9px;
+  width: fit-content;
+  margin-top: auto;
+  padding: 6px 0 0;
+  transition: opacity 0.18s ease;
+}
+.tile__lockrow:hover { opacity: 0.6; }
+/* The label already dims with the row above, so it must not dim twice. */
+.tile__lockrow:hover .textlink { opacity: 1; }
+.tile__lock svg { width: 20px; height: 20px; }
 .tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; max-width: 300px; }
 .tile__week i { display: block; height: 56px; border-radius: 8px; background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; }
 .tile__week i.f::after, .tile__week i.s::after { content: ''; position: absolute; left: 4px; right: 4px; border-radius: 5px; }
@@ -564,6 +563,17 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .quote cite { font-style: normal; font-size: 15px; color: var(--muted); }
 
 /* ─── FAQ ───────────────────────────────────────────────────────────────── */
+/* Always painted above .footer--art, so however far .section--outro's
+   overlap reaches back it can never visually cover this section -- it
+   sits under this content instead of clipping it. Fixes a real,
+   recurring bug: the footer (position: relative, so it participates in
+   default stacking and paints after normal-flow siblings) painted over
+   the bottom of the last FAQ card whenever the overlap crept back far
+   enough to reach it, which kept happening again every time the CTA's
+   own overlap was pushed further down. This removes that constraint
+   entirely instead of continuing to re-tune the overlap amount against
+   it every time the CTA position changes. */
+#faq { position: relative; z-index: 2; }
 .faq { max-width: 760px; margin: 0 auto; display: grid; gap: 12px; }
 .faq details {
   background: var(--surface);
@@ -648,10 +658,9 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   .hero__grid { grid-template-columns: 1fr; }
   .hero__copy { order: 1; }
   .hero__art  { order: 2; }
-  .band { grid-template-columns: 1fr; }
-  .band--flip .band__art { order: 0; }
-  .band__art svg { width: min(100%, 260px); }
   .plans { grid-template-columns: 1fr; }
+  .profiles__grid { grid-template-columns: 1fr; }
+  .preview { margin-top: clamp(4px, 2vw, 16px); }
   .tiles { grid-template-columns: 1fr; }
   .footer__inner { flex-direction: column; align-items: flex-start; }
 }
@@ -666,16 +675,143 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 
 .nowrap { white-space: nowrap; }
 
-/* ---------- Closing painting ---------------------------------------------
-   The old site's hero artwork, full bleed under the footer. Anchored to its
-   bottom edge so the mountains are what shows, with a white overlay fading
-   out downward so the band grows out of the page instead of starting on a
-   hard line. The fade's far stop is spelled rgba(255,255,255,0) rather than
-   `transparent`, which some engines interpolate through transparent black
-   and leave a gray haze across the middle of the gradient. */
-.coda {
-  height: clamp(200px, 26vw, 400px);
+/* ---------- Opening sky --------------------------------------------------
+   Full bleed behind the top of the landing page, taking no space in flow.
+   Three things make a true backdrop work here, see docs/ARCHITECTURE.md: the page
+   ground lives on <html> (a background on <body> would cover a
+   z-index: -1 child), .nav goes transparent at rest via site.js, and
+   .nav__link goes to full ink while it sits on the sky. */
+.prelude {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  z-index: -1;
+  pointer-events: none;
+  /* Lightened as a whole rather than by softening the gradient: the page
+     behind is white, so dropping the element's opacity washes the sky
+     toward that white evenly, and leaves the already-white tail of the
+     fade unchanged. One number to retune. */
+  opacity: 1;
+  height: clamp(260px, 32vw, 460px);
   background:
-    linear-gradient(to bottom, var(--paper) 0%, rgba(255, 255, 255, 0) 58%),
-    url('assets/images/hero-painting.jpg') center bottom / cover no-repeat;
+    linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--paper) 55%),
+    url('assets/images/hero-top.webp') center center / cover no-repeat;
 }
+
+/* ---------- Closing painting ---------------------------------------------
+   The bottom of index.html is one composed screen: the artwork fades in
+   from the page at the top of this band, the closing CTA sits on it, and
+   the photograph itself runs all the way to the footer's true bottom edge
+   at its own real colors — no fade out, no flat-color fill standing in for
+   the rest of the image. Scoped to .footer--art because site.css is
+   shared; pricing.html and privacy.html keep the plain footer.
+
+   The footer row's text sits directly on the photograph, not on a flat
+   ground manufactured for it. Two earlier legibility approaches were tried
+   and dropped for the same reason each time — adding something ON TOP of
+   the artwork that competed with it: a full-width dark scrim (muddied the
+   painting into a grey wash), frosted pills behind each item (seven
+   floating capsules where the design otherwise has one clean row), and a
+   flat average-color fill sitting below the ridgeline (read as a visible
+   extra edge rather than part of the photo). Current approach instead
+   just lightens the TEXT itself — see the color rules below — so nothing
+   is added over the image. */
+.footer--art {
+  position: relative;
+  --footer-art-top: clamp(370px, 46vw, 660px);
+  padding: var(--footer-art-top) 0 clamp(12px, 1.2vw, 18px);
+  background-image:
+    /* Fade in from the page. Gradual and high, so the sky arrives long
+       before the CTA does rather than appearing as an edge. */
+    linear-gradient(to bottom,
+      var(--paper) 0%,
+      var(--paper) 40%,
+      rgba(255, 255, 255, 0.62) 66%,
+      rgba(255, 255, 255, 0.20) 74%,
+      rgba(255, 255, 255, 0.07) 80%,
+      rgba(255, 255, 255, 0.03) 86%,
+      rgba(255, 255, 255, 0.06) 92%,
+      rgba(255, 255, 255, 0.1) 100%),
+    url('assets/images/hero-painting.jpg');
+  /* No flat-color layer at the bottom any more, and no lift off the edge to
+     make room for one — the photograph itself runs all the way to the
+     footer's true bottom edge. The top fade's own gradient now carries a
+     second, much lighter rise at its tail (92% to 100%) so the last sliver
+     of the image gets a slight white wash too, not a hard stop. */
+  background-size: 100% 100%, cover;
+  background-position: center top, center bottom;
+  background-repeat: no-repeat;
+  /* scrollHeight rounds UP to a whole pixel while the page's real height is
+     fractional, so at full scroll a sub-pixel strip of the white <html>
+     ground below this element can show as a hairline. A shadow covers it:
+     it paints outside the border box and the spec excludes it from
+     scrollable overflow, so it can't create a fresh gap of its own. White
+     now that the band's own last pixels are whitened by the fade above,
+     not the painting's dark blue this used to be. */
+  box-shadow: 0 2px 0 0 var(--paper);
+}
+/* Solid white, not --on-ink-muted (68% alpha): with no flat ground behind
+   it the text can land on the photo's palest sky, where a translucent
+   color reads as barely-there. A soft dark shadow does the legibility work
+   a scrim would otherwise do, without adding a layer over the artwork —
+   it only darkens the few pixels right at each glyph's edge. */
+.footer--art .footer__links a,
+.footer--art .footer__copy {
+  color: var(--paper);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 12px rgba(0, 0, 0, 0.35);
+}
+.footer--art .footer__links a { opacity: 0.82; }
+.footer--art .footer__links a:hover { opacity: 1; }
+.footer--art :focus-visible { outline-color: var(--paper); }
+
+/* ---------- Privacy page footer: text color only ---------------------------
+   privacy.html keeps the plain .footer shape untouched — no extra padding,
+   no fade, no artwork. "Same style but black instead of white" turned out
+   to mean literally that: the founder wants the footer's own architecture
+   left alone, just the link/copyright text in solid ink instead of the
+   default --muted gray (which already reads as near-black, but isn't
+   actually the same token as the rest of this file's flat black/white
+   pairing). No :hover override needed — the base .footer__links a:hover
+   already goes to --ink, which this rule now matches at rest too. */
+.footer--dark .footer__links a { color: var(--ink); }
+.footer--dark .footer__copy { color: var(--ink); }
+/* Matches .footer--art's own bottom padding (index/pricing), which is
+   smaller than the base .footer's 44px. Without this privacy sat with
+   visibly more space below its footer than the other two pages. */
+.footer--dark { padding-bottom: clamp(12px, 1.2vw, 18px); }
+
+/* The closing CTA is pulled down over the footer's artwork with a negative
+   margin, so the two read as one screen at the end of the page. Negative
+   margin rather than moving the markup, which would put a real call to
+   action inside <footer>. z-index because the footer paints a background
+   and would otherwise cover it. */
+.section--outro {
+  position: relative;
+  z-index: 1;
+  /* Extra breathing room above the CTA, on top of .section--tight's own
+     top padding, so whatever precedes this (FAQ on pricing.html, the
+     plans grid on index.html) doesn't feel like it runs straight into
+     "Ready to take your time back?" / "Your attention is worth
+     defending." */
+  margin-top: clamp(60px, 8vw, 140px);
+  /* Pulls the footer up behind the CTA so the closing block sits on the
+     artwork. This USED to also have to stay smaller than .section--outro's
+     own rendered height, to avoid reaching back far enough to overlap
+     whatever precedes it (the FAQ, on pricing.html) -- that overlap
+     visually painted the footer's white top OVER the bottom of the last
+     FAQ card, since .footer--art (position: relative) paints after
+     normal-flow siblings by default. That constraint is gone now: #faq
+     has its own higher z-index specifically so it always renders above
+     .footer--art regardless of how far this reaches back, so this number
+     is free to be whatever looks right. */
+  margin-bottom: clamp(-320px, -20vw, -190px);
+  padding-bottom: 0;
+}
+/* No card. A frosted panel was tried first and blurred away the very
+   artwork it sat on. The type works bare because the wash above keeps this
+   part of the band white, so the CTA is effectively still on paper. */
+.cta--art { background: none; padding: 0 var(--gutter); }
+/* A touch darker than --muted, which is tuned for paper and lands at
+   3.7:1 once the wash thins out this far up. Still clearly secondary to the
+   ink headline, but it clears 4.5:1 on the sky. */
+.cta--art .lede { color: #57575c; }

@@ -695,7 +695,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   height: clamp(260px, 32vw, 460px);
   background:
     linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--paper) 55%),
-    url('assets/images/hero-top.webp') center center / cover no-repeat;
+    url('assets/images/testthis.webp') center center / cover no-repeat;
 }
 
 /* ---------- Closing painting ---------------------------------------------
@@ -732,7 +732,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
       rgba(255, 255, 255, 0.03) 86%,
       rgba(255, 255, 255, 0.06) 92%,
       rgba(255, 255, 255, 0.1) 100%),
-    url('assets/images/hero-painting.jpg');
+    url('assets/images/testthis.webp');
   /* No flat-color layer at the bottom any more, and no lift off the edge to
      make room for one — the photograph itself runs all the way to the
      footer's true bottom edge. The top fade's own gradient now carries a
@@ -750,19 +750,35 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
      not the painting's dark blue this used to be. */
   box-shadow: 0 2px 0 0 var(--paper);
 }
-/* Solid white, not --on-ink-muted (68% alpha): with no flat ground behind
-   it the text can land on the photo's palest sky, where a translucent
-   color reads as barely-there. A soft dark shadow does the legibility work
-   a scrim would otherwise do, without adding a layer over the artwork —
-   it only darkens the few pixels right at each glyph's edge. */
-.footer--art .footer__links a,
+/* Two frosted pills, one around the whole link group and one around the
+   copyright line, so legibility no longer depends on what part of the
+   photograph happens to sit behind the text. (An earlier attempt gave every
+   item its own capsule -- seven of them -- and read as clutter; two pills is
+   the founder's own version of that idea.) Semi-transparent white with a
+   blur, so the meadow still shows through; ink text on top.
+   The text was white on the old dark mountain photograph; on this bright
+   meadow it measured 1.3-1.6:1, so it is ink now. Flip both back if the
+   image ever goes dark again. */
+.footer--art .footer__links,
 .footer--art .footer__copy {
-  color: var(--paper);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 12px rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(5px);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
 }
-.footer--art .footer__links a { opacity: 0.82; }
-.footer--art .footer__links a:hover { opacity: 1; }
-.footer--art :focus-visible { outline-color: var(--paper); }
+.footer--art .footer__links { padding: 2px 22px; }
+.footer--art .footer__copy  { padding: 8px 20px; }
+.footer--art .footer__links a { color: var(--ink); transition: opacity 0.18s ease; }
+.footer--art .footer__links a:hover { opacity: 0.6; }
+.footer--art :focus-visible { outline-color: var(--ink); }
+/* Phones: five links are ~350px wide with the desktop spacing, which is the
+   whole row. Tighter gaps keep it on one line where it fits; the smaller
+   radius keeps it looking like a card, not a blob, on the widths where it
+   still wraps. */
+@media (max-width: 520px) {
+  .footer--art .footer__links { gap: 4px 14px; padding: 2px 16px; border-radius: 22px; }
+}
 
 /* ---------- Privacy page footer: text color only ---------------------------
    privacy.html keeps the plain .footer shape untouched — no extra padding,

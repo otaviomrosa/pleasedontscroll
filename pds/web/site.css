@@ -38,6 +38,13 @@
   --radius-nested:  12px;
   --radius-pill:    999px;
   --shadow-float:   0 12px 40px rgba(0, 0, 0, 0.12);
+  /* Frosted pills. Two independent sets, so the footer and the hero eyebrow
+     can be tuned separately: the footer sits on grass, where a faint white
+     shows fine; the eyebrow sits on sky and cloud, where it needs more. */
+  --glass-bg:       rgba(255, 255, 255, 0.22);   /* footer pills */
+  --glass-blur:     5px;
+  --eyebrow-bg:     rgba(255, 255, 255, 0.5);    /* hero eyebrow */
+  --eyebrow-blur:   5px;
 
   --font-ui:      'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -253,6 +260,25 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   align-items: center;
 }
 .hero__copy { display: flex; flex-direction: column; gap: 26px; align-items: flex-start; }
+/* Small frosted pill above the headline, same glass as the footer pills.
+   It sits on the sky backdrop, where a solid pill would look pasted on. */
+.eyebrow {
+  display: inline-flex; align-items: center;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  /* Its own white glass, at 50%. A dark tint was tried so the pill would
+     show over white cloud and the founder ruled it out, so white it stays.
+     White glass can only show as much as the sky behind it leaves room for:
+     over open blue it reads clearly, over near-white cloud it is subtle. */
+  background: var(--eyebrow-bg);
+  -webkit-backdrop-filter: blur(var(--eyebrow-blur));
+  backdrop-filter: blur(var(--eyebrow-blur));
+  color: var(--ink);
+  font-size: 13.5px; font-weight: 500; line-height: 1.3;
+  /* Pulls it a touch closer to the headline than the column's 26px gap. */
+  margin-bottom: -8px;
+}
+
 .hero__actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 
 /* ─── Hero: a mock of the blocked page ─────────────────────────────────── */
@@ -453,13 +479,40 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .preview__quick { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
 .preview__quick-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
 .preview__icons { display: flex; flex-wrap: wrap; gap: 8px; }
-.preview__chip { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); }
-.preview__chip svg { width: 18px; height: 18px; color: var(--muted); }
+.preview__chip {
+  display: grid; place-items: center; width: 36px; height: 36px;
+  border-radius: 50%; background: var(--surface);
+  border: 0; padding: 0; cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.preview__chip svg { width: 18px; height: 18px; color: var(--muted); display: block; transition: color 0.15s ease; }
+.preview__chip:hover, .preview__chip:focus-visible,
+.preview__chip.menu-open { background: var(--surface-deep); }
+.preview__chip:hover svg, .preview__chip:focus-visible svg,
+.preview__chip.menu-open svg { color: var(--ink); }
+/* The trigger keeps its hover look while its own menu is open, instead of
+   letting go the moment the cursor moves down into the menu. */
+.preview__quickitem { position: relative; display: flex; }
+.preview__chip-arrow {
+  position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
+  display: flex; color: var(--ink); opacity: 0; pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.preview__chip:not(.added):hover ~ .preview__chip-arrow,
+.preview__chip.menu-open ~ .preview__chip-arrow { opacity: 1; }
+/* Already on this profile's list: reads as done and stops responding. */
+.preview__chip.added { opacity: 0.4; cursor: default; }
+.preview__chip.added:hover { background: var(--surface); }
+.preview__chip.added:hover svg { color: var(--muted); }
+/* A fixed height, not a minimum: the quick-add chips can push this past seven
+   rows, and min-height let that stretch the whole #profiles grid. Overflow
+   scrolls inside the gray surface instead, so the section never moves. */
 .preview__sites {
   background: var(--surface);
   border-radius: var(--radius-surface);
   padding: 12px;
-  min-height: 190px;
+  height: 190px;
+  overflow-y: auto;
 }
 .preview__site {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -468,7 +521,13 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 }
 .preview__site-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .preview__favicon { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
-.preview__site-x { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); }
+.preview__site-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; color: var(--muted);
+  background: none; border: 0; padding: 0; cursor: pointer; flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.preview__site-x:hover { background: var(--surface-deep); color: var(--ink); }
 .preview__site-x svg { width: 12px; height: 12px; }
 .preview__empty { padding: 18px 0; text-align: center; color: var(--muted); font-size: 14px; }
 
@@ -505,6 +564,34 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .plan .btn { align-self: flex-start; }
 .plan--pro .btn--paper { color: var(--ink); }
 
+/* ─── Quick-add options menu ────────────────────────────────────────────── */
+/* The one floating surface out here, same as in the dashboard: no border, a
+   soft shadow is what lifts it. The 0fr -> 1fr grid row is what animates it
+   open without needing a measured height. */
+.site-options-menu {
+  position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%);
+  min-width: 190px; display: grid; grid-template-rows: 0fr; opacity: 0;
+  transition: grid-template-rows 0.22s ease, opacity 0.16s ease; z-index: 50;
+}
+.site-options-menu.open { grid-template-rows: 1fr; opacity: 1; }
+.site-options-menu[hidden] { display: none; }
+.site-options-menu-inner {
+  overflow: hidden; min-height: 0; background: var(--paper);
+  border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px;
+}
+.site-options-menu-item {
+  display: block; width: 100%; text-align: left; background: none; border: 0;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--ink);
+  padding: 9px 12px; border-radius: 10px; cursor: pointer;
+  transition: background 0.15s ease; white-space: nowrap;
+}
+.site-options-menu-item:hover { background: var(--surface); }
+.site-options-menu-item.added { color: var(--muted); font-weight: 400; cursor: default; }
+.site-options-menu-item.added:hover { background: none; }
+/* In the feature tile the menu is a picture of the real one, never a control. */
+.tile .site-options-menu { pointer-events: none; }
+.tile__quickitem:hover .site-options-menu { grid-template-rows: 1fr; opacity: 1; }
+
 /* ─── Feature tiles (2 x 2) ─────────────────────────────────────────────── */
 /* grid-auto-rows: 1fr so every tile matches the tallest, not just the two
    sharing its row. Without it the second row ran taller than the first. */
@@ -518,13 +605,72 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .tile h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; font-size: 1.25rem; }
 .tile p { color: var(--muted); font-size: 1rem; max-width: 34em; }
 .tile__icons { display: flex; gap: 18px; color: var(--muted); padding: 4px 0 2px; }
-.tile__icons svg { width: 22px; height: 22px; }
-/* The dashboard's pause switch, drawn at its real size. */
-.switch { width: 42px; height: 24px; border-radius: 12px; background: var(--ink); position: relative; flex-shrink: 0; }
-.switch::after { content: ''; position: absolute; top: 2px; left: 20px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
-.tile__switchrow { display: flex; align-items: center; gap: 12px; }
-.tile__durations { display: flex; gap: 6px; }
-.tile__durations span { background: var(--paper); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; color: var(--muted); }
+.tile__chip svg { width: 22px; height: 22px; display: block; }
+/* The same glyph treatment .quick-add-chip has in the dashboard: no container,
+   just the glyph, darkening and growing slightly on hover. */
+.tile__chip {
+  display: grid; place-items: center; color: var(--muted);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.tile__quickitem:hover .tile__chip { color: var(--ink); transform: scale(1.1); }
+/* Sectioned sites show the real options menu on hover, so a visitor learns a
+   section can be blocked on its own without opening the app. Illustration
+   only: pointer-events stays off the whole thing, and the interactive version
+   lives in the "Built around your day" preview. */
+.tile__quickitem { position: relative; display: grid; place-items: center; }
+.tile__chip-arrow {
+  position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
+  display: flex; color: var(--ink); opacity: 0; pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.tile__quickitem:hover .tile__chip-arrow { opacity: 1; }
+.tile__chip-arrow svg { width: 8px; height: 5px; display: block; }
+/* The dashboard's pause switch, drawn at its real size and wired to match.
+   Same convention as .pause-toggle there: NO class is the default and means
+   blocking is on (ink track, knob right); .paused is the exception state. Do
+   not rename it to .active, which would invert how it reads. */
+.switch {
+  width: 42px; height: 24px; border-radius: 12px; background: var(--ink);
+  position: relative; flex-shrink: 0; border: 0; padding: 0; cursor: pointer;
+  transition: background 0.25s ease;
+}
+.switch.paused { background: var(--surface-deep); }
+/* 2px inset on a 24px track leaves a 20px knob and 42 - 2*2 - 20 = 18px of
+   travel, exactly as .pause-toggle-knob is built. A real element rather than
+   ::after, so the knob transitions on its own. */
+.switch__knob {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--paper);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transform: translateX(18px); transition: transform 0.25s ease;
+}
+.switch.paused .switch__knob { transform: translateX(0); }
+.tile__switchrow { display: flex; align-items: center; gap: 12px; min-height: 30px; }
+.tile__durations { display: flex; gap: 6px; flex-wrap: wrap; }
+.tile__durations.hidden { display: none; }
+.tile__durations button {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper); border: 0; border-radius: 999px;
+  padding: 5px 10px; font: inherit; font-size: 12.5px; color: var(--muted);
+  cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+}
+.tile__durations button:hover { color: var(--ink); background: var(--surface-deep); }
+.tile__durations .tile__infinite { padding: 5px 9px; }
+.tile__durations .tile__infinite svg { width: 16px; height: 16px; display: block; }
+/* Occupies the row the durations vacate, so the tile's height never moves. */
+.tile__pauselabel { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.tile__pauselabel.hidden { display: none; }
+/* Clicking the switch while blocking is on points at the real control rather
+   than leaving a dead button. Motion-gated, so it is the only cue for someone
+   who has asked for less movement, hence no other feedback depends on it. */
+@media (prefers-reduced-motion: no-preference) {
+  .tile__durations.nudge { animation: tile-nudge 0.4s ease; }
+}
+@keyframes tile-nudge {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+}
 .tile__lock { color: var(--ink); display: inline-flex; }
 /* Lock and label are one link, sized to its contents so only that pair is
    the target and not the full width of the tile. Sits in the top row, where
@@ -761,9 +907,9 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
    image ever goes dark again. */
 .footer--art .footer__links,
 .footer--art .footer__copy {
-  background: rgba(255, 255, 255, 0.22);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(5px);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-pill);
   color: var(--ink);
 }

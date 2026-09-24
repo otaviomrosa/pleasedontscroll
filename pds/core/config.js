@@ -33,7 +33,7 @@ export const PRICING_URL = 'https://pleasedontscroll.com/pricing';
 // published to the Chrome Web Store (see TODO.md) — an ID doesn't exist
 // yet. This is safe to leave unset: chrome.runtime.sendMessage to a wrong/
 // placeholder ID just fails silently in web/dashboard.html's pokeExtension()
-// helper, and the extension's normal 30s poll (background/index.js) is the
+// helper, and the extension's normal 60s poll (background/index.js) is the
 // fallback either way. For local testing before publishing, use the ID
 // Chrome assigns your unpacked "Load unpacked" install — visible at
 // chrome://extensions — but don't commit a personal dev ID here.

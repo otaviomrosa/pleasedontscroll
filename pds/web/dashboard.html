@@ -51,6 +51,17 @@
       --shell-pad-top: 40px;
       --shell-pad-bottom: 72px;
       --sidebar-w: 200px;
+      /* The whole app sits in one gray card and every surface inside it is
+         white: the same two-surface relationship the hero's browser mock
+         uses (gray frame, white screen), just inverted from how this file
+         used to read. TO REVERT, delete .app-card's rule and its wrapper
+         div, restore .page-wrap's four rows, and drop the three overrides
+         marked "card flip" below. --card-pad and --note-block-h are
+         subtracted from the shell's height so the card's extra chrome
+         comes out of the shell, not out of the bottom margin. */
+      --card-ground: var(--surface);
+      --card-pad: 16px;
+      --note-block-h: 30px;
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -116,12 +127,24 @@
         minmax(var(--shell-pad-bottom), 3fr);
     }
     /* Explicit, because auto-placement would drop these into the spacers. */
-    .page-wrap > .pause-row       { grid-row: 2; }
-    .page-wrap > .dashboard-shell { grid-row: 3; }
+    .page-wrap > .app-card   { grid-row: 2; }
+    .page-wrap > .sync-hint  { grid-row: 3; }
+    /* The card is the app's ground. Redefining --surface here, and nowhere
+       else, is what turns every gray surface inside it white in one move:
+       sidebar, blocklist, fields, pills, chips, settings rows. --surface-deep
+       is deliberately NOT redefined, so hovers still darken (white ->
+       #e8e8ed) rather than vanishing into the card. */
+    .app-card {
+      background: var(--card-ground);
+      border-radius: var(--radius-surface);
+      padding: var(--card-pad);
+      --surface: var(--paper);
+    }
     .dashboard-shell {
       display: grid; grid-template-columns: var(--sidebar-w) 1fr; gap: 18px;
       height: min(
-        calc(100vh - var(--shell-pad-top) - var(--shell-pad-bottom)),
+        calc(100vh - var(--shell-pad-top) - var(--shell-pad-bottom)
+             - 2 * var(--card-pad) - var(--note-block-h)),
         var(--shell-max-h));
       min-height: 480px;
     }
@@ -134,7 +157,7 @@
     .sidebar-nav-lock { display: inline-flex; align-items: center; }
     .sidebar-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 14px 4px 2px; }
     .account-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 600; display: grid; place-items: center; flex-shrink: 0; }
-    .pro-tag { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--paper); border-radius: 6px; padding: 3px 8px; line-height: 1.2; }
+    .pro-tag { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--card-ground); /* card flip: sidebar is white now */ border-radius: 6px; padding: 3px 8px; line-height: 1.2; }
     .sidebar-signout { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--muted); padding: 6px 8px; border-radius: var(--radius-pill); transition: color 0.18s ease; }
     .sidebar-signout:hover { color: var(--ink); }
     .sidebar-hamburger, .sidebar-backdrop { display: none; }
@@ -149,8 +172,17 @@
 
     /* ─── Profiles ────────────────────────────────────────────────────── */
     .profile-switcher { display: flex; flex-direction: column; gap: 10px; }
-    .profile-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .profile-tab { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    /* Two rows of 34px tabs plus the 8px between them, then it scrolls.
+       Without this ceiling the wrapped row grows without limit, and since
+       .blocklist-surface is flex: 1 inside a fixed-height shell every pixel
+       the tabs gain comes straight out of the list: measured 506px of list at
+       2 profiles, 296px at 12, and 24px with overflow at 25. */
+    .profile-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      max-height: calc(2 * 34px + 8px); overflow-y: auto; }
+    .profile-tab { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 180px; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    /* min-width: 0 is what actually lets a long name shrink inside the flex
+       tab; without it the max-width above is ignored and the pill just grows. */
+    .profile-tab > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .profile-tab:hover { color: var(--ink); }
     .profile-tab.active { background: var(--ink); color: var(--paper); font-weight: 500; }
     .profile-tab.locked { opacity: 0.6; }
@@ -161,7 +193,7 @@
     .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
     .profile-tab-delete:hover { color: var(--ink); }
     .btn-add-profile { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); color: var(--muted); font-size: 14px; background: none; transition: background 0.18s ease, color 0.18s ease; }
-    .btn-add-profile:hover { background: var(--surface); color: var(--ink); }
+    .btn-add-profile:hover { background: var(--surface-deep); color: var(--ink); } /* card flip */
     .new-profile-form { display: none; gap: 8px; align-items: center; }
     .new-profile-form.visible { display: flex; }
     .new-profile-form .field { background: var(--surface); height: 40px; }
@@ -173,7 +205,9 @@
     .btn-sm:disabled { opacity: 0.5; cursor: default; transform: none; }
     .btn-sm.dark { background: var(--ink); color: var(--paper); }
     .btn-sm.dark:hover { opacity: 0.86; }
-    .btn-sm.light { background: var(--surface); color: var(--ink); }
+    /* card flip: was --surface on an --surface .settings-item, i.e. already
+       invisible at rest before the flip. One step off white fixes both. */
+    .btn-sm.light { background: var(--card-ground); color: var(--ink); }
     .btn-sm.light:hover { background: var(--surface-deep); }
     .btn-sm.danger { background: var(--ink); color: var(--paper); }
     .btn-ghost { color: var(--muted); }
@@ -181,21 +215,97 @@
 
     /* ─── Blocklist ───────────────────────────────────────────────────── */
     .url-input-row { display: flex; gap: 8px; }
-    .url-input-row .field { flex: 1; background: var(--surface); height: 44px; }
+    .url-input-wrap {
+      flex: 1; min-width: 0; display: flex; align-items: center;
+      height: 44px; padding-right: 6px;
+      background: var(--surface); border-radius: var(--radius-field);
+      transition: box-shadow 0.15s ease;
+    }
+    /* The ring belongs to the box the user sees, not the transparent input. */
+    .url-input-wrap:focus-within { box-shadow: 0 0 0 3px rgba(41, 108, 226, 0.26); }
+    .url-input-row .field { flex: 1; min-width: 0; background: transparent; height: 42px; padding-right: 8px; }
+    .url-input-row .field:focus { box-shadow: none; }
+    /* Below ~560px the five chips leave under 170px to type in, so they drop
+       to their own line inside the same box rather than crowding the text
+       (measured: 198px of room at 560, 118px at 480). This block MUST come
+       after the .url-input-row .field rule above: same specificity, so the
+       later one wins, and sitting before it the flex-basis was silently
+       overridden while the padding still applied. */
+    @media (max-width: 560px) {
+      .url-input-wrap { flex-wrap: wrap; height: auto; min-height: 44px; padding: 0 6px 6px; }
+      .url-input-row .field { flex: 1 0 100%; }
+      /* Full width so the row wraps WITHIN the box: without it the row is
+         sized by its content and five chips overhang the box below ~360px. */
+      .quick-add-row { width: 100%; flex-wrap: wrap; justify-content: flex-end; }
+    }
     .blocklist-surface { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 12px; flex: 1; min-height: 0; }
     .url-list { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0 0; }
+
+    /* ─── Scrollbars ──────────────────────────────────────────────────── */
+    /* Thumb only, no track, and invisible until the area is hovered. The
+       width stays reserved at all times and only the colour changes, so
+       revealing it never reflows what is underneath. Two hover targets,
+       because the scroller is not always the thing you point at: the tab
+       area is its own scroller, while .url-list sits inset inside
+       .blocklist-surface's padding and #schedule-scroll is the surface. */
+    .profile-tabs, .url-list, .sched-profiles, #schedule-scroll, #section-settings {
+      scrollbar-width: thin; scrollbar-color: transparent transparent;
+    }
+    .profile-tabs:hover, .blocklist-surface:hover .url-list, .sched-profiles:hover,
+    #schedule-scroll:hover, #section-settings:hover {
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+    .profile-tabs::-webkit-scrollbar, .url-list::-webkit-scrollbar, .sched-profiles::-webkit-scrollbar,
+    #schedule-scroll::-webkit-scrollbar, #section-settings::-webkit-scrollbar { width: 6px; }
+    .profile-tabs::-webkit-scrollbar-track, .url-list::-webkit-scrollbar-track,
+    #schedule-scroll::-webkit-scrollbar-track, #section-settings::-webkit-scrollbar-track { background: transparent; }
+    .profile-tabs::-webkit-scrollbar-thumb, .url-list::-webkit-scrollbar-thumb,
+    #schedule-scroll::-webkit-scrollbar-thumb, #section-settings::-webkit-scrollbar-thumb {
+      background: transparent; border-radius: 999px; transition: background 0.2s ease;
+    }
+    .profile-tabs:hover::-webkit-scrollbar-thumb,
+    .sched-profiles:hover::-webkit-scrollbar-thumb,
+    .blocklist-surface:hover .url-list::-webkit-scrollbar-thumb,
+    #schedule-scroll:hover::-webkit-scrollbar-thumb,
+    #section-settings:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+    .profile-tabs::-webkit-scrollbar-thumb:hover,
+    .url-list::-webkit-scrollbar-thumb:hover,
+    #schedule-scroll::-webkit-scrollbar-thumb:hover,
+    #section-settings::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.34); }
     /* Rows sit directly on the gray surface — no white card per site, and
        tighter now that there's no bubble needing its own breathing room. */
-    .url-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px 9px 14px; border-radius: var(--radius-field); }
+    .url-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px 9px 14px; border-radius: var(--radius-field); transition: background 0.15s ease; }
+    /* Fills the radius the rule above already declares, which painted nothing
+       until now. Gives a long list per-row separation on demand without the
+       dividers the design system rules out, and ties the delete button to the
+       row it belongs to. Gated on a real pointer: on touch, :hover sticks
+       after a tap and the row would stay filled until you tapped elsewhere. */
+    @media (hover: hover) {
+      .url-item:hover { background: var(--card-ground); }
+      /* The hovered row comes fully forward: icon to full strength, name to
+         ink. Inside the (hover: hover) block on purpose -- on touch there is
+         no hover, so the muted resting state is all a phone ever shows, and
+         --muted on white is 4.86:1, which clears AA on its own. */
+      .url-item:hover .url-favicon { opacity: 1; }
+    }
     .url-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .url-text { font-size: 15px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .url-favicon, .url-favicon-fallback { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; }
+    /* Grayscale, so the list reads as one quiet column of names rather than
+       a row of competing brand colours. This is the blocklist's favicons
+       stepping INTO the monochrome system, not an exception to it -- the
+       .browser__dots traffic lights on the landing page are still the one
+       sanctioned "literal depiction" that keeps real colour. */
+    .url-favicon, .url-favicon-fallback { width: 14px; height: 14px; flex-shrink: 0; border-radius: 4px; }
+    .url-favicon { opacity: 0.90; transition: opacity 0.15s ease; }
     .url-favicon-fallback { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
     .btn-delete-url { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); transition: color 0.15s; flex-shrink: 0; }
     .btn-delete-url:hover { color: var(--ink); }
     .btn-delete-url.locked:hover { color: var(--muted); }
     .empty-state { text-align: center; padding: 18px 0; color: var(--muted); font-size: 14px; }
-    .sync-hint { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 2px; }
+    .sync-hint { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 10px; }
+    /* Hidden by visibility, not display, so its grid row stays reserved and
+       the card holds still when you switch tabs. */
+    .sync-hint.is-off { visibility: hidden; }
 
     /* ─── Settings ────────────────────────────────────────────────────── */
     .section-title { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin: 4px 0 0; }
@@ -203,6 +313,9 @@
     .settings-header-dot { opacity: 0.5; }
     .settings-body { display: flex; flex-direction: column; gap: 8px; }
     .settings-item { background: var(--surface); border-radius: var(--radius-inner); }
+    /* card flip: .field is white, and .settings-item is white now too, so
+       the inputs inside Settings need the same one-step-off-white ground. */
+    .settings-item .field { background: var(--card-ground); }
     .settings-link-row { display: block; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--ink); padding: 15px 18px; border-radius: var(--radius-inner); transition: background 0.15s ease; }
     .settings-link-row:hover { background: var(--surface-deep); }
     /* Once a disclosure is open, its row is a heading for what's below it,
@@ -239,44 +352,100 @@
       .sidebar.open { transform: translateX(0); }
       .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 250; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
       .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
-      .pause-row { padding-left: 54px; }
+      /* Lets the pause controls and the mode pill stack if a phone is too
+         narrow to seat them on one line. */
       .sched { display: none; }
       .sched-mobile-note { display: block; }
     }
 
     /* ─── Pause toggle ────────────────────────────────────────────────── */
     /* Flat: no border, no knob shadow. Paused = light gray track, knob left. */
-    .pause-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-left: 2px; }
+    /* Two white bubbles on the card's gray, pinned to the foot of the pane:
+       pause on the left, mode on the right, with the gray showing between
+       them and the blocklist above. */
+    /* Bottom edge sits flush with the sidebar's, so both white shapes end on
+       the card's inner edge. The height is then DERIVED so the bubble's
+       centred contents land on the same line as the sidebar's avatar row.
+       Walking up from the card's inner edge: .sidebar's 12px bottom padding,
+       then .sidebar-footer's own 2px bottom padding, then half that row's
+       33px of content. So the avatar's centre is 12 + 2 + 16.5 = 30.5px up,
+       and a bottom-flush box needs twice that to centre on the same line.
+       Do NOT read the 49px .sidebar-footer height off the box and halve it:
+       its 14px top padding means its contents are not centred within it,
+       which is a 6px error. Re-derive if either padding or that row's
+       content height changes. */
+    /* Was nudging itself against the old row's right edge. */
     /* Back to the switch's original 42x24 footprint, after a spell at 52x30
        to match .mode-status' height. min-width tracks the switch's own width:
        without it the pill's layout makes this row measure narrower than the
-       switch actually renders, and #pause-label starts underneath it. */
-    .pause-toggle-row { display: flex; align-items: center; min-width: 42px; }
-    .pause-toggle { position: relative; z-index: 2; flex-shrink: 0; width: 42px; height: 24px; background: var(--ink); border-radius: 12px; padding: 0; margin-left: 4px; cursor: pointer; transition: background 0.25s ease; }
-    .pause-toggle.paused { background: var(--surface-deep); }
+       switch actually renders. */
+    /* ── TEMPORARY EXPERIMENT ─────────────────────────────────────────
+       The iOS-style track+knob switch swapped for a round pause/play
+       button. To revert, restore the 60x34 track and .pause-toggle-knob
+       (both were scaled as a group: 2px inset on a 34px track gives a 30px
+       knob and 26px of travel) and put <span class="pause-toggle-knob">
+       back inside #pause-toggle. No JS depends on either shape -- it only
+       toggles .paused and the ARIA on the button itself.
+       The icon shows the ACTION, media-player style: blocking running ->
+       pause glyph, paused -> play glyph. The ink/gray fill carries the
+       state, keeping .paused as the exception class as everywhere else. */
+    /* Bare glyph, no circle. Still a 34px box so the tap target survives.
+       The ink/gray fill used to carry the on/off state; the status pill beside
+       it now reads "Friction Mode active" or "Paused until ...", so the glyph
+       only has to show the action and stays ink in both states. */
+    .pause-toggle { position: relative; z-index: 2; flex-shrink: 0; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: none; color: inherit; padding: 0; cursor: pointer; transition: opacity 0.18s ease, transform 0.18s ease; }
+    .pause-toggle:hover { opacity: 0.78; }
+    .pause-toggle:active { transform: scale(0.96); }
     @keyframes pause-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 40% { transform: translateX(2px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }
     /* 2px inset on a 24px track leaves a 20px knob, and 42 - 2*2 - 20 = 18px
        of travel. The knob is 20px rather than the 18px this size carried
        years ago because that version had a 1px border eating the interior;
        this one is flat, so the same inset yields a slightly larger knob. */
-    .pause-toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); transform: translateX(18px); transition: transform 0.25s ease; }
-    .pause-toggle.paused .pause-toggle-knob { transform: translateX(0); }
+    /* Both glyphs share one grid cell and cross-fade with a scale+rotate,
+       rather than morphing the path: animating `d` is not supported in
+       Firefox, and this page is a website as well as an extension surface. */
+    .pause-icon { display: grid; place-items: center; width: 25px; height: 25px; color: inherit; }
+    .pause-icon svg { grid-area: 1 / 1; width: 25px; height: 25px; fill: currentColor;
+      transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+    .pause-icon__pause { opacity: 1; transform: none; }
+    .pause-icon__play  { opacity: 0; transform: scale(0.5) rotate(-30deg); }
+    .pause-toggle.paused .pause-icon__pause { opacity: 0; transform: scale(0.5) rotate(30deg); }
+    .pause-toggle.paused .pause-icon__play  { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .pause-icon svg { transition: opacity 0.01s; }
+      .pause-toggle:hover, .pause-toggle:active { transform: none; } }
     /* The durations are small gray bubbles next to the switch (same as the
        landing page's "Pause when you need to" tile), not one extended
        gray bar. The container stays a zero-width clip that animates open;
        openPauseOptions() measures the row's scrollWidth for it. */
-    .pause-options-pill { position: relative; z-index: 1; display: flex; align-items: center; flex-shrink: 0; width: 0; height: 30px; margin-left: 0; overflow: hidden; white-space: nowrap; transition: width 0.3s ease; }
-    .pause-durations { display: flex; align-items: center; gap: 6px; margin-left: 10px; padding-right: 4px; }
-    .pause-duration-btn { display: inline-flex; align-items: center; justify-content: center; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--surface); font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; transition: color 0.15s, background 0.15s; }
-    .pause-duration-btn:hover { color: var(--ink); background: var(--surface-deep); }
-    .pause-duration-infinite { display: inline-flex; align-items: center; justify-content: center; }
-    .pause-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    /* --card-ground, not --surface: --surface is white inside .app-card and
+       the bubble is white too, so these chips were rendering invisible. */
     /* Same solid mode pill the popup's toggle and the blocked page use. */
-    .mode-status { display: inline-flex; align-items: center; margin-right: -2px; height: 30px; padding: 0 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 500; color: var(--paper); white-space: nowrap; }
+    /* Pill states what is running; the bare glyph beside it is the control.
+       They are a pair, so they sit tighter to each other than to the tabs.
+       The negative margin cancels the row gap; what the eye measures is the
+       6px of padding the 40px button leaves around its 28px glyph. */
+    /* flex-start pins the status to the TOP of the row, so it stays put as
+       the tab area grows to a second line instead of drifting down to the new
+       centre. The pause button is taller than the pill's 34px, so the offset
+       below is half that height difference: (36 - 34) / 2 = 1px. Re-derive if
+       either height changes. */
+    .profile-row { display: flex; align-items: flex-start; gap: 12px; }
+    .profile-row .mode-status { margin-right: -12px; }
+    .profile-row .pause-item { margin-top: -1px; }
+    .profile-row .profile-tabs { flex: 1; min-width: 0; }
+    .mode-status { display: inline-flex; align-items: center; flex-shrink: 0; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 500; color: var(--paper); white-space: nowrap; }
+    /* Anchors both the chevron and the menu to the BUTTON, so they centre on
+       it rather than on the pill. */
+    .pause-item { position: relative; display: flex; flex-shrink: 0; }
+    .pause-toggle { position: relative; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; background: none; color: var(--ink); padding: 0; cursor: pointer; transition: transform 0.18s ease; }
+    /* .menu-open keeps the button looking engaged once the cursor leaves it
+       for the menu, the same reason .quick-add-chip carries that class. */
+    .pause-toggle:hover, .pause-toggle.menu-open { transform: scale(1.1); }
+    .pause-toggle:active { transform: scale(0.96); }
     .mode-status-dot { display: none; }
     .mode-status.mode-friction { background: var(--friction); }
     .mode-status.mode-strict   { background: var(--strict); }
-    .pause-title { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .mode-status.mode-paused   { background: var(--surface-deep); color: var(--ink); }
 
     /* ─── Quick-add row + site options menu ───────────────────────────── */
      /* Adding lives above the list, never inside it: the gray surface below
@@ -284,27 +453,37 @@
        something". That move is also what lets the chips take the standard
        gray circle — on the surface it would have had to be white, which is
        the shadowed chip shape that was already rejected. */
-    .quick-add { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
-    .quick-add-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
-    .quick-add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    /* Inside the input box now, so no wrapping and no shrinking. gap is 0 on
+       purpose: each 32px button already carries 6px of padding around its
+       20px glyph, so touching buttons put exactly 12px between glyphs, which
+       is also the 12px the last glyph sits from the box's right edge. Add a
+       gap here and the glyph spacing goes to 12 + that, so `gap: 12px`
+       would render 24px. The founder asked for 12 everywhere. */
+    .quick-add-row { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
     .quick-add-item { position: relative; }
-    .quick-add-chip { position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); cursor: pointer; transition: background 0.18s ease; }
-    .quick-add-chip:not(.added):hover, .quick-add-chip.menu-open { background: var(--surface-deep); }
+    /* Bare glyph, no circle. Still a 32px button so the tap target and the
+       menu's anchor point survive; only the fill is gone. */
+    .quick-add-chip { position: relative; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: none; cursor: pointer; transition: transform 0.18s ease; }
+    .quick-add-chip:not(.added):hover, .quick-add-chip.menu-open { transform: scale(1.1); }
     /* Glyph follows .sidebar-nav-item exactly: muted at rest, ink on hover,
        with the surface darkening underneath at the same time. */
     .quick-add-chip svg { display: block; color: var(--muted); transition: color 0.18s ease; }
     .quick-add-chip:not(.added):hover svg, .quick-add-chip.menu-open svg { color: var(--ink); }
     .quick-add-chip.added { cursor: default; }
     .quick-add-chip.added svg { color: var(--faint); }
-    .quick-add-chip-arrow { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); display: flex; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .quick-add-chip-arrow { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); display: flex; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
     .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow, .quick-add-chip.menu-open ~ .quick-add-chip-arrow { opacity: 1; }
     /* The one floating surface in the blocklist. No border; a soft shadow
        is what lifts it off the gray surface underneath. */
     .site-options-menu { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); min-width: 190px; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.16s ease; z-index: 50; }
     .site-options-menu.open { grid-template-rows: 1fr; opacity: 1; }
+    /* No chevron under this one, so it does not need the 14px that the
+       quick-add menus use to clear theirs. Must stay after the base rule:
+       same specificity, so source order decides. */
+    .site-options-menu--tight { top: calc(100% + 8px); }
     .site-options-menu-inner { overflow: hidden; min-height: 0; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
     .site-options-menu-item { display: block; width: 100%; text-align: left; font-size: 14px; font-weight: 500; color: var(--ink); padding: 9px 12px; border-radius: 10px; transition: background 0.15s; white-space: nowrap; }
-    .site-options-menu-item:hover { background: var(--surface); }
+    .site-options-menu-item:hover { background: var(--surface-deep); } /* card flip */
     .site-options-menu-item.added { color: var(--muted); font-weight: 400; cursor: default; }
     .site-options-menu-item.added:hover { background: none; }
 
@@ -313,9 +492,20 @@
        so no borders are needed to separate anything. Hour lines stay as a
        faint background because they carry real information. */
     .sched { --sched-gutter-w: 48px; display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; user-select: none; -webkit-user-select: none; }
-    .sched-palette { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .sched-profiles, .sched-modes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .sched-pill, .sched-mode-pill { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    /* flex-start keeps the mode pills at the TOP right as the profile area
+       grows to a second row, and nowrap stops them dropping onto their own
+       line. The 32px gap is a minimum separation, not decoration: both groups
+       use the identical .sched-pill shape, so with only 8px between them the
+       Friction/Strict pair reads as two more profiles. */
+    .sched-palette { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: nowrap; }
+    /* Same ceiling as the blocklist's profile tabs: two rows, then scroll. */
+    .sched-profiles { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      flex: 1; min-width: 0; max-height: calc(2 * 34px + 8px); overflow-y: auto; }
+    .sched-modes { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
+    .sched-pill, .sched-mode-pill { display: inline-flex; align-items: center; flex-shrink: 0; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    /* min-width: 0 is what lets a long name shrink inside the flex pill. */
+    .sched-pill { max-width: 180px; }
+    .sched-pill > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .sched-pill:hover, .sched-mode-pill:hover { color: var(--ink); }
     .sched-pill.selected, .sched-mode-pill.selected { color: var(--paper); font-weight: 500; }
     .sched-pill.selected.mode-friction, .sched-mode-pill.selected[data-mode="friction"] { background: var(--friction); }
@@ -328,15 +518,22 @@
        of each 1/24 (1/48) cell, so nothing sits on the top edge, and a
        1px paper overlay hides the one that would land on the bottom edge. */
     .sched-grid { display: grid; grid-template-columns: var(--sched-gutter-w) repeat(7, 1fr); grid-template-rows: auto 1fr; column-gap: 0; height: 100%; }
-    .sched-head-cell { position: sticky; top: 0; z-index: 2; background: var(--surface); padding: 2px 0 10px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+    .sched-head-cell { position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 2px 0 10px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
     .sched-col { position: relative; min-height: 460px; background-color: var(--paper); cursor: crosshair; touch-action: none;
       background-image:
         linear-gradient(to bottom, transparent calc(100% - 1px), var(--paper) calc(100% - 1px)),
         repeating-linear-gradient(to bottom, transparent 0 calc(100% / 24 - 1px), rgba(0, 0, 0, 0.06) calc(100% / 24 - 1px) calc(100% / 24)),
         repeating-linear-gradient(to bottom, transparent 0 calc(100% / 48 - 1px), rgba(0, 0, 0, 0.025) calc(100% / 48 - 1px) calc(100% / 48)); }
     .sched-col + .sched-col { box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.06); }
+    .sched-head-cell--corner { background: transparent; }
     .sched-gutter + .sched-col { border-radius: var(--radius-field) 0 0 var(--radius-field); }
     .sched-col:last-child { border-radius: 0 var(--radius-field) var(--radius-field) 0; }
+    /* The header is the top of that same white panel now, so the outer
+       corners round with it and the columns below only round at the foot. */
+    .sched-head-cell--corner + .sched-head-cell { border-radius: var(--radius-field) 0 0 0; }
+    .sched-head-cell:last-of-type { border-radius: 0 var(--radius-field) 0 0; }
+    .sched-gutter + .sched-col { border-radius: 0 0 0 var(--radius-field); }
+    .sched-col:last-child { border-radius: 0 0 var(--radius-field) 0; }
     .sched-gutter { display: grid; grid-template-rows: repeat(24, 1fr); padding-right: 6px; }
     .sched-hour { font-size: 11px; color: var(--muted); text-align: right; padding-top: 2px; }
     .sched-block { position: absolute; left: 3px; right: 3px; display: flex; flex-direction: column; justify-content: center; gap: 1px; overflow: visible; padding: 3px 8px; border-radius: 8px; color: var(--paper); text-align: left; cursor: pointer; transition: background-color 0.15s ease; }
@@ -488,39 +685,7 @@
   <div id="app-screen" class="hidden">
     <div class="page-wrap">
 
-      <!-- Pause blocking, above the sidebar/content-pane row rather than
-           inside the Blocklist section — a page-global control, not
-           specific to one section, and gives the two cards below some
-           breathing room instead of starting right at the top edge. -->
-      <div class="pause-row">
-        <!-- Active blocking mode first: it's the headline state, and the
-             pause switch after it is a control on that state. -->
-        <span class="mode-status" id="mode-status">
-          <span id="mode-status-label"></span>
-          <span class="mode-status-dot"></span>
-        </span>
-        <div class="pause-toggle-row" id="pause-toggle-row">
-          <button class="pause-toggle" id="pause-toggle" aria-expanded="false" aria-pressed="false" title="Pause blocking">
-            <span class="pause-toggle-knob"></span>
-          </button>
-          <div class="pause-options-pill" id="pause-toggle-options">
-            <div class="pause-durations" id="pause-durations-row">
-              <button class="pause-duration-btn" data-minutes="30" type="button">30m</button>
-              <button class="pause-duration-btn" data-minutes="60" type="button">1h</button>
-              <button class="pause-duration-btn" data-minutes="120" type="button">2h</button>
-              <button class="pause-duration-btn" data-minutes="360" type="button">6h</button>
-              <button class="pause-duration-btn" data-minutes="720" type="button">12h</button>
-              <button class="pause-duration-btn pause-duration-infinite" data-minutes="infinite" type="button" title="Pause indefinitely, until you resume it">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M18.178 8c5.096 0 5.096 8 0 8-5.096 0-7.646-8-12.906-8-4.789 0-4.789 8 0 8 5.26 0 7.81-8 12.906-8z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        <span class="pause-title" id="pause-title">Blocking on</span>
-        <span class="pause-label hidden" id="pause-label"></span>
-      </div>
+      <div class="app-card">
 
       <div class="dashboard-shell">
 
@@ -575,8 +740,39 @@
             <!-- Profile switcher — moved here from the old #profiles-card,
                  pinned at the top of this pane. -->
             <div class="profile-switcher">
-              <!-- Profile tabs (rendered by JS) -->
-              <div class="profile-tabs" id="profile-tabs"></div>
+              <!-- Tabs left, status pinned right. The pause control lives
+                   INSIDE the mode pill now, so they read as one object and
+                   the separate bottom bar is gone. -->
+              <div class="profile-row">
+                <!-- Profile tabs (rendered by JS) -->
+                <div class="profile-tabs" id="profile-tabs"></div>
+                <!-- Two separate things again: the mode pill states what is
+                     running, the bare glyph beside it is the control. The
+                     chevron and menu belong to the BUTTON, not the pill, and
+                     follow .quick-add-chip-arrow exactly: hidden at rest,
+                     faded in on hover or while the menu is open. -->
+                <span class="mode-status" id="mode-status">
+                  <span id="mode-status-label"></span>
+                </span>
+                <div class="pause-item">
+                  <button class="pause-toggle" id="pause-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="true" title="Pause blocking">
+                    <span class="pause-icon" aria-hidden="true">
+                      <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.4" y="4" width="4" height="16" rx="2"/><rect x="13.6" y="4" width="4" height="16" rx="2"/></svg>
+                      <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.6 5.4v13.2L18.4 12 7.6 5.4z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                    </span>
+                  </button>
+                  <div class="site-options-menu site-options-menu--tight" id="pause-menu">
+                    <div class="site-options-menu-inner">
+                      <button class="site-options-menu-item" data-minutes="30" type="button">30 minutes</button>
+                      <button class="site-options-menu-item" data-minutes="60" type="button">1 hour</button>
+                      <button class="site-options-menu-item" data-minutes="120" type="button">2 hours</button>
+                      <button class="site-options-menu-item" data-minutes="360" type="button">6 hours</button>
+                      <button class="site-options-menu-item" data-minutes="720" type="button">12 hours</button>
+                      <button class="site-options-menu-item" data-minutes="infinite" type="button">Until I turn it back on</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
                    only for premium users, to avoid a flash of an actionable
@@ -592,15 +788,19 @@
             </div>
 
             <div class="url-input-row">
-              <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
+              <!-- The wrap IS the visible input box: it carries the ground,
+                   the radius and the focus ring, the <input> inside it is
+                   transparent, and the quick-add chips are flex siblings
+                   pinned to its right. Done this way rather than absolutely
+                   positioning the chips over a padded input so the text can
+                   never run under them, whatever the list's length. -->
+              <div class="url-input-wrap">
+                <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
+                <div class="quick-add-row" id="quick-add-row"></div>
+              </div>
               <button class="btn-sm dark" id="add-url-btn">Block site</button>
             </div>
             <p class="error-msg" id="url-error"></p>
-
-            <div class="quick-add">
-              <span class="quick-add-label">Quick add</span>
-              <div class="quick-add-row" id="quick-add-row"></div>
-            </div>
 
             <div class="blocklist-surface">
               <ul class="url-list" id="url-list">
@@ -608,7 +808,6 @@
               </ul>
             </div>
 
-            <p class="sync-hint">Blocklist syncs every minute. To refresh instantly, click the extension icon.</p>
           </div>
 
           <!-- Schedule section — a weekly recurring grid the user paints
@@ -708,6 +907,12 @@
         </div>
       </div>
 
+      </div><!-- /.app-card -->
+      <!-- Sits below the card, not inside it, so the blocklist can run to
+           the card's bottom edge. Kept in the grid at all times and hidden
+           with visibility, not display, so switching tabs never moves the
+           card. Toggled alongside .content-section in the nav handler. -->
+      <p class="sync-hint" id="sync-hint">Blocklist syncs every minute. To refresh instantly, click the extension icon.</p>
     </div>
   </div>
 
@@ -1040,7 +1245,7 @@
     let pauseActionToken = 0;
 
     /**
-     * Updates the mode line at the right end of .pause-row, above the cards.
+     * Updates the mode line in the right-hand bubble at the foot of the pane.
      * The mode's own color (teal for Friction, burgundy for Strict — see the
      * --friction-teal/--strict-burgundy tokens' comment) lives in the dot;
      * the text itself stays muted like every other label in that row.
@@ -1051,12 +1256,30 @@
     function applyModeIndicator() {
       const el = document.getElementById('mode-status');
       const isStrict = currentBlockingMode === 'strict';
-      // "Mode active: Strict until 11:00 PM" while a scheduled Strict block
+      const labelEl = document.getElementById('mode-status-label');
+
+      // Paused wins: a blue "Friction Mode active" sitting beside a paused
+      // button would simply be untrue, so the pill goes neutral and reports
+      // the pause instead. This is the only status element in the bar now —
+      // the separate "Blocking on" / "Paused until ..." labels are gone,
+      // since the pause glyph and its fill already say whether it is running.
+      const isPaused = currentPausedUntil && new Date(currentPausedUntil).getTime() > Date.now();
+      if (isPaused) {
+        labelEl.textContent = isIndefinitePause(currentPausedUntil)
+          ? 'Paused indefinitely'
+          : `Paused until ${new Date(currentPausedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        el.classList.remove('mode-friction', 'mode-strict');
+        el.classList.add('mode-paused');
+        return;
+      }
+
+      // "Strict Mode active until 11:00 PM" while a scheduled Strict block
       // is in force — the one place on this page that says why the pause
       // switch, the profile tabs and the block itself are all refusing.
       const scheduled = scheduledStrictBlock();
-      document.getElementById('mode-status-label').textContent =
-        `${isStrict ? 'Strict' : 'Friction'}${scheduled ? ` until ${formatBlockEndClock(scheduled)}` : ''}`;
+      labelEl.textContent =
+        `${isStrict ? 'Strict' : 'Friction'} Mode active${scheduled ? ` until ${formatBlockEndClock(scheduled)}` : ''}`;
+      el.classList.remove('mode-paused');
       el.classList.toggle('mode-strict', isStrict);
       el.classList.toggle('mode-friction', !isStrict);
     }
@@ -1091,16 +1314,7 @@
       document.getElementById('pause-toggle').classList.toggle('paused', !!isActive);
       document.getElementById('pause-toggle').setAttribute('aria-pressed', String(!isActive));
 
-      const label = document.getElementById('pause-label');
-      if (isActive) {
-        label.textContent = isIndefinitePause(currentPausedUntil)
-          ? 'Paused indefinitely'
-          : `Paused until ${new Date(currentPausedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-        label.classList.remove('hidden');
-      } else {
-        label.classList.add('hidden');
-      }
-      document.getElementById('pause-title').classList.toggle('hidden', !!isActive);
+      // The pill (applyModeIndicator, above) is the only status element now.
 
       // Profile tabs' locked-by-Strict-Mode appearance depends on
       // currentBlockingMode too — re-render so it stays in sync whenever
@@ -1126,18 +1340,17 @@
      * metrics, so there's nothing to guess here.
      */
     function openPauseOptions() {
-      const pill      = document.getElementById('pause-toggle-options');
-      const durations = document.getElementById('pause-durations-row');
-      pill.style.width = `${durations.scrollWidth + 24}px`; // +24 = .pause-durations' own margin-left reserve
-      pill.classList.add('open');
+      closeAllSiteMenus();                       // never two dropdowns at once
+      document.getElementById('pause-menu').classList.add('open');
+      // .menu-open keeps the chevron showing once the cursor leaves the
+      // button for the menu, exactly as the quick-add chips do.
+      document.getElementById('pause-toggle').classList.add('menu-open');
       document.getElementById('pause-toggle').setAttribute('aria-expanded', 'true');
     }
 
-    /** Collapses the gray pill back to zero width. */
     function closePauseOptions() {
-      const pill = document.getElementById('pause-toggle-options');
-      pill.style.width = '0px';
-      pill.classList.remove('open');
+      document.getElementById('pause-menu').classList.remove('open');
+      document.getElementById('pause-toggle').classList.remove('menu-open');
       document.getElementById('pause-toggle').setAttribute('aria-expanded', 'false');
     }
 
@@ -1165,10 +1378,13 @@
       setTimeout(() => el.classList.remove('shake'), 400);
     }
 
-    document.getElementById('pause-toggle').addEventListener('click', async () => {
+    document.getElementById('pause-toggle').addEventListener('click', async (e) => {
+      // Without this the document-level listener below closes the menu in the
+      // same click that opened it.
+      e.stopPropagation();
       const myToken = ++pauseActionToken;
 
-      const isOpen = document.getElementById('pause-toggle-options').classList.contains('open');
+      const isOpen = document.getElementById('pause-menu').classList.contains('open');
       if (isOpen) { closePauseOptions(); return; }
 
       // Already paused — clicking resumes immediately, back to the
@@ -1206,7 +1422,7 @@
     // Picking a duration commits immediately — no hold here. The 30s wait
     // already exists for leaving Strict Mode (in the popup); a Friction-mode
     // user pausing doesn't need a second one on top of it.
-    document.querySelectorAll('.pause-duration-btn').forEach((btn) => {
+    document.querySelectorAll('#pause-menu .site-options-menu-item').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const myToken = ++pauseActionToken;
         const isIndefinite = btn.dataset.minutes === 'infinite';
@@ -1274,6 +1490,10 @@
       document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.section === name);
       });
+
+      // The sync note lives outside the card now, so it is not carried by
+      // the section it belongs to; toggle it in step with that section.
+      document.getElementById('sync-hint').classList.toggle('is-off', name !== 'blocklist');
 
       document.querySelectorAll('.content-section').forEach((section) => {
         const isTarget = section.id === `section-${name}`;
@@ -1561,6 +1781,12 @@
         container.appendChild(tab);
       });
 
+      // Once the tab area can scroll, the active profile must never be the
+      // one left hidden below the fold. Done after the loop because tabs are
+      // appended from two places (the locked branch returns early).
+      const activeTab = container.querySelector('.profile-tab.active');
+      if (activeTab) requestAnimationFrame(() => activeTab.scrollIntoView({ block: 'nearest' }));
+
       // Moved into the same flex container as the tabs (not left as a
       // separate block-level element below) so it always sits as a pill
       // immediately after the last profile tab, wrapping onto a new line
@@ -1707,8 +1933,6 @@
         { label: 'Reels', path: '/reels' },
         { label: 'Marketplace', path: '/marketplace' },
       ] },
-      { name: 'Reddit',       hostname: 'reddit.com', icon: '<path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" />' },
-      { name: 'Twitch',       hostname: 'twitch.tv', icon: '<path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" />' },
     ];
 
     // Kept in sync with the currently-loaded profile's blocklist on every
@@ -1980,7 +2204,11 @@
     // can never drift out of sync with each other.
     function closeAllSiteMenus() {
       document.querySelectorAll('.site-options-menu.open').forEach((el) => el.classList.remove('open'));
-      document.querySelectorAll('.quick-add-chip.menu-open').forEach((el) => el.classList.remove('menu-open'));
+      document.querySelectorAll('.menu-open').forEach((el) => el.classList.remove('menu-open'));
+      // #pause-menu is one of those .site-options-menu elements now, so its
+      // trigger's ARIA has to be reset here too or it lies after an
+      // outside click.
+      document.getElementById('pause-toggle')?.setAttribute('aria-expanded', 'false');
     }
 
     // Closes any open site-options-menu on an outside click — same
@@ -2345,7 +2573,7 @@
       // It lives inside the same grid as the columns so the two can never
       // drift apart (see .sched-grid's own comment).
       const corner = document.createElement('div');
-      corner.className = 'sched-head-cell';
+      corner.className = 'sched-head-cell sched-head-cell--corner';
       body.appendChild(corner);
 
       SCHED_DAYS.forEach((day) => {
@@ -2402,13 +2630,21 @@
         pill.type = 'button';
         const isSelected = profile.id === schedulePaintProfileId;
         pill.className = `sched-pill${isSelected ? ` selected mode-${schedulePaintMode}` : ''}`;
-        pill.textContent = profile.name;
+        // Wrapped rather than set as textContent so text-overflow has an
+        // element to act on; a flex parent will not ellipsise its own text.
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = profile.name;
+        pill.appendChild(nameSpan);
+        pill.title = profile.name;
         pill.addEventListener('click', () => {
           schedulePaintProfileId = profile.id;
           renderSchedulePalette();
         });
         profileRow.appendChild(pill);
       });
+      // Now that this area can scroll, the painted profile must stay visible.
+      const chosen = profileRow.querySelector('.sched-pill.selected');
+      if (chosen) requestAnimationFrame(() => chosen.scrollIntoView({ block: 'nearest' }));
 
       [['friction', 'Friction'], ['strict', 'Strict']].forEach(([mode, label]) => {
         const pill = document.createElement('button');

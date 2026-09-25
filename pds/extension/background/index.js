@@ -5,15 +5,15 @@
 // specific to this context (the live blockedEntries array, pause timers).
 
 import { chromeStorageAdapter } from '../../core/auth/storage.js';
-import { getValidAccessToken, getStoredSession } from '../../core/auth/session.js';
+import { getValidAccessToken, getStoredSession, clearSession } from '../../core/auth/session.js';
 import { fetchActiveProfile, switchProfileDetailed } from '../../core/sync/profiles.js';
 import { fetchBlockedUrls } from '../../core/sync/blockedUrls.js';
 import {
-  fetchBlockingMode, setBlockingModeDetailed, fetchIsPremium, fetchPauseUntil, setPauseUntil, setTimezoneIfUnset,
+  setBlockingModeDetailed, fetchIsPremium, fetchSettingsSnapshot, setPauseUntil, setTimezoneIfUnset,
 } from '../../core/sync/userSettings.js';
 import { fetchSchedules, applySchedule } from '../../core/sync/schedules.js';
 import { activeBlockAt, nextBoundaryAt } from '../../core/schedule/active.js';
-import { isNavigableUrl, parseBlocklistEntry, matchesBlockedEntry } from '../../core/blocklist/hostname.js';
+import { isNavigableUrl, hostnameOf, parseBlocklistEntry, matchesBlockedEntry } from '../../core/blocklist/hostname.js';
 
 // ─── In-memory state ─────────────────────────────────────────────────────────
 // Parsed { hostname, pathPrefix } entries from the user's active profile's
@@ -37,8 +37,8 @@ let blockedEntries = [];
 const lastSafeUrl = new Map();
 
 // User-level pause (not per-profile) — epoch ms when the pause expires, or
-// null. Set from the dashboard or the Friction Mode breathing flow
-// (Supabase-backed, see core/sync/userSettings.js's fetchPauseUntil/
+// null. Set from the dashboard's pause switch (the breath grants a per-site
+// pass instead, see sitePasses) — Supabase-backed, see core/sync/userSettings.js's fetchPauseUntil/
 // setPauseUntil), refreshed on every refreshBlocklist() AND re-checked
 // live in checkAndBlockTab() below right before a block would actually
 // happen, since that's the one place staleness is immediately visible to
@@ -49,6 +49,15 @@ const lastSafeUrl = new Map();
 // 'strict', so a pause can never bypass Strict Mode even if one was
 // already running when the user switched into it.
 let pausedUntil = null;
+
+// Per-site passes earned by finishing the 30s breath on blocked.html:
+// { [hostname]: expiresAtMs }. One breath opens the site it was served for,
+// not every blocked site (fix sprint decision; it used to write the
+// account-wide paused_until above, which opened everything for 10 minutes).
+// Local to this browser on purpose: a pass is earned here, by sitting
+// through the countdown here. Friction Mode only, like the pause.
+let sitePasses = {};
+const SITE_PASS_MINUTES = 10;
 
 // The currently active profile row: { id, name } or null.
 let activeProfile = null;
@@ -108,6 +117,124 @@ const BOUNDARY_ALARM_SLACK_MS = 3000;
 // null), this just avoids a pointless PATCH every minute.
 let timezoneOfferedFor = null;
 
+// ─── Persisted cache ─────────────────────────────────────────────────────────
+// Everything above is mirrored to chrome.storage.local after each refresh
+// and loaded back before any event is handled. MV3 stops this worker after
+// ~30s idle and it restarts roughly every minute, and every restart used to
+// begin with an empty blocklist until several network calls finished. A
+// navigation that woke the worker slipped through, and if Supabase was
+// unreachable (an outage, a captive portal, or the user blocking its host
+// in an ad blocker) nothing was blocked at all (audit R2). Now the last
+// known state is enforced until a refresh replaces it: failing closed.
+const STATE_KEY = 'pds_state';
+
+// When the cache was last filled from the server (epoch ms), and for whom.
+let lastRefreshAt = 0;
+let cachedUserId = null;
+
+async function saveState() {
+  try {
+    await chrome.storage.local.set({
+      [STATE_KEY]: {
+        userId: cachedUserId,
+        blockedEntries,
+        activeProfile,
+        blockingMode,
+        isPremium,
+        pausedUntil,
+        sitePasses: livePasses(),
+        schedules,
+        lastRefreshAt,
+        timezoneOfferedFor,
+      },
+    });
+  } catch (err) {
+    console.warn('[PDS] Could not save state:', err);
+  }
+}
+
+async function loadState() {
+  const { [STATE_KEY]: saved } = await chrome.storage.local.get(STATE_KEY);
+  if (!saved) return;
+  cachedUserId = saved.userId ?? null;
+  blockedEntries = Array.isArray(saved.blockedEntries) ? saved.blockedEntries : [];
+  activeProfile = saved.activeProfile ?? null;
+  blockingMode = saved.blockingMode === 'strict' ? 'strict' : 'friction';
+  isPremium = saved.isPremium === true;
+  pausedUntil = typeof saved.pausedUntil === 'number' ? saved.pausedUntil : null;
+  sitePasses = saved.sitePasses && typeof saved.sitePasses === 'object' ? saved.sitePasses : {};
+  schedules = Array.isArray(saved.schedules) ? saved.schedules : [];
+  lastRefreshAt = saved.lastRefreshAt ?? 0;
+  timezoneOfferedFor = saved.timezoneOfferedFor ?? null;
+}
+
+/** Forgets the cached state, in memory and in storage (a real sign-out). */
+async function clearState() {
+  blockedEntries = [];
+  activeProfile = null;
+  pausedUntil = null;
+  sitePasses = {};
+  blockingMode = 'friction';
+  isPremium = false;
+  schedules = [];
+  timezoneOfferedFor = null;
+  lastRefreshAt = 0;
+  cachedUserId = null;
+  armBoundaryAlarm();
+  try {
+    await chrome.storage.local.remove(STATE_KEY);
+  } catch (err) {
+    console.warn('[PDS] Could not clear state:', err);
+  }
+}
+
+// Every listener awaits this before reading state, so an event that wakes
+// the worker is judged against the saved blocklist, not an empty one.
+const ready = loadState().catch((err) => console.warn('[PDS] Could not load state:', err));
+
+// How old the cache may get before a navigation waits for a refresh. The
+// 60s alarm usually keeps it younger; this covers the gaps where it
+// doesn't (sleep, a missed alarm, a failed refresh).
+const STALE_AFTER_MS = 2 * 60 * 1000;
+
+/**
+ * True when the cache may no longer describe what the server would say:
+ * older than STALE_AFTER_MS, or a scheduled block has started or ended
+ * since it was filled. The second case is the schedule-start bug in
+ * TODO.md: a block that switches to a profile with a different list is
+ * invisible to navigation, because only URLs on the cached list trigger a
+ * live check.
+ */
+function cacheIsStale() {
+  if (Date.now() - lastRefreshAt > STALE_AFTER_MS) return true;
+  const boundary = nextBoundaryAt(schedules, new Date(lastRefreshAt));
+  return boundary !== null && boundary.getTime() <= Date.now();
+}
+
+/** sitePasses without the expired ones. */
+function livePasses() {
+  const now = Date.now();
+  return Object.fromEntries(Object.entries(sitePasses).filter(([, until]) => until > now));
+}
+
+/** True if a breath pass currently covers this URL (its host or a subdomain). */
+function hasSitePass(url) {
+  return Object.keys(livePasses()).some((hostname) => matchesBlockedEntry(url, { hostname, pathPrefix: null }));
+}
+
+/**
+ * The hostname a pass for `url` should cover: that of the broadest cached
+ * entry blocking it ("youtube.com" for m.youtube.com/shorts/x), so the
+ * site's own redirects between subdomains (pinterest.com to
+ * br.pinterest.com) don't land the user straight back on the block screen
+ * they just breathed through. Falls back to the URL's own hostname.
+ */
+function passHostnameFor(url) {
+  const matching = blockedEntries.filter((entry) => matchesBlockedEntry(url, entry));
+  if (matching.length === 0) return hostnameOf(url);
+  return matching.reduce((a, b) => (b.hostname.length < a.hostname.length ? b : a)).hostname;
+}
+
 /**
  * Re-arms the boundary alarm from the cached schedule (or clears it when
  * there's nothing scheduled).
@@ -158,17 +285,17 @@ function scheduledStrictRefusal() {
 }
 
 /**
- * Live { mode, pausedUntil, profileId } from the server in one round trip.
- * Calls apply_schedule() — which both runs any due schedule transition
- * (so "live" here includes a block that started seconds ago, even if no
- * alarm has fired yet) and returns the resulting mode/paused_until/profile
- * for every account, Focus Pro or not. Falls back to the plain
- * blocking_mode + paused_until reads if the RPC is unavailable, so the
- * extension keeps enforcing normally even before 016 is applied or during
- * a partial outage.
+ * Live { mode, pausedUntil, profileId } from the server in one round trip,
+ * or null when the server couldn't be asked. Calls apply_schedule() — which
+ * both runs any due schedule transition (so "live" here includes a block
+ * that started seconds ago, even if no alarm has fired yet) and returns the
+ * resulting mode/paused_until/profile for every account, Focus Pro or not.
+ * Falls back to a plain settings read if the RPC fails. Null, never a
+ * default: the old fallback answered 'friction' on a network error, which
+ * let a Strict user through (audit R2).
  */
 async function fetchLiveState(accessToken, userId) {
-  const result = await applySchedule(accessToken, userId);
+  const result = await applySchedule(accessToken, userId).catch(() => null);
   if (result && (result.mode === 'friction' || result.mode === 'strict')) {
     return {
       mode: result.mode,
@@ -176,58 +303,124 @@ async function fetchLiveState(accessToken, userId) {
       profileId: result.profile_id ?? null,
     };
   }
-  const [mode, pauseIso] = await Promise.all([
-    fetchBlockingMode(accessToken, userId),
-    fetchPauseUntil(accessToken, userId),
-  ]);
-  return { mode, pausedUntil: pauseIso ? new Date(pauseIso).getTime() : null, profileId: null };
+  const settings = await fetchSettingsSnapshot(accessToken, userId).catch(() => null);
+  if (!settings) return null;
+  return {
+    mode: settings.blockingMode,
+    pausedUntil: settings.pausedUntil ? new Date(settings.pausedUntil).getTime() : null,
+    profileId: null,
+  };
 }
 
 // ─── Blocklist management ─────────────────────────────────────────────────────
 
+// A one-shot alarm that retries a failed refresh instead of waiting for the
+// next periodic tick. 30s is the shortest delay Chrome allows a packed
+// extension's alarm.
+const RETRY_ALARM_NAME = 'pds-retry';
+const RETRY_DELAY_MINUTES = 0.5;
+
+function scheduleRetry() {
+  chrome.alarms.create(RETRY_ALARM_NAME, { delayInMinutes: RETRY_DELAY_MINUTES });
+}
+
+let refreshInFlight = null;
+let refreshAfterChangePending = null;
+
+// When the last refresh started, successful or not. A stale cache makes
+// navigations refresh first (checkAndBlockTab()); while Supabase is
+// unreachable that would be one failing attempt per page load, so a
+// navigation starts a new attempt only this long after the previous one.
+let lastRefreshAttemptAt = 0;
+const NAVIGATION_REFRESH_BACKOFF_MS = 30 * 1000;
+
 /**
- * Resolves a valid access token, resolves the active profile, fetches its
- * blocklist, and rebuilds the in-memory blockedEntries array.
- * Called on startup and on a timed interval. Refreshes the token itself if
- * it's expired — unlike the old REST calls, this doesn't depend on the popup
- * having been opened recently to stay fresh.
+ * Refills the cache from the server. Callers landing together (a wake fires
+ * the alarm, initialize() and a tab event at once) share one refresh
+ * instead of each spending four or five requests and racing the refresh
+ * token (audit R6). Never rejects.
  */
-async function refreshBlocklist() {
-  const accessToken = await getValidAccessToken(chromeStorageAdapter);
-
-  if (!accessToken) {
-    blockedEntries = [];
-    activeProfile = null;
-    isPremium = false;
-    schedules = [];
-    armBoundaryAlarm();
-    console.log('[PDS] No active session. Blocking disabled.');
-    return;
+function refreshBlocklist() {
+  if (!refreshInFlight) {
+    refreshInFlight = runRefresh().finally(() => { refreshInFlight = null; });
   }
+  return refreshInFlight;
+}
 
+/**
+ * For callers that just changed something (sign-in, a dashboard edit, a
+ * profile switch): a refresh already in flight may have read the state
+ * before the change, so wait for it and start a new one.
+ */
+function refreshAfterChange() {
+  if (!refreshAfterChangePending) {
+    const previous = refreshInFlight ?? Promise.resolve();
+    refreshAfterChangePending = previous.then(() => {
+      refreshAfterChangePending = null;
+      return refreshBlocklist();
+    });
+  }
+  return refreshAfterChangePending;
+}
+
+async function runRefresh() {
+  await ready;
+  lastRefreshAttemptAt = Date.now();
+  try {
+    const accessToken = await getValidAccessToken(chromeStorageAdapter);
+    if (!accessToken) {
+      if (await getStoredSession(chromeStorageAdapter)) {
+        // Signed in, but the token couldn't be refreshed right now (offline,
+        // a 5xx, a captive portal). Keep enforcing what we have.
+        console.warn('[PDS] Could not refresh the session. Keeping cached state.');
+        scheduleRetry();
+        return;
+      }
+      if (cachedUserId || blockedEntries.length) await clearState();
+      console.log('[PDS] No active session. Blocking disabled.');
+      return;
+    }
+    await pullState(accessToken);
+  } catch (err) {
+    console.warn('[PDS] Refresh failed. Keeping cached state.', err);
+    scheduleRetry();
+  }
+}
+
+/**
+ * Reads the active profile, its blocklist, mode, pause, premium flag and
+ * schedule, running any due schedule transition first. Throws when the
+ * server can't answer; the caller keeps the cache and retries. Only a
+ * complete refresh advances lastRefreshAt.
+ */
+async function pullState(accessToken) {
   const session = await getStoredSession(chromeStorageAdapter);
   const userId = session.user.id;
 
   // The schedule is evaluated in the user's own wall clock, which the
   // server only knows once some client tells it. First writer wins and
   // later changes are guarded server-side — see setTimezoneIfUnset().
+  // timezoneOfferedFor is saved with the cache, so this is one PATCH per
+  // account, not one per worker restart.
   if (timezoneOfferedFor !== userId) {
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (await setTimezoneIfUnset(accessToken, userId, zone)) timezoneOfferedFor = userId;
+    if (await setTimezoneIfUnset(accessToken, userId, zone).catch(() => false)) timezoneOfferedFor = userId;
   }
 
-  // Order matters here: fetchLiveState() runs apply_schedule(), which may
-  // switch the active profile, so the profile read has to come after it —
-  // otherwise a block's profile switch would only show up one poll late.
-  // is_premium doesn't depend on it, so that one still runs concurrently.
-  const [live, premium] = await Promise.all([
-    fetchLiveState(accessToken, userId),
-    fetchIsPremium(accessToken, userId),
+  // apply_schedule() may switch the active profile, so the profile read has
+  // to come after it. The settings read doesn't depend on it and runs
+  // alongside: it supplies is_premium, and mode/pause if the RPC fails.
+  const [live, settings] = await Promise.all([
+    applySchedule(accessToken, userId).catch(() => null),
+    fetchSettingsSnapshot(accessToken, userId).catch(() => null),
   ]);
+  const liveOk = live && (live.mode === 'friction' || live.mode === 'strict');
+  if (!liveOk && !settings) throw new Error('Could not read blocking mode.');
 
-  blockingMode = live.mode;
-  isPremium = premium;
-  pausedUntil = live.pausedUntil;
+  blockingMode = liveOk ? live.mode : settings.blockingMode;
+  const pauseIso = liveOk ? live.paused_until : settings.pausedUntil;
+  pausedUntil = pauseIso ? new Date(pauseIso).getTime() : null;
+  if (settings) isPremium = settings.isPremium;
 
   // Cache the schedule (Focus Pro only — dormant otherwise, matching the
   // server) and re-arm the boundary alarm from it. A failed fetch keeps
@@ -241,41 +434,54 @@ async function refreshBlocklist() {
   }
   armBoundaryAlarm();
 
+  // Throws on a failed request; null only when no profile is active, which
+  // 009/010 prevent, so the empty list below is a real state, not a blip.
   const profile = await fetchActiveProfile(accessToken);
-
   if (!profile) {
     blockedEntries = [];
     activeProfile = null;
     console.warn('[PDS] No active profile found. Blocking disabled.');
-    return;
+  } else {
+    const rows = await fetchBlockedUrls(accessToken, profile.id);
+    if (rows === null) throw new Error('Could not load the blocklist.');
+    activeProfile = profile;
+    blockedEntries = rows.map((row) => parseBlocklistEntry(row.url));
+    console.log(
+      `[PDS] Blocklist refreshed (profile: "${profile.name}"): ${blockedEntries.length} entr${blockedEntries.length === 1 ? 'y' : 'ies'}.`,
+      blockedEntries,
+    );
   }
 
-  activeProfile = profile;
-
-  const rows = await fetchBlockedUrls(accessToken, profile.id);
-  if (rows === null) {
-    // Network blip — keep the stale blocklist rather than opening everything.
-    console.warn('[PDS] Blocklist refresh failed. Keeping stale list.');
-    return;
-  }
-
-  blockedEntries = rows.map((row) => parseBlocklistEntry(row.url));
-
-  console.log(
-    `[PDS] Blocklist refreshed (profile: "${profile.name}"): ${blockedEntries.length} entr${blockedEntries.length === 1 ? 'y' : 'ies'}.`,
-    blockedEntries,
-  );
+  cachedUserId = userId;
+  lastRefreshAt = Date.now();
+  await saveState();
 }
 
 /**
- * Starts (or restarts) the periodic blocklist refresh alarm.
+ * Creates the periodic refresh alarm if it's missing. Chrome may drop alarms
+ * on a browser restart, so this runs on every worker start; it no longer
+ * re-creates an existing alarm, which reset its period each time.
  */
-function startRefreshCycle() {
-  chrome.alarms.create(REFRESH_ALARM_NAME, { periodInMinutes: REFRESH_PERIOD_MINUTES });
+async function ensureRefreshAlarm() {
+  const existing = await chrome.alarms.get(REFRESH_ALARM_NAME);
+  if (!existing) chrome.alarms.create(REFRESH_ALARM_NAME, { periodInMinutes: REFRESH_PERIOD_MINUTES });
 }
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === REFRESH_ALARM_NAME || alarm.name === BOUNDARY_ALARM_NAME) refreshBlocklist();
+  if (alarm.name === REFRESH_ALARM_NAME || alarm.name === BOUNDARY_ALARM_NAME || alarm.name === RETRY_ALARM_NAME) {
+    refreshBlocklist();
+  }
+});
+
+// Waking from sleep or unlocking is when a missed boundary alarm is most
+// likely (TODO.md's schedule-start bug): refresh as soon as the user is
+// back. The idle permission shows no install warning.
+chrome.idle.onStateChanged.addListener((newState) => {
+  if (newState === 'active') refreshBlocklist();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  refreshBlocklist();
 });
 
 // ─── Tab interception logic ───────────────────────────────────────────────────
@@ -317,29 +523,46 @@ function isCandidateForBlocking(url) {
  * @param {string} url
  */
 async function checkAndBlockTab(tabId, url) {
+  // Judge against the saved state, never the empty one a restarted worker
+  // starts with.
+  await ready;
+
+  // Not a real navigable page — this also filters out blocked.html's own
+  // chrome-extension:// URL, so redirecting TO the block page never
+  // overwrites the safe URL that got us there.
+  if (!isNavigableUrl(url)) return;
+
+  // A URL missing from an out-of-date list may still be blocked: most often
+  // a scheduled block has started and moved the user to a profile whose
+  // list the cache doesn't hold yet. Refresh before letting it through.
   if (!isCandidateForBlocking(url)) {
-    // Not on the blocklist (or not a real navigable page — isNavigableUrl
-    // inside isCandidateForBlocking already filters out blocked.html's own
-    // chrome-extension:// URL, so redirecting TO the block page never
-    // overwrites the safe URL that got us there).
-    if (isNavigableUrl(url)) lastSafeUrl.set(tabId, url);
+    if (refreshInFlight) {
+      await refreshInFlight;
+    } else if (cacheIsStale() && Date.now() - lastRefreshAttemptAt > NAVIGATION_REFRESH_BACKOFF_MS) {
+      await refreshBlocklist();
+    }
+  }
+
+  if (!isCandidateForBlocking(url)) {
+    lastSafeUrl.set(tabId, url);
     return;
   }
 
   const accessToken = await getValidAccessToken(chromeStorageAdapter);
-  if (accessToken) {
-    const session = await getStoredSession(chromeStorageAdapter);
-    // One RPC that also applies any schedule transition that's due — so a
-    // Strict block that began moments ago is enforced on this very
-    // navigation, not after the boundary alarm or the next poll.
-    const live = await fetchLiveState(accessToken, session.user.id);
+  const session = accessToken ? await getStoredSession(chromeStorageAdapter) : null;
+  // One RPC that also applies any schedule transition that's due — so a
+  // Strict block that began moments ago is enforced on this very
+  // navigation, not after the boundary alarm or the next poll. Null when
+  // the server can't be asked; then the cached mode decides, below.
+  const live = session ? await fetchLiveState(accessToken, session.user.id) : null;
+  if (live) {
     blockingMode = live.mode;
 
     // If that transition just moved the user to another profile, this
     // navigation must be judged against that profile's list, not the
     // cached one — refresh, then re-ask whether the URL is even a candidate.
     if (live.profileId && activeProfile && live.profileId !== activeProfile.id) {
-      await refreshBlocklist();
+      await refreshAfterChange();
       if (!isCandidateForBlocking(url)) {
         if (isNavigableUrl(url)) lastSafeUrl.set(tabId, url);
         return;
@@ -359,10 +582,25 @@ async function checkAndBlockTab(tabId, url) {
       pausedUntil = null;
     }
   }
-  // No valid access token: fall through and block using whatever mode is
-  // already cached. Staying cautious (still enforcing) is the safer
-  // default when a live check isn't possible — never silently grant an
-  // exemption that couldn't actually be verified.
+
+  // A breath pass for this site. Unlike the server-side pause above, it is
+  // honored on the cached mode too: it was earned here, seconds ago, by
+  // sitting through the countdown, and refusing it whenever Supabase is
+  // unreachable would strand a Friction user on the block screen. Strict
+  // never honors one, and entering Strict forfeits them all.
+  if (blockingMode === 'friction') {
+    if (hasSitePass(url)) {
+      lastSafeUrl.set(tabId, url);
+      return;
+    }
+  } else if (Object.keys(sitePasses).length) {
+    sitePasses = {};
+    saveState();
+  }
+  // No token, or the server didn't answer: fall through and block using
+  // whatever mode is already cached. Staying cautious (still enforcing) is
+  // the safer default when a live check isn't possible — never silently
+  // grant an exemption that couldn't actually be verified.
 
   // The page before this blocked attempt, if we ever saw one for this tab
   // (we won't for e.g. a tab that loaded straight into a blocked URL on
@@ -439,24 +677,55 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 // ─── Message protocol ─────────────────────────────────────────────────────────
 
+/**
+ * What to tell the popup when an action needs a token and there isn't one:
+ * signed out, or signed in but the session couldn't be refreshed just now
+ * (getValidAccessToken() keeps the session on a network error or a 5xx).
+ */
+async function noTokenError() {
+  return (await getStoredSession(chromeStorageAdapter))
+    ? "Can't reach Please Don't Scroll right now. Try again in a moment."
+    : 'Not authenticated.';
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message.type === 'SESSION_UPDATED') {
-    refreshBlocklist().then(() => sendResponse({ ok: true }));
+    refreshAfterChange().then(() => sendResponse({ ok: true }));
     return true;
   }
 
-  if (message.type === 'LOGOUT') {
-    blockedEntries = [];
-    activeProfile = null;
-    pausedUntil = null;
-    blockingMode = 'friction';
-    isPremium = false;
-    schedules = [];
-    timezoneOfferedFor = null;
-    armBoundaryAlarm();
-    sendResponse({ ok: true });
-    return true;
+  if (message.type === 'SIGN_OUT') {
+    // The popup's Sign out. Signing out empties the blocklist, which made it
+    // a one-click way out of Strict Mode, easier than the exit hold it
+    // skipped (audit R1). Refused in Strict, as profile switches and
+    // blocklist edits already are: leave Strict first. The check happens
+    // here, not in the popup, and asks the server first (a Strict block may
+    // have started since the last refresh); if the server can't be asked,
+    // the cached mode decides, so going offline isn't a way out either.
+    // This is friction rather than a boundary: no server can refuse
+    // clearing chrome.storage, and uninstalling is always possible.
+    (async () => {
+      await ready;
+      const accessToken = await getValidAccessToken(chromeStorageAdapter);
+      const session = accessToken ? await getStoredSession(chromeStorageAdapter) : null;
+      const live = session ? await fetchLiveState(accessToken, session.user.id) : null;
+      if (live) blockingMode = live.mode;
+
+      if (blockingMode === 'strict') {
+        const scheduled = scheduledStrictRefusal();
+        sendResponse({
+          ok: false,
+          error: scheduled ? `${scheduled} You can sign out after it ends.` : 'Switch to Friction Mode to sign out.',
+        });
+        return;
+      }
+
+      await clearSession(chromeStorageAdapter);
+      await clearState();
+      sendResponse({ ok: true });
+    })();
+    return true; // async
   }
 
   if (message.type === 'GET_STATE') {
@@ -475,7 +744,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     // out stale gets both: an instant-feeling open AND the same eventual
     // correctness, without paying for a full refresh on every single click
     // of the toolbar icon.
-    sendResponse(buildStatePayload());
+    ready.then(() => sendResponse(buildStatePayload()));
 
     refreshBlocklist().then(() => {
       chrome.runtime.sendMessage({ type: 'STATE_REFRESHED', ...buildStatePayload() }, () => {
@@ -488,9 +757,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'SET_BLOCKING_MODE') {
     // message.mode — 'friction' or 'strict'
     (async () => {
+      await ready;
       const accessToken = await getValidAccessToken(chromeStorageAdapter);
       if (!accessToken) {
-        sendResponse({ ok: false, error: 'Not authenticated.' });
+        sendResponse({ ok: false, error: await noTokenError() });
         return;
       }
 
@@ -543,61 +813,40 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           const cleared = await setPauseUntil(accessToken, session.user.id, null);
           if (cleared) pausedUntil = null;
         }
+        if (mode === 'strict') sitePasses = {};
+        await saveState();
       } else if (mode === 'friction') {
         // The server said no — most likely the scheduled-Strict guard, in
         // which case our cached mode was stale (a block started since the
         // last poll). Resync so the popup's next STATE_REFRESHED shows the
         // lock and the real reason, not a toggle that silently snaps back.
-        await refreshBlocklist();
+        await refreshAfterChange();
       }
       sendResponse({ ok, error: ok ? null : (error || 'Could not change mode.'), blockingMode, isPremium });
     })();
     return true; // async
   }
 
-  if (message.type === 'PAUSE_BLOCKING') {
-    // Sent by blocked.js's onComplete() once the 30s Friction Mode
-    // breathing countdown finishes — the automatic "you sat through the
-    // friction, here's a grace window" grant, distinct from the
-    // dashboard's deliberate pause. message.durationMinutes — currently
-    // always 10 (blocked.js), defaulted here too in case that ever
-    // changes without this file being touched.
-    //
-    // Written through to the same Supabase paused_until column the
-    // dashboard's setPauseUntil() writes (not a separate local-only
-    // variable) — this is what makes "a dashboard pause always overrides
-    // this" true for free: both are just the last write to one column, no
-    // merge logic needed either direction. It's also why this can't
-    // regress the way the old per-profile in-memory PAUSE_BLOCKING +
-    // profilePauses Map did (see docs/ARCHITECTURE.md §5) — that state lived only in
-    // the service worker and was silently wiped on every MV3 idle
-    // teardown; this survives it the same way the dashboard's pause
-    // already does, because it's the same durable column.
+  if (message.type === 'GRANT_SITE_PASS') {
+    // Sent by blocked.js once the 30s Friction Mode breath finishes, with
+    // the URL the block screen was served for (message.url). Grants a
+    // SITE_PASS_MINUTES pass for that site only. Local, no network: the
+    // pass lives in this browser's cache, and checkAndBlockTab() re-checks
+    // the mode before honoring it.
     (async () => {
-      const accessToken = await getValidAccessToken(chromeStorageAdapter);
-      if (!accessToken) {
-        sendResponse({ ok: false, error: 'Not authenticated.' });
-        return;
-      }
-
-      const session = await getStoredSession(chromeStorageAdapter);
-
-      // Re-check fresh, not the mode blocked.html opened with 30s ago —
-      // checkAndBlockTab() would ignore a stale-mode grant regardless (it
-      // re-checks blockingMode itself before honoring pausedUntil), but no
-      // reason to write a pause to Supabase at all if the user has since
-      // switched to Strict from another tab.
-      blockingMode = await fetchBlockingMode(accessToken, session.user.id);
+      await ready;
       if (blockingMode !== 'friction') {
         sendResponse({ ok: false, error: 'Not in Friction Mode.' });
         return;
       }
-
-      const minutes = Number(message.durationMinutes) || 10;
-      const untilIso = new Date(Date.now() + minutes * 60 * 1000).toISOString();
-      const ok = await setPauseUntil(accessToken, session.user.id, untilIso);
-      if (ok) pausedUntil = new Date(untilIso).getTime();
-      sendResponse({ ok });
+      const hostname = passHostnameFor(message.url);
+      if (!hostname) {
+        sendResponse({ ok: false, error: 'Unknown site.' });
+        return;
+      }
+      sitePasses = { ...livePasses(), [hostname]: Date.now() + SITE_PASS_MINUTES * 60 * 1000 };
+      await saveState();
+      sendResponse({ ok: true, hostname, minutes: SITE_PASS_MINUTES });
     })();
     return true; // async
   }
@@ -605,9 +854,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'SWITCH_PROFILE') {
     // message.profileId — UUID of the profile to activate
     (async () => {
+      await ready;
       const accessToken = await getValidAccessToken(chromeStorageAdapter);
       if (!accessToken) {
-        sendResponse({ ok: false, error: 'Not authenticated.' });
+        sendResponse({ ok: false, error: await noTokenError() });
         return;
       }
 
@@ -626,7 +876,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       // Refresh either way — a refusal usually means the cache was stale
       // (a Strict block began since the last poll), and the popup needs
       // the corrected state to explain itself.
-      await refreshBlocklist();
+      await refreshAfterChange();
       sendResponse({ ok, error: ok ? null : (error || 'Could not switch profile.'), activeProfile });
     })();
     return true; // async
@@ -643,7 +893,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'BLOCKLIST_CHANGED') {
-    refreshBlocklist().then(() => sendResponse({ ok: true }));
+    refreshAfterChange().then(() => sendResponse({ ok: true }));
     return true; // async
   }
 });
@@ -651,8 +901,15 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
 // ─── Startup ──────────────────────────────────────────────────────────────────
 
 async function initialize() {
-  await refreshBlocklist();
-  startRefreshCycle();
+  await ready;
+  await ensureRefreshAlarm();
+  // The saved schedule may outlive a boundary alarm Chrome dropped on restart.
+  armBoundaryAlarm();
+
+  // Every worker start runs this, roughly once a minute. Only go to the
+  // network when the saved state is actually old; a wake caused by the
+  // refresh alarm refreshes through its own listener anyway.
+  if (cacheIsStale()) await refreshBlocklist();
 
   // Check any tabs already open before the extension loaded.
   const tabs = await chrome.tabs.query({});

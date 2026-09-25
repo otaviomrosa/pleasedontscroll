@@ -16,11 +16,6 @@ async function persistSession(session) {
   await chrome.runtime.sendMessage({ type: 'SESSION_UPDATED' });
 }
 
-async function clearSessionAndNotify() {
-  await Auth.clearSession(chromeStorageAdapter);
-  await chrome.runtime.sendMessage({ type: 'LOGOUT' });
-}
-
 async function getValidAccessToken() {
   return Auth.getValidAccessToken(chromeStorageAdapter);
 }
@@ -352,7 +347,7 @@ function applyState(state) {
       : `Paused until ${new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     statLine.classList.add('paused');
   } else if (state.blockedCount > 0) {
-    statLine.textContent = `${state.blockedCount} sites blocked`;
+    statLine.textContent = `${state.blockedCount} ${state.blockedCount === 1 ? 'site' : 'sites'} blocked`;
     statLine.classList.remove('paused');
   } else {
     statLine.textContent = 'No sites blocked yet';
@@ -505,9 +500,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── Logout ──────────────────────────────────────────────────────────────────
+  // The background decides, not this page: it re-checks the mode live and
+  // refuses in Strict (see SIGN_OUT in background/index.js). The refusal
+  // shows in the same status line as the other Strict refusals.
   document.getElementById('logout-btn').addEventListener('click', async () => {
-    await clearSessionAndNotify();
-    showView(viewAuth);
+    const response = await chrome.runtime.sendMessage({ type: 'SIGN_OUT' });
+    if (response?.ok) {
+      showView(viewAuth);
+      return;
+    }
+    showModeNotice(response?.error || 'Could not sign out. Try again.');
   });
 
   // ── Mode toggle ─────────────────────────────────────────────────────────────

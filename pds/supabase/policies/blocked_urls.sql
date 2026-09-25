@@ -11,6 +11,8 @@
 --
 -- Defined in: 001_initial_schema.sql
 -- Touched by: 003_profiles.sql (added the profile_id column; policy unchanged)
+-- Touched by: 017_lock_down_client_writes.sql (grants, not policy: no UPDATE for
+--   authenticated, entries are added or removed, never edited; anon holds nothing)
 -- ============================================================
 
 CREATE POLICY "Users manage own blocked_urls"

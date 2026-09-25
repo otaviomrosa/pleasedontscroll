@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { supabaseFetch } from '../core/sync/restClient.js';
-import { fetchProfiles, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
+import { fetchProfiles, fetchActiveProfile, createProfile, switchProfile, deleteProfile } from '../core/sync/profiles.js';
 import { addBlockedUrl, removeBlockedUrl, fetchBlockedUrls } from '../core/sync/blockedUrls.js';
 
 /**
@@ -122,4 +122,21 @@ test('fetchBlockedUrls returns null (not []) on a failed fetch', async () => {
   mockFetch(undefined, { ok: false, status: 500 });
   const result = await fetchBlockedUrls('token', 'profile-1');
   assert.equal(result, null);
+});
+
+test('fetchActiveProfile', async (t) => {
+  await t.test('returns the active profile', async () => {
+    mockFetch([{ id: 'p1', name: 'Deep Work' }]);
+    assert.deepEqual(await fetchActiveProfile('token'), { id: 'p1', name: 'Deep Work' });
+  });
+
+  await t.test('returns null when no profile is active', async () => {
+    mockFetch([]);
+    assert.equal(await fetchActiveProfile('token'), null);
+  });
+
+  await t.test('throws on a failed request, so it is never read as "no active profile"', async () => {
+    mockFetch({ message: 'upstream timeout' }, { ok: false, status: 504 });
+    await assert.rejects(fetchActiveProfile('token'), /Could not load the active profile/);
+  });
 });

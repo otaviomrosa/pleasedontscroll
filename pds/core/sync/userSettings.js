@@ -12,6 +12,29 @@ export async function fetchIsPremium(accessToken, userId) {
 }
 
 /**
+ * is_premium, blocking_mode and paused_until in one read, or null when the
+ * request failed. fetchIsPremium() and fetchBlockingMode() answer false and
+ * 'friction' on a failure, which is fine for a page that re-renders; the
+ * extension needs "couldn't ask" kept apart from "free, in Friction", so a
+ * network blip leaves its cached state alone instead of relaxing it.
+ * Throws if fetch itself throws (offline), same as supabaseFetch().
+ * @returns {Promise<{ isPremium: boolean, blockingMode: 'friction'|'strict', pausedUntil: string|null } | null>}
+ */
+export async function fetchSettingsSnapshot(accessToken, userId) {
+  const rows = await supabaseFetch(
+    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=is_premium,blocking_mode,paused_until`,
+    accessToken,
+  );
+  const row = rows?.[0];
+  if (!row) return null;
+  return {
+    isPremium: row.is_premium === true,
+    blockingMode: row.blocking_mode === 'strict' ? 'strict' : 'friction',
+    pausedUntil: row.paused_until ?? null,
+  };
+}
+
+/**
  * The user's current blocking mode — 'friction' (30s breathing bypass) or
  * 'strict' (no bypass). This is a single per-user setting, not a property
  * of a profile: any profile can be run in either mode. Defaults to

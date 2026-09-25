@@ -12,14 +12,20 @@ export async function fetchProfiles(accessToken) {
   return rows ?? [];
 }
 
-/** The user's single active profile ({ id, name }), or null if none is active. */
+/**
+ * The user's single active profile ({ id, name }), or null if none is
+ * active. Throws when the request fails: the background worker used to read
+ * a failed request as "no active profile" and stop blocking, so a network
+ * blip at the wrong moment turned enforcement off (audit R2).
+ */
 export async function fetchActiveProfile(accessToken) {
-  const rows = await supabaseFetch(
+  const { data, error } = await supabaseFetchDetailed(
     '/rest/v1/profiles?is_active=eq.true&select=id,name&limit=1',
     accessToken,
   );
-  if (!rows || rows.length === 0) return null;
-  return { id: rows[0].id, name: rows[0].name };
+  if (error) throw new Error(`Could not load the active profile: ${error}`);
+  if (!data || data.length === 0) return null;
+  return { id: data[0].id, name: data[0].name };
 }
 
 /** Creates a new, inactive profile. Returns the created row or null on failure. */

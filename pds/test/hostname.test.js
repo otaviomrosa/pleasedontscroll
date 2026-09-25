@@ -321,3 +321,68 @@ test('isOwnDomain', async (t) => {
     assert.equal(isOwnDomain('notpleasedontscroll.com'), false);
   });
 });
+
+// Audit R4: a fully qualified hostname ("instagram.com." with the DNS root
+// dot) loads the same site in Chrome, so it must match the same entry.
+test('trailing-dot hostnames', async (t) => {
+  await t.test('hostnameOf strips the root dot', () => {
+    assert.equal(hostnameOf('https://instagram.com./'), 'instagram.com');
+    assert.equal(hostnameOf('https://www.instagram.com./reels'), 'instagram.com');
+  });
+
+  await t.test('normalizeToHostname strips it too, for stored entries', () => {
+    assert.equal(normalizeToHostname('instagram.com.'), 'instagram.com');
+    assert.equal(normalizeToHostname('https://www.instagram.com./'), 'instagram.com');
+  });
+
+  await t.test('a trailing-dot tab URL is blocked', () => {
+    assert.equal(matchesBlockedEntry('https://instagram.com./', parseBlocklistEntry('instagram.com')), true);
+    assert.equal(matchesBlockedEntry('https://m.youtube.com./shorts/x', parseBlocklistEntry('youtube.com/shorts')), true);
+  });
+
+  await t.test('a trailing-dot entry is a duplicate of the plain one', () => {
+    assert.deepEqual(parseBlocklistEntry('instagram.com.'), parseBlocklistEntry('instagram.com'));
+  });
+});
+
+// Audit R5: a path entry covers that path segment and everything below it,
+// not every path that merely starts with the same characters.
+test('path entries match whole segments', async (t) => {
+  const shorts = parseBlocklistEntry('youtube.com/shorts');
+  const news = parseBlocklistEntry('reddit.com/r/news');
+
+  await t.test('the exact path and anything under it match', () => {
+    assert.equal(matchesBlockedEntry('https://www.youtube.com/shorts', shorts), true);
+    assert.equal(matchesBlockedEntry('https://www.youtube.com/shorts/', shorts), true);
+    assert.equal(matchesBlockedEntry('https://www.youtube.com/shorts/abc123', shorts), true);
+    assert.equal(matchesBlockedEntry('https://www.youtube.com/Shorts/abc123?feature=share', shorts), true);
+    assert.equal(matchesBlockedEntry('https://reddit.com/r/news/comments/1', news), true);
+  });
+
+  await t.test('a longer segment with the same prefix does not', () => {
+    assert.equal(matchesBlockedEntry('https://www.youtube.com/shortsxyz', shorts), false);
+    assert.equal(matchesBlockedEntry('https://reddit.com/r/newsokur', news), false);
+  });
+
+  await t.test('entryCovers follows the same boundary', () => {
+    assert.equal(entryCovers(news, parseBlocklistEntry('reddit.com/r/news/top')), true);
+    assert.equal(entryCovers(news, parseBlocklistEntry('reddit.com/r/newsokur')), false);
+  });
+});
+
+// Audit S8: the dashboard lives on pleasedontscroll.com, and a stored entry
+// that normalizes to it (a trailing dot, a percent-encoded dot sent through
+// the REST API past the SQL guard) must never block it.
+test('the own domain is never matched', async (t) => {
+  await t.test('entries that normalize to the own domain match nothing', () => {
+    for (const raw of ['pleasedontscroll.com', 'pleasedontscroll.com.', 'pleasedontscroll%2Ecom', 'www.pleasedontscroll.com']) {
+      const entry = parseBlocklistEntry(raw);
+      assert.equal(matchesBlockedEntry('https://www.pleasedontscroll.com/dashboard', entry), false, raw);
+      assert.equal(matchesBlockedEntry('https://pleasedontscroll.com/', entry), false, raw);
+    }
+  });
+
+  await t.test('other sites are unaffected', () => {
+    assert.equal(matchesBlockedEntry('https://instagram.com/', parseBlocklistEntry('instagram.com')), true);
+  });
+});

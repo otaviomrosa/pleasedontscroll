@@ -12,6 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   fetchIsPremium,
+  fetchSettingsSnapshot,
   fetchBlockingMode,
   setBlockingMode,
   fetchPauseUntil,
@@ -163,5 +164,26 @@ test('isIndefinitePause', async (t) => {
     assert.equal(isIndefinitePause(null), false);
     assert.equal(isIndefinitePause(undefined), false);
     assert.equal(isIndefinitePause(''), false);
+  });
+});
+
+test('fetchSettingsSnapshot', async (t) => {
+  await t.test('reads the three columns in one request', async () => {
+    const calls = mockFetch([{ is_premium: true, blocking_mode: 'strict', paused_until: null }]);
+    assert.deepEqual(await fetchSettingsSnapshot('token', 'user-123'), {
+      isPremium: true, blockingMode: 'strict', pausedUntil: null,
+    });
+    assert.equal(calls.length, 1);
+    assert.match(calls[0].url, /user_settings\?id=eq\.user-123&select=is_premium,blocking_mode,paused_until/);
+  });
+
+  await t.test('returns null on a failed request instead of defaulting to free/Friction', async () => {
+    mockFetch({ message: 'boom' }, { ok: false, status: 503 });
+    assert.equal(await fetchSettingsSnapshot('token', 'user-123'), null);
+  });
+
+  await t.test('returns null when the row is missing', async () => {
+    mockFetch([]);
+    assert.equal(await fetchSettingsSnapshot('token', 'user-123'), null);
   });
 });

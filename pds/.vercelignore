@@ -1,8 +1,0 @@
-# Vercel's Root Directory is pds/ (see docs/ARCHITECTURE.md §5), which also holds the
-# extension, the Supabase migrations and functions, tests, scripts and notes.
-# Everything was publicly fetchable by path (audit S6). Deploy only what the
-# site serves: the pages and /core, which they import.
-/*
-!/web
-!/core
-!/vercel.json

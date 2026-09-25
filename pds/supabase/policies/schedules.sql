@@ -10,6 +10,8 @@
 -- (it depends on the table already existing, created in 016_schedules.sql).
 --
 -- Defined in: 016_schedules.sql
+-- Touched by: 017_lock_down_client_writes.sql (anon holds nothing; authenticated
+--   keeps INSERT/UPDATE/DELETE, guarded by 016's triggers)
 --
 -- Business rules on top of this policy (triggers in 016, not RLS): no
 -- overlapping blocks per user/day, the profile must belong to the same

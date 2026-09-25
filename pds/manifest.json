@@ -3,7 +3,7 @@
   "name": "Please Don't Scroll",
   "version": "2.0",
   "description": "Block distracting sites with a mindful breathing pause, or lock them out completely in Strict Mode. Built for serious focus.",
-  "permissions": ["storage", "tabs", "alarms"],
+  "permissions": ["storage", "tabs", "alarms", "idle"],
   "host_permissions": [
     "https://fqnoxcycqnnflwdgczvi.supabase.co/*"
   ],

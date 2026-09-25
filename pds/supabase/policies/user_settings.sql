@@ -12,6 +12,9 @@
 -- Touched by: 016_schedules.sql (added timezone + schedule_state columns and a
 --   BEFORE UPDATE trigger guarding Strict->Friction / timezone changes during a
 --   scheduled Strict block, and schedule_state writes by clients; policy unchanged)
+-- Touched by: 017_lock_down_client_writes.sql (grants, not policy: authenticated
+--   may UPDATE only blocking_mode, paused_until, timezone, and may not INSERT or
+--   DELETE the row; anon holds nothing)
 -- ============================================================
 
 CREATE POLICY "Users manage own settings"

@@ -190,14 +190,37 @@ export async function getUser(accessToken) {
   return res.json();
 }
 
-/** Exchanges a refresh_token for a fresh session, or null if it's no longer valid. */
+/**
+ * Exchanges a refresh_token for a fresh session. Resolves to one of:
+ *   { session }       — success
+ *   { invalid: true } — the auth server rejected the refresh token itself
+ *                       (400/401: revoked, already used, not found)
+ *   { transient: true } — anything that says nothing about the token: a
+ *                       network error, a 429, a 5xx, a captive portal's page
+ * Only the second may end a session. Treating the third the same way is what
+ * used to sign the extension out (and stop all blocking) on a server hiccup
+ * or a laptop waking before its Wi-Fi did (audit R3).
+ */
 async function refreshSessionToken(refreshToken) {
-  const { res, data } = await authFetch('/auth/v1/token?grant_type=refresh_token', {
-    refresh_token: refreshToken,
-  });
-  if (!res.ok || !data.access_token) return null;
-  return data;
+  let res;
+  let data;
+  try {
+    ({ res, data } = await authFetch('/auth/v1/token?grant_type=refresh_token', {
+      refresh_token: refreshToken,
+    }));
+  } catch {
+    return { transient: true };
+  }
+  if (res.ok && data.access_token) return { session: data };
+  if (res.status === 400 || res.status === 401) return { invalid: true };
+  return { transient: true };
 }
+
+// Refreshes in flight in this JS context, keyed by the refresh token being
+// spent. On wake, the service worker's alarm, a tab event and a popup
+// message can all ask for a token at once; they share one request instead
+// of racing the same refresh token (Supabase rotates it on use).
+const refreshesInFlight = new Map();
 
 export async function persistSession(storage, session) {
   await storage.set(SESSION_KEY, session);
@@ -218,8 +241,11 @@ export async function signOut(storage) {
 /**
  * Returns a valid access token, transparently refreshing (and persisting the
  * refreshed session) if the stored one is expired or about to be. Returns
- * null if there's no session, or the refresh token itself is no longer valid
- * (in which case the stale session is cleared).
+ * null when there's no session, when the refresh token was rejected (the
+ * session is then cleared), and when the refresh couldn't happen right now
+ * (the session is kept for the next attempt). Callers that must tell the
+ * last two apart check getStoredSession() afterwards: still there means
+ * "try again later", not "signed out".
  */
 export async function getValidAccessToken(storage) {
   const session = await getStoredSession(storage);
@@ -230,12 +256,29 @@ export async function getValidAccessToken(storage) {
     return session.access_token;
   }
 
-  const fresh = await refreshSessionToken(session.refresh_token);
-  if (!fresh) {
-    await clearSession(storage);
-    return null;
+  let pending = refreshesInFlight.get(session.refresh_token);
+  if (!pending) {
+    pending = refreshSessionToken(session.refresh_token)
+      .finally(() => refreshesInFlight.delete(session.refresh_token));
+    refreshesInFlight.set(session.refresh_token, pending);
+  }
+  const result = await pending;
+
+  if (result.session) {
+    await persistSession(storage, result.session);
+    return result.session.access_token;
   }
 
-  await persistSession(storage, fresh);
-  return fresh.access_token;
+  if (result.invalid) {
+    // The popup and the service worker are separate contexts sharing one
+    // storage. If the other one already refreshed, our token was rejected
+    // only because it had just been spent: use theirs, don't sign out.
+    const current = await getStoredSession(storage);
+    if (current && current.refresh_token !== session.refresh_token) {
+      return current.access_token;
+    }
+    await clearSession(storage);
+  }
+
+  return null;
 }

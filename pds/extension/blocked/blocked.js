@@ -74,17 +74,20 @@ function setRingProgress(fraction) {
 /**
  * Called when the countdown reaches zero.
  * 1. Injects and shows the completion overlay.
- * 2. Sends PAUSE_BLOCKING to the service worker.
+ * 2. Asks the service worker for a pass for this site only (not a pause
+ *    of every blocked site, which is what the breath used to grant).
  * 3. Redirects to the originally requested URL.
  */
 function onComplete() {
-  // Inject completion overlay DOM (keeps HTML clean).
+  // Inject completion overlay DOM (keeps HTML clean). Built with
+  // textContent: the site name comes from the URL.
   const overlay = document.createElement('div');
   overlay.className = 'completion-overlay';
   overlay.innerHTML = `
     <p class="completion-message">Well done.<br>Proceed mindfully.</p>
-    <p class="completion-sub">Blocking paused for 10 minutes.</p>
+    <p class="completion-sub"></p>
   `;
+  overlay.querySelector('.completion-sub').textContent = `${displayHost || 'This site'} is open for 10 minutes.`;
   document.body.appendChild(overlay);
 
   // Trigger fade-in on next paint.
@@ -92,9 +95,8 @@ function onComplete() {
     requestAnimationFrame(() => overlay.classList.add('visible'));
   });
 
-  // Tell the service worker to pause blocking.
   chrome.runtime.sendMessage(
-    { type: 'PAUSE_BLOCKING', durationMinutes: 10 },
+    { type: 'GRANT_SITE_PASS', url: fromUrl },
     () => {
       // After a brief beat, navigate to the original destination.
       setTimeout(() => {

@@ -2,7 +2,7 @@
 -- PDS Migration 007 — Free-tier profile limit
 -- Run this in the Supabase SQL Editor (Dashboard → SQL Editor).
 --
--- No RLS policy change accompanies this migration (see docs/ARCHITECTURE.md §8's rule
+-- No RLS policy change accompanies this migration (see docs/ARCHITECTURE.md's rule
 -- on migrations shipping with policies) because this doesn't add or alter a
 -- table or its RLS — it's a BEFORE INSERT trigger enforcing a business rule
 -- on top of the existing "Users manage own profiles" policy from

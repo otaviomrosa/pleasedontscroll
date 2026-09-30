@@ -30,7 +30,7 @@
  * @property {string | null} paused_until - ISO timestamp; blocking is
  *   suspended until this time when set and in the future. Friction Mode
  *   only — ignored entirely while blocking_mode is 'strict'. Set from the
- *   dashboard (see docs/ARCHITECTURE.md §5), read by the extension's poll.
+ *   dashboard (see docs/ARCHITECTURE.md), read by the extension's poll.
  * @property {string | null} timezone - IANA zone the schedule is evaluated
  *   in. Written once by the first client to see the account
  *   (setTimezoneIfUnset); null means the schedule is dormant.

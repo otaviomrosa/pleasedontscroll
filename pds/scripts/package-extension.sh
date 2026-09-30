@@ -5,9 +5,9 @@
 #
 # Why this exists: manifest.json lives at the repo root (not inside
 # /extension) so that "Load unpacked" during dev can resolve the background
-# service worker's relative imports into /core — see docs/ARCHITECTURE.md §5/§7. That
+# service worker's relative imports into /core — see docs/ARCHITECTURE.md. That
 # means the repo root is NOT what you want to upload to the Web Store as-is;
-# it also contains /web, /supabase, pds-art/, etc. This script copies just
+# it also contains /web and /supabase. This script copies just
 # the files the extension actually needs (manifest.json + /extension + /core)
 # into a clean temp directory and zips that.
 #

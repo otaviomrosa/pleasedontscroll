@@ -3,7 +3,7 @@
 -- the security-definer functions
 -- Run this in the Supabase SQL Editor (Dashboard → SQL Editor).
 --
--- Closes audit findings S1–S4 (reports/pds-launch-audit.html). Every
+-- Closes four findings from a security review of this schema. Every
 -- policy in this schema is `FOR ALL USING (auth.uid() = …)`: it decides
 -- which ROWS a user reaches, never which COLUMNS or operations. The
 -- triggers (009/011/014/015/016) guard the paths the app itself uses, so a

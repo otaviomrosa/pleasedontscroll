@@ -2,7 +2,7 @@
   "name": "please-dont-scroll",
   "private": true,
   "type": "module",
-  "description": "No dependencies here on purpose — see docs/ARCHITECTURE.md §7 (this project is deliberately build-free). This file exists only to declare ES module type and a test script.",
+  "description": "No dependencies here on purpose — see docs/ARCHITECTURE.md (this project is deliberately build-free). This file exists only to declare ES module type and a test script.",
   "scripts": {
     "test": "node --test"
   }

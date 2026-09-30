@@ -1,7 +1,7 @@
 // Shared input-validation helpers, used wherever the extension or web app
 // takes free-text input (email, password, profile name). Hand-rolled, not a
 // library — this repo doesn't add dependencies without asking (see
-// docs/ARCHITECTURE.md §8), and these checks are simple enough not to need one.
+// docs/ARCHITECTURE.md), and these checks are simple enough not to need one.
 //
 // These are UX/data-hygiene checks, not a security boundary — RLS and
 // Supabase Auth's own server-side rules are what actually enforce

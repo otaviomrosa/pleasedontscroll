@@ -201,7 +201,7 @@ const STALE_AFTER_MS = 2 * 60 * 1000;
  * True when the cache may no longer describe what the server would say:
  * older than STALE_AFTER_MS, or a scheduled block has started or ended
  * since it was filled. The second case is the schedule-start bug in
- * TODO.md: a block that switches to a profile with a different list is
+ * known gap: a block that switches to a profile with a different list is
  * invisible to navigation, because only URLs on the cached list trigger a
  * live check.
  */
@@ -474,7 +474,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // Waking from sleep or unlocking is when a missed boundary alarm is most
-// likely (TODO.md's schedule-start bug): refresh as soon as the user is
+// likely (the schedule-start gap above): refresh as soon as the user is
 // back. The idle permission shows no install warning.
 chrome.idle.onStateChanged.addListener((newState) => {
   if (newState === 'active') refreshBlocklist();
@@ -736,7 +736,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     // This used to await refreshBlocklist() before responding at all,
     // which fixed a real bug (the popup showing a stale pause expiry that
     // wouldn't correct itself until the next chrome.alarms tick — see
-    // docs/ARCHITECTURE.md §5) but made every popup open feel slow, since
+    // docs/ARCHITECTURE.md) but made every popup open feel slow, since
     // refreshBlocklist() is several sequential Supabase round trips. The
     // cache is usually already close to fresh (the 60s alarm, plus
     // whatever the last GET_STATE's own background refresh left behind),

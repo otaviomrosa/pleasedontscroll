@@ -9,7 +9,7 @@
 -- block boundary), and the dashboard calls it on load. apply_schedule() is
 -- the ONLY place a schedule ever changes profile/mode, and it is idempotent.
 --
--- Design decisions (see docs/ARCHITECTURE.md §5 "Scheduled blocking"):
+-- Design decisions (see docs/ARCHITECTURE.md "Scheduled blocking"):
 --   * Times are integer minutes from LOCAL midnight (0..1440), day_of_week
 --     is 0 = Monday .. 6 = Sunday (matches the grid's column index; note
 --     EXTRACT(ISODOW) is 1..7, hence the "- 1" below, and JS getDay() is
@@ -41,7 +41,7 @@
 --
 -- Run this in the Supabase SQL Editor. Ships with
 -- supabase/policies/schedules.sql and the new Schedule typedef in
--- core/types/index.js, per docs/ARCHITECTURE.md §8.
+-- core/types/index.js, per docs/ARCHITECTURE.md.
 -- ============================================================
 
 -- ─── Table ──────────────────────────────────────────────────────────────────

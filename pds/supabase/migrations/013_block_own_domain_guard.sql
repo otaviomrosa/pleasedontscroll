@@ -10,7 +10,7 @@
 
 -- ─── Enforce: pleasedontscroll.com (or any subdomain) can never be blocked ───
 -- The dashboard, pricing page, and account settings all live at
--- pleasedontscroll.com (see docs/ARCHITECTURE.md §5's Clean URLs note). If a user ever
+-- pleasedontscroll.com (see docs/ARCHITECTURE.md's Clean URLs note). If a user ever
 -- got this onto their own blocklist, the extension's tab intercept would
 -- redirect the dashboard itself to blocked.html — and in Strict Mode
 -- specifically, 011_lock_mode_guards.sql's "no bypass" + "can't remove a

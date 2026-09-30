@@ -144,7 +144,6 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   white-space: nowrap;
   transition: transform 0.18s var(--ease-out), background 0.18s ease, opacity 0.18s ease;
 }
-.btn:hover  { transform: translateY(-1px); }
 .btn:active { transform: scale(0.98); }
 .btn[disabled] { opacity: 0.55; cursor: default; transform: none; }
 
@@ -612,7 +611,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   display: grid; place-items: center; color: var(--muted);
   transition: color 0.15s ease, transform 0.15s ease;
 }
-.tile__quickitem:hover .tile__chip { color: var(--ink); transform: scale(1.1); }
+.tile__quickitem:hover .tile__chip { color: var(--ink); }
 /* Sectioned sites show the real options menu on hover, so a visitor learns a
    section can be blocked on its own without opening the app. Illustration
    only: pointer-events stays off the whole thing, and the interactive version

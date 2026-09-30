@@ -20,13 +20,19 @@
        Every id and class the script touches is unchanged from web/. */
     :root {
       --ink: #000000;   --black: #000000;  --text: #000000;
-      --paper: #ffffff; --white: #ffffff;  --bg: #ffffff;  --card: #ffffff;
+      --paper: #fefeff; --white: #ffffff;  --bg: #ffffff;  --card: #ffffff;
       --surface: #f5f5f7; --surface-deep: #e8e8ed;
+      /* The page ground behind the card, on its own token because
+         --surface-deep also fills controls (the paused pill, the + profile
+         circle) and paints every hover. One value can't be both a barely
+         there page tint and a fill you can see, which is what made those
+         two controls vanish. Tune the page here, controls above. */
+      --page-ground: #f1f1f3;
       --muted: #6e6e73;  --text-muted: #6e6e73;  --faint: #aeaeb2;
       --border: rgba(0, 0, 0, 0.09);           /* gridlines only, never boxes */
       --error: #d70015;
 
-      --friction:     #0071e3;
+      --friction:     #388ce0;
       --strict:       #2a55a5;
       /* Legacy aliases, kept pointing at the same values so older selectors
          in this file keep working. Not separate colors. */
@@ -102,12 +108,40 @@
     .error-msg { display: none; font-size: 14px; color: var(--error); }
     .error-msg.visible { display: block; }
     .btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; margin-top: 6px; background: var(--ink); color: var(--paper); border-radius: var(--radius-pill); font-weight: 500; transition: opacity 0.18s ease, transform 0.18s var(--ease-out); }
-    .btn-primary:hover { opacity: 0.86; transform: translateY(-1px); }
+    .btn-primary:hover { opacity: 0.86; }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
 
     /* ─── App shell ───────────────────────────────────────────────────── */
-    #app-screen { height: 100vh; overflow: hidden; }
+    /* The painting sits behind the whole signed-in shell, with a flat white
+       wash over it so the card still reads as the foreground and the note
+       under the card stays legible. Tune the strength with the TWO matching
+       rgba alphas below and nothing else, the same way .prelude on the
+       landing page is tuned by its one opacity: the wash is flat, so one
+       number moves the whole image toward --page-ground evenly.
+       Relative url() resolves in both environments: from /dashboard in
+       production it becomes /assets/..., which vercel.json's /assets/:path*
+       rewrite already covers, and locally it resolves straight to the file.
+       Scoped to #app-screen, so the signed-out screen keeps its plain page. */
+    #app-screen {
+      height: 100vh; overflow: hidden;
+      background-color: var(--page-ground);
+      background-image:
+        /* Same image and same fade as index.html's .footer--art, copied
+           stop for stop from site.css: white at the top so the card still
+           sits on a plain ground, the sky arriving gradually toward the
+           bottom rather than as an edge, and the tail (92% to 100%) keeping
+           its slight extra wash so the last sliver isn't a hard stop.
+           Keep the two in step; site.css owns the original. */
+        linear-gradient(to top,
+          var(--paper) 0%,
+          var(--paper) 50%,
+          rgba(255, 255, 255, 0.2) 100%),
+        url('assets/images/testthis.webp');
+      background-size: 100% 100%, cover;
+      background-position: center top, center bottom;
+      background-repeat: no-repeat;
+    }
     /* Two spacer rows flanking the content, weighted 1fr above and 3fr
        below, so the free space is split a quarter/three-quarters instead of
        in half. That is what holds the shell high on a tall monitor: an even
@@ -138,6 +172,11 @@
       background: var(--card-ground);
       border-radius: var(--radius-surface);
       padding: var(--card-pad);
+      /* The one resting shadow in the system, by the founder's call: it
+         lifts the card off the gray page ground. Kept soft and two-layer
+         (a tight contact shadow plus a wide ambient one) so it reads as
+         depth rather than a floating menu, which owns --shadow-float. */
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.07);
       --surface: var(--paper);
     }
     .dashboard-shell {
@@ -150,9 +189,19 @@
     }
     .sidebar { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 16px 12px 12px; }
     .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
-    .sidebar-nav-item { display: block; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--muted); padding: 11px 14px; border-radius: var(--radius-inner); transition: background 0.18s ease, color 0.18s ease; }
+    .sidebar-nav-item { display: block; position: relative; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--muted); padding: 11px 14px; border-radius: var(--radius-inner); transition: background 0.18s ease, color 0.18s ease; }
     .sidebar-nav-item:hover { color: var(--ink); background: var(--surface-deep); }
-    .sidebar-nav-item.active { background: var(--ink); color: var(--paper); }
+    /* Active: a small ink bar at the right edge instead of a solid fill —
+       one deliberate exception to this file's "solid ink, white text" rule
+       for active state, by the founder's request. The bar is a pseudo-
+       element rather than a border so it doesn't shift the text's padding,
+       and it's inset from the item's own edge (not the sidebar's) so it
+       reads as part of this control, not the sidebar frame. */
+    .sidebar-nav-item.active { color: var(--ink); }
+    .sidebar-nav-item.active::after {
+      content: ''; position: absolute; left: 1px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 50%; border-radius: var(--radius-pill); background: var(--ink);
+    }
     .sidebar-nav-item.locked { display: flex; align-items: center; justify-content: space-between; color: var(--muted); }
     .sidebar-nav-lock { display: inline-flex; align-items: center; }
     .sidebar-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 14px 4px 2px; }
@@ -171,7 +220,7 @@
     @media (prefers-reduced-motion: reduce) { .content-section.section-enter, .shake { animation: none; } }
 
     /* ─── Profiles ────────────────────────────────────────────────────── */
-    .profile-switcher { display: flex; flex-direction: column; gap: 10px; }
+    .profile-switcher { display: flex; flex-direction: column; gap: 12px; }
     /* Two rows of 34px tabs plus the 8px between them, then it scrolls.
        Without this ceiling the wrapped row grows without limit, and since
        .blocklist-surface is flex: 1 inside a fixed-height shell every pixel
@@ -184,7 +233,9 @@
        tab; without it the max-width above is ignored and the pill just grows. */
     .profile-tab > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .profile-tab:hover { color: var(--ink); }
-    .profile-tab.active { background: var(--ink); color: var(--paper); font-weight: 500; }
+    /* Solid ink, white text — this file's usual active state. The mode's
+       own colour stays on the status pill at the other end of the row. */
+    .profile-tab.active { color: var(--paper); font-weight: 500; background: var(--ink); }
     .profile-tab.locked { opacity: 0.6; }
     .profile-tab.locked:hover { opacity: 0.85; }
     .profile-tab-lock { display: inline-flex; align-items: center; margin-left: 6px; }
@@ -192,18 +243,40 @@
     .profile-tab-delete { display: inline-flex; align-items: center; margin-left: 6px; font-size: 1.2rem; line-height: 1; color: var(--muted); opacity: 0; transition: opacity 0.15s, color 0.15s; }
     .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
     .profile-tab-delete:hover { color: var(--ink); }
-    .btn-add-profile { display: inline-flex; align-items: center; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); color: var(--muted); font-size: 14px; background: none; transition: background 0.18s ease, color 0.18s ease; }
-    .btn-add-profile:hover { background: var(--surface-deep); color: var(--ink); } /* card flip */
+    /* An outlined "+" at the row's 34px tab height, not a filled pill. The
+       dashed ring is a deliberate exception to this file's no-borders rule,
+       by the founder's call: a dashed outline is the usual "this makes a NEW
+       thing" affordance, which is what separates it from the solid tabs
+       beside it. It is an SVG ring rather than border-style: dashed, because
+       CSS derives dash length from border-width: at 1px that is a ~2px dash,
+       so a 34px circle came out as ~50 specks. The SVG sets the dash
+       explicitly (see .btn-add-profile__ring's own note). Ring and glyph both
+       draw in currentColor, so one colour change moves them together. */
+    .btn-add-profile { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; color: var(--faint); background: none; transition: background 0.18s ease, color 0.18s ease, transform 0.18s var(--ease-out); }
+    .btn-add-profile:hover { background: var(--surface-deep); color: var(--muted); }
+    .btn-add-profile__ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .btn-add-profile:active { transform: scale(0.98); }
     .new-profile-form { display: none; gap: 8px; align-items: center; }
     .new-profile-form.visible { display: flex; }
-    .new-profile-form .field { background: var(--surface); height: 40px; }
+    /* Matches .url-input-wrap's 44px — the blocklist input box's visible
+       height — so the two forms line up when both are on screen. */
+    .new-profile-form .field { background: var(--surface); height: 44px; }
 
     /* ─── Buttons (small) ─────────────────────────────────────────────── */
     .btn-sm { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 500; white-space: nowrap; transition: opacity 0.18s ease, background 0.18s ease, transform 0.18s var(--ease-out); flex-shrink: 0; }
-    .btn-sm:hover { transform: translateY(-1px); }
     .btn-sm:active { transform: scale(0.98); }
     .btn-sm:disabled { opacity: 0.5; cursor: default; transform: none; }
     .btn-sm.dark { background: var(--ink); color: var(--paper); }
+    /* Smaller than the base .btn-sm (44px): it sits beside a 44px input box
+       but only ever holds one short word ("Add"), so it doesn't need the
+       same footprint. align-self: center because .url-input-row has no
+       align-items of its own, and a fixed-height flex item without one
+       renders at the row's cross-start (top), not centered. */
+    /* Height matches .url-input-wrap beside it (44px); the corner is the
+       system's usual pill, inherited from .btn-sm. align-self stays for the
+       <560px case, where the wrap grows to two lines and stretch would
+       otherwise pin this to the top. */
+    #add-url-btn { height: 44px; padding: 0 18px; align-self: center; }
     .btn-sm.dark:hover { opacity: 0.86; }
     /* card flip: was --surface on an --surface .settings-item, i.e. already
        invisible at rest before the flip. One step off white fixes both. */
@@ -211,10 +284,20 @@
     .btn-sm.light:hover { background: var(--surface-deep); }
     .btn-sm.danger { background: var(--ink); color: var(--paper); }
     .btn-ghost { color: var(--muted); }
-    .new-profile-form .btn-sm { height: 40px; padding: 0 14px; }
+    .new-profile-form .btn-sm { height: 44px; padding: 0 14px; }
 
     /* ─── Blocklist ───────────────────────────────────────────────────── */
-    .url-input-row { display: flex; gap: 8px; }
+    /* margin-top matches the Schedule tab's profiles-to-grid gap in its
+       REGULAR state (an existing schedule, not a fresh empty one): once
+       scheduleBlocks.length > 0, renderScheduleGrid() hides #sched-hint
+       ("Drag on the grid...") and .sched's own 12px gap is all that's left
+       between .sched-palette and #schedule-scroll. Measured against that
+       state, not the empty-schedule one where the hint is still visible
+       and the gap runs to ~43px — matching that one instead was the first
+       version of this fix, and it left a much bigger gap than the
+       Blocklist tab actually needs to look right. content-section's own
+       16px gap already overshoots the 12px target, hence the negative value. */
+    .url-input-row { display: flex; gap: 8px; margin-top: -4px; }
     .url-input-wrap {
       flex: 1; min-width: 0; display: flex; align-items: center;
       height: 44px; padding-right: 6px;
@@ -238,7 +321,10 @@
          sized by its content and five chips overhang the box below ~360px. */
       .quick-add-row { width: 100%; flex-wrap: wrap; justify-content: flex-end; }
     }
-    .blocklist-surface { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 12px; flex: 1; min-height: 0; }
+    /* margin-top: same -4px trim as .url-input-row above, to bring the
+       content-section's 16px baseline gap down to the 12px used elsewhere
+       in this pane (profiles-to-input, and Schedule's palette-to-grid). */
+    .blocklist-surface { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 12px; flex: 1; min-height: 0; margin-top: -4px; }
     .url-list { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; overflow-y: auto; padding: 2px 0 0; }
 
     /* ─── Scrollbars ──────────────────────────────────────────────────── */
@@ -287,6 +373,14 @@
          no hover, so the muted resting state is all a phone ever shows, and
          --muted on white is 4.86:1, which clears AA on its own. */
       .url-item:hover .url-favicon { opacity: 1; }
+      /* The button shows on hover only, the same as a profile tab's x, and
+         that now includes the Strict-mode lock variant: the row reads as a
+         plain name until you reach for it either way. Hidden here rather
+         than globally so a touch device, which has no hover, always shows
+         it. */
+      .url-item .btn-delete-url { opacity: 0; }
+      .url-item:hover .btn-delete-url,
+      .btn-delete-url:focus-visible { opacity: 1; }
     }
     .url-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .url-text { font-size: 15px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -298,11 +392,11 @@
     .url-favicon, .url-favicon-fallback { width: 14px; height: 14px; flex-shrink: 0; border-radius: 4px; }
     .url-favicon { opacity: 0.90; transition: opacity 0.15s ease; }
     .url-favicon-fallback { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
-    .btn-delete-url { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); transition: color 0.15s; flex-shrink: 0; }
+    .btn-delete-url { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); transition: color 0.15s, opacity 0.15s; flex-shrink: 0; }
     .btn-delete-url:hover { color: var(--ink); }
     .btn-delete-url.locked:hover { color: var(--muted); }
     .empty-state { text-align: center; padding: 18px 0; color: var(--muted); font-size: 14px; }
-    .sync-hint { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 10px; }
+    .sync-hint { font-size: 12.5px; color: var(--ink); opacity: 0.66; text-align: center; margin-top: 10px; }
     /* Hidden by visibility, not display, so its grid row stays reserved and
        the card holds still when you switch tabs. */
     .sync-hint.is-off { visibility: hidden; }
@@ -328,6 +422,11 @@
     .danger-warning { font-size: 14px; color: var(--ink); line-height: 1.5; padding-bottom: 6px; }
     .danger-link { color: var(--muted); }
     .settings-link-row.danger-link:hover { color: var(--ink); }
+    /* Stays ink for as long as the confirm panel is open, not just on
+       hover — matches settings-link-row[aria-expanded="true"] above
+       dropping its own hover highlight once a disclosure is a heading
+       rather than a button waiting to be pressed. */
+    .settings-link-row.danger-link[aria-expanded="true"] { color: var(--ink); }
     #password-body .field, #change-password-btn { height: 44px; }
     .settings-subbody-inner .btn-sm, .danger-confirm-inner .btn-sm { align-self: flex-start; }
     .upgrade-banner { margin-top: auto; background: var(--ink); color: var(--paper); border-radius: var(--radius-surface); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -379,24 +478,9 @@
        to match .mode-status' height. min-width tracks the switch's own width:
        without it the pill's layout makes this row measure narrower than the
        switch actually renders. */
-    /* ── TEMPORARY EXPERIMENT ─────────────────────────────────────────
-       The iOS-style track+knob switch swapped for a round pause/play
-       button. To revert, restore the 60x34 track and .pause-toggle-knob
-       (both were scaled as a group: 2px inset on a 34px track gives a 30px
-       knob and 26px of travel) and put <span class="pause-toggle-knob">
-       back inside #pause-toggle. No JS depends on either shape -- it only
-       toggles .paused and the ARIA on the button itself.
-       The icon shows the ACTION, media-player style: blocking running ->
-       pause glyph, paused -> play glyph. The ink/gray fill carries the
-       state, keeping .paused as the exception class as everywhere else. */
-    /* Bare glyph, no circle. Still a 34px box so the tap target survives.
-       The ink/gray fill used to carry the on/off state; the status pill beside
-       it now reads "Friction Mode active" or "Paused until ...", so the glyph
-       only has to show the action and stays ink in both states. */
-    .pause-toggle { position: relative; z-index: 2; flex-shrink: 0; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: none; color: inherit; padding: 0; cursor: pointer; transition: opacity 0.18s ease, transform 0.18s ease; }
-    .pause-toggle:hover { opacity: 0.78; }
-    .pause-toggle:active { transform: scale(0.96); }
-    @keyframes pause-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 40% { transform: translateX(2px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }
+    /* The glyph shows the ACTION, media-player style: blocking running ->
+       pause, paused -> play. #mode-status (the whole pill) is the button
+       that carries it; there is no separate .pause-toggle element any more. */
     /* 2px inset on a 24px track leaves a 20px knob, and 42 - 2*2 - 20 = 18px
        of travel. The knob is 20px rather than the 18px this size carried
        years ago because that version had a 1px border eating the interior;
@@ -404,15 +488,16 @@
     /* Both glyphs share one grid cell and cross-fade with a scale+rotate,
        rather than morphing the path: animating `d` is not supported in
        Firefox, and this page is a website as well as an extension surface. */
-    .pause-icon { display: grid; place-items: center; width: 25px; height: 25px; color: inherit; }
-    .pause-icon svg { grid-area: 1 / 1; width: 25px; height: 25px; fill: currentColor;
+    /* Scaled down from 25px/23x25 to fit the 26px button the pill version
+       above uses (was sized for the old 36px standalone button). */
+    .pause-icon { display: grid; place-items: center; width: 20px; height: 20px; color: inherit; }
+    .pause-icon svg { grid-area: 1 / 1; width: 20px; height: 20px; fill: currentColor;
       transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
     .pause-icon__pause { opacity: 1; transform: none; }
     .pause-icon__play  { opacity: 0; transform: scale(0.5) rotate(-30deg); }
-    .pause-toggle.paused .pause-icon__pause { opacity: 0; transform: scale(0.5) rotate(30deg); }
-    .pause-toggle.paused .pause-icon__play  { opacity: 1; transform: none; }
-    @media (prefers-reduced-motion: reduce) { .pause-icon svg { transition: opacity 0.01s; }
-      .pause-toggle:hover, .pause-toggle:active { transform: none; } }
+    .pause-bubble.paused .pause-icon__pause { opacity: 0; transform: scale(0.5) rotate(30deg); }
+    .pause-bubble.paused .pause-icon__play  { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .pause-icon svg { transition: opacity 0.01s; } }
     /* The durations are small gray bubbles next to the switch (same as the
        landing page's "Pause when you need to" tile), not one extended
        gray bar. The container stays a zero-width clip that animates open;
@@ -425,27 +510,39 @@
        The negative margin cancels the row gap; what the eye measures is the
        6px of padding the 40px button leaves around its 28px glyph. */
     /* flex-start pins the status to the TOP of the row, so it stays put as
-       the tab area grows to a second line instead of drifting down to the new
-       centre. The pause button is taller than the pill's 34px, so the offset
-       below is half that height difference: (36 - 34) / 2 = 1px. Re-derive if
-       either height changes. */
+       the tab area grows to a second line instead of drifting down to the
+       new centre. The pill and the pause button are now one element (the
+       button lives inside the pill), so nothing here needs to reconcile
+       two different heights any more. */
     .profile-row { display: flex; align-items: flex-start; gap: 12px; }
-    .profile-row .mode-status { margin-right: -12px; }
-    .profile-row .pause-item { margin-top: -1px; }
     .profile-row .profile-tabs { flex: 1; min-width: 0; }
-    .mode-status { display: inline-flex; align-items: center; flex-shrink: 0; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 500; color: var(--paper); white-space: nowrap; }
-    /* Anchors both the chevron and the menu to the BUTTON, so they centre on
-       it rather than on the pill. */
-    .pause-item { position: relative; display: flex; flex-shrink: 0; }
-    .pause-toggle { position: relative; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; background: none; color: var(--ink); padding: 0; cursor: pointer; transition: transform 0.18s ease; }
-    /* .menu-open keeps the button looking engaged once the cursor leaves it
-       for the menu, the same reason .quick-add-chip carries that class. */
-    .pause-toggle:hover, .pause-toggle.menu-open { transform: scale(1.1); }
-    .pause-toggle:active { transform: scale(0.96); }
+    /* gap + symmetric padding, not the old negative-margin trick — with the
+       button INSIDE the pill now, the pill is one inline-flex box that just
+       sizes to whichever children it has (label alone in Strict, label +
+       button otherwise), so there's no second box to reconcile a gap
+       against any more. color: var(--paper) here is what makes the pause
+       icon white by inheritance below; .mode-paused's color: var(--ink)
+       override keeps it legible on that pill's light gray too. */
+    /* Anchors the menu, and holds the pair. left: 50% on .site-options-menu
+       is 50% of THIS box, so the menu centres on pill + bubble together. */
+    .mode-status-wrap { position: relative; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    /* Status only — the bubble beside it is the control. */
+    .mode-status { display: inline-flex; align-items: center; flex-shrink: 0; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 500; color: var(--paper); white-space: nowrap; }
+    /* Same 34px circle as .btn-add-profile at the other end of this row, and
+       an inactive .profile-tab's --surface ground, but with an ink glyph
+       rather than a muted one: these carry no label, so the glyph is the
+       whole control. Hover darkens the ground to --surface-deep. Hidden
+       outright in Strict (applyModeIndicator), where the flex gap collapses
+       with it and the pill is left on its own. */
+    .pause-bubble { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; transition: background 0.18s ease; }
+    .pause-bubble:hover { background: var(--surface-deep); }
+    /* The glyph's ink sits ~1 viewBox unit below its own box's centre, so a
+       1px lift is what actually centres it in the circle. */
+    .pause-bubble .pause-icon { position: relative; top: -1px; }
     .mode-status-dot { display: none; }
     .mode-status.mode-friction { background: var(--friction); }
     .mode-status.mode-strict   { background: var(--strict); }
-    .mode-status.mode-paused   { background: var(--surface-deep); color: var(--ink); }
+    .mode-status.mode-paused   { background: var(--surface); color: var(--ink); }
 
     /* ─── Quick-add row + site options menu ───────────────────────────── */
      /* Adding lives above the list, never inside it: the gray surface below
@@ -464,23 +561,16 @@
     /* Bare glyph, no circle. Still a 32px button so the tap target and the
        menu's anchor point survive; only the fill is gone. */
     .quick-add-chip { position: relative; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: none; cursor: pointer; transition: transform 0.18s ease; }
-    .quick-add-chip:not(.added):hover, .quick-add-chip.menu-open { transform: scale(1.1); }
     /* Glyph follows .sidebar-nav-item exactly: muted at rest, ink on hover,
        with the surface darkening underneath at the same time. */
     .quick-add-chip svg { display: block; color: var(--muted); transition: color 0.18s ease; }
     .quick-add-chip:not(.added):hover svg, .quick-add-chip.menu-open svg { color: var(--ink); }
     .quick-add-chip.added { cursor: default; }
     .quick-add-chip.added svg { color: var(--faint); }
-    .quick-add-chip-arrow { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); display: flex; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
-    .quick-add-chip:not(.added):hover ~ .quick-add-chip-arrow, .quick-add-chip.menu-open ~ .quick-add-chip-arrow { opacity: 1; }
     /* The one floating surface in the blocklist. No border; a soft shadow
        is what lifts it off the gray surface underneath. */
-    .site-options-menu { position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); min-width: 190px; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.16s ease; z-index: 50; }
+    .site-options-menu { position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); min-width: 190px; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.22s ease, opacity 0.16s ease; z-index: 50; }
     .site-options-menu.open { grid-template-rows: 1fr; opacity: 1; }
-    /* No chevron under this one, so it does not need the 14px that the
-       quick-add menus use to clear theirs. Must stay after the base rule:
-       same specificity, so source order decides. */
-    .site-options-menu--tight { top: calc(100% + 8px); }
     .site-options-menu-inner { overflow: hidden; min-height: 0; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
     .site-options-menu-item { display: block; width: 100%; text-align: left; font-size: 14px; font-weight: 500; color: var(--ink); padding: 9px 12px; border-radius: 10px; transition: background 0.15s; white-space: nowrap; }
     .site-options-menu-item:hover { background: var(--surface-deep); } /* card flip */
@@ -746,22 +836,25 @@
               <div class="profile-row">
                 <!-- Profile tabs (rendered by JS) -->
                 <div class="profile-tabs" id="profile-tabs"></div>
-                <!-- Two separate things again: the mode pill states what is
-                     running, the bare glyph beside it is the control. The
-                     chevron and menu belong to the BUTTON, not the pill, and
-                     follow .quick-add-chip-arrow exactly: hidden at rest,
-                     faded in on hover or while the menu is open. -->
-                <span class="mode-status" id="mode-status">
-                  <span id="mode-status-label"></span>
-                </span>
-                <div class="pause-item">
-                  <button class="pause-toggle" id="pause-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="true" title="Pause blocking">
+                <!-- Two objects: the pill states what is running, the round
+                     bubble beside it is the control. Same 34px gray circle as
+                     the "+ profile" button at the other end of this row, so
+                     the two read as a matched pair and the pill stays the
+                     only coloured thing. The menu is their sibling inside
+                     .mode-status-wrap and centres on the pair, not on the
+                     34px bubble alone — centred on the bubble it would hang
+                     off the card's right edge. -->
+                <div class="mode-status-wrap">
+                  <span class="mode-status" id="mode-status">
+                    <span id="mode-status-label"></span>
+                  </span>
+                  <button class="pause-bubble" id="pause-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="true" title="Pause blocking">
                     <span class="pause-icon" aria-hidden="true">
-                      <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.4" y="4" width="4" height="16" rx="2"/><rect x="13.6" y="4" width="4" height="16" rx="2"/></svg>
-                      <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.6 5.4v13.2L18.4 12 7.6 5.4z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                      <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
+                      <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
                     </span>
                   </button>
-                  <div class="site-options-menu site-options-menu--tight" id="pause-menu">
+                  <div class="site-options-menu" id="pause-menu">
                     <div class="site-options-menu-inner">
                       <button class="site-options-menu-item" data-minutes="30" type="button">30 minutes</button>
                       <button class="site-options-menu-item" data-minutes="60" type="button">1 hour</button>
@@ -777,7 +870,17 @@
               <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
                    only for premium users, to avoid a flash of an actionable
                    button before premium status resolves. -->
-              <button class="btn-add-profile hidden" id="add-profile-btn">+ New profile</button>
+              <button class="btn-add-profile hidden" id="add-profile-btn" aria-label="New profile" title="New profile">
+                <svg class="btn-add-profile__ring" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+                  <!-- 16 dashes: circumference 2*pi*16.5 = 103.67, divided
+                       into 16 repeats of 3.75 + 2.73 so the pattern
+                       closes without a short dash where the ends meet. -->
+                  <circle cx="17" cy="17" r="16.5" stroke="currentColor" stroke-width="1" stroke-dasharray="3.75 2.73"/>
+                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </button>
 
               <div class="new-profile-form" id="new-profile-form">
                 <input class="field field-inline" type="text" id="new-profile-name" placeholder="Profile name…" maxlength="28">
@@ -795,10 +898,10 @@
                    positioning the chips over a padded input so the text can
                    never run under them, whatever the list's length. -->
               <div class="url-input-wrap">
-                <input class="field" type="text" id="url-input" placeholder="e.g. instagram.com" maxlength="100">
+                <input class="field" type="text" id="url-input" placeholder="e.g. netflix.com" maxlength="100">
                 <div class="quick-add-row" id="quick-add-row"></div>
               </div>
-              <button class="btn-sm dark" id="add-url-btn">Block site</button>
+              <button class="btn-sm dark" id="add-url-btn">Add</button>
             </div>
             <p class="error-msg" id="url-error"></p>
 
@@ -1282,6 +1385,12 @@
       el.classList.remove('mode-paused');
       el.classList.toggle('mode-strict', isStrict);
       el.classList.toggle('mode-friction', !isStrict);
+
+      // Strict Mode can't be paused at all (refreshPauseUI()'s own guard
+      // below would just shake the button and toast a refusal), so the
+      // bubble disappears rather than sitting there doing nothing, and the
+      // wrap's flex gap collapses with it, leaving the pill on its own.
+      document.querySelector('.pause-bubble').classList.toggle('hidden', isStrict);
     }
 
     /**
@@ -1924,11 +2033,9 @@
       { name: 'Instagram',    hostname: 'instagram.com', icon: '<path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" />', sections: [
         { label: 'Reels', path: '/reels' },
       ] },
-      { name: 'TikTok',       hostname: 'tiktok.com', icon: '<path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" />' },
       { name: 'YouTube',      hostname: 'youtube.com', icon: '<path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" />', sections: [
         { label: 'Shorts', path: '/shorts' },
       ] },
-      { name: 'X (Twitter)',  hostname: 'x.com', icon: '<path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" />' },
       { name: 'Facebook',     hostname: 'facebook.com', icon: '<path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" />', sections: [
         { label: 'Reels', path: '/reels' },
         { label: 'Marketplace', path: '/marketplace' },
@@ -2125,20 +2232,6 @@
         item.appendChild(chip);
 
         if (hasSections) {
-          // Sits below the chip (not a corner badge on it) as the "more
-          // options here" hint — must come after `chip` in the DOM for
-          // the `.quick-add-chip:hover ~ .quick-add-chip-arrow` CSS
-          // sibling selector to darken it in step with the icon on hover.
-          const arrow = document.createElement('span');
-          arrow.className = 'quick-add-chip-arrow';
-          arrow.setAttribute('aria-hidden', 'true');
-          arrow.innerHTML = `
-            <svg width="8" height="5" viewBox="0 0 8 5" fill="none">
-              <path d="M1 1l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          `;
-          item.appendChild(arrow);
-
           const menu = document.createElement('div');
           menu.className = 'site-options-menu';
 

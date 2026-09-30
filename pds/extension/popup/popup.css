@@ -141,7 +141,7 @@ p { margin: 0; }
 }
 
 .btn-primary { background: var(--ink); color: var(--paper); }
-.btn-primary:hover  { opacity: 0.86; transform: translateY(-1px); }
+.btn-primary:hover  { opacity: 0.86; }
 .btn-primary:active { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
 
@@ -340,7 +340,7 @@ p { margin: 0; }
   transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
 }
 
-.stat-manage-link:hover  { opacity: 0.86; transform: translateY(-1px); }
+.stat-manage-link:hover  { opacity: 0.86; }
 .stat-manage-link:active { transform: scale(0.98); }
 
 /* ─── Strict → Friction confirmation (breathing hold) ─────────────────────────── */

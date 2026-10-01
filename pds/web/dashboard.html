@@ -123,27 +123,39 @@
        production it becomes /assets/..., which vercel.json's /assets/:path*
        rewrite already covers, and locally it resolves straight to the file.
        Scoped to #app-screen, so the signed-out screen keeps its plain page. */
-    #app-screen {
-      height: 100vh; overflow: hidden;
-      background-color: var(--page-ground);
+    #app-screen { position: relative; height: 100vh; overflow: hidden; background: var(--paper); }
+    /* index.html's closing band, reproduced rather than approximated. It has
+       to be its own bottom-anchored box, not a background on the viewport:
+       .footer--art sizes the fade to the FOOTER (100% of a ~716px element)
+       and covers the image inside that same box. Painting the identical
+       gradient across a 900px viewport instead stretches every stop ~25%
+       lower and crops the image against a different box, which is why the
+       first attempt looked wrong despite identical stops.
+       Height mirrors .footer--art's own: its --footer-art-top clamp plus the
+       56px its content and bottom padding add. Gradient, stops, sizes and
+       positions below are copied verbatim from site.css; keep them in step. */
+    #app-screen::before {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+      height: calc(clamp(370px, 46vw, 660px) + 56px);
       background-image:
-        /* Same image and same fade as index.html's .footer--art, copied
-           stop for stop from site.css: white at the top so the card still
-           sits on a plain ground, the sky arriving gradually toward the
-           bottom rather than as an edge, and the tail (92% to 100%) keeping
-           its slight extra wash so the last sliver isn't a hard stop.
-           Keep the two in step; site.css owns the original. */
         linear-gradient(to bottom,
           var(--paper) 0%,
           var(--paper) 40%,
-          rgba(255, 255, 255, 0.60) 74%,
-          rgba(255, 255, 255, 0.0) 92%,
-          rgba(255, 255, 255, 0.0) 100%),
+          rgba(255, 255, 255, 0.62) 66%,
+          rgba(255, 255, 255, 0.20) 74%,
+          rgba(255, 255, 255, 0.07) 80%,
+          rgba(255, 255, 255, 0.03) 86%,
+          rgba(255, 255, 255, 0.06) 92%,
+          rgba(255, 255, 255, 0.1) 100%),
         url('assets/images/landscape.webp');
       background-size: 100% 100%, cover;
       background-position: center top, center bottom;
       background-repeat: no-repeat;
+      pointer-events: none;
     }
+    /* Above the band, which is a sibling pseudo-element in the same stacking
+       context. */
+    #app-screen > .page-wrap { position: relative; z-index: 1; }
     /* Two spacer rows flanking the content, weighted 1fr above and 3fr
        below, so the free space is split a quarter/three-quarters instead of
        in half. That is what holds the shell high on a tall monitor: an even

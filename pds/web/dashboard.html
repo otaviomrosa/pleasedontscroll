@@ -118,55 +118,9 @@
     .btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
 
     /* ─── App shell ───────────────────────────────────────────────────── */
-    /* The painting sits behind the whole signed-in shell, with a flat white
-       wash over it so the card still reads as the foreground and the note
-       under the card stays legible. Tune the strength with the TWO matching
-       rgba alphas below and nothing else, the same way .prelude on the
-       landing page is tuned by its one opacity: the wash is flat, so one
-       number moves the whole image toward --page-ground evenly.
-       Relative url() resolves in both environments: from /dashboard in
-       production it becomes /assets/..., which vercel.json's /assets/:path*
-       rewrite already covers, and locally it resolves straight to the file.
-       Scoped to #app-screen, so the signed-out screen keeps its plain page. */
-    /* A normal scrolling page now: nav, card, then the same closing band
-       index.html ends on. It used to be a fixed 100vh box with the artwork
-       painted behind it; the footer carries that artwork itself, so the
-       separate backdrop is gone rather than drawn twice. */
-    /* Back to one fixed box that never scrolls. The nav sits at the top,
-       the card in the middle and the footer row at the bottom, all three
-       over the band painted by ::before. */
+    /* One fixed box that never scrolls: nav at the top, the card in the
+       middle, the footer row at the bottom, on a plain white page. */
     #app-screen { position: relative; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--paper); }
-    /* index.html's closing band, bottom-anchored. It has to be its own box
-       rather than a background on the viewport: .footer--art sizes the fade
-       to the FOOTER (100% of a ~716px element) and covers the image inside
-       that same box, so painting it across a 900px viewport instead pushes
-       every stop about 25% lower and crops against a different box.
-       Gradient, sizes and positions are copied verbatim from site.css. */
-    #app-screen::before {
-      content: ''; position: absolute; left: 0; right: 0; bottom: 0;
-      height: calc(clamp(370px, 46vw, 660px) + 56px);
-      background-image:
-        linear-gradient(to bottom,
-          var(--paper) 0%,
-          var(--paper) 40%,
-          rgba(255, 255, 255, 0.62) 66%,
-          rgba(255, 255, 255, 0.20) 74%,
-          rgba(255, 255, 255, 0.07) 80%,
-          rgba(255, 255, 255, 0.03) 86%,
-          rgba(255, 255, 255, 0.06) 92%,
-          rgba(255, 255, 255, 0.1) 100%),
-        url('assets/images/landscape.webp');
-      background-size: 100% 100%, cover;
-      background-position: center top, center bottom;
-      background-repeat: no-repeat;
-      pointer-events: none;
-    }
-    /* Above the band. Deliberately NOT a blanket z-index on every child:
-       #app-screen > * outranks .app-nav's own z-index (ID beats class), which
-       pinned the nav to the same layer as the card and trapped the account
-       dropdown behind it. The nav keeps its own higher value. */
-    #app-screen > .page-wrap,
-    #app-screen > .footer { position: relative; z-index: 1; }
 
     /* ─── App nav + closing footer ──────────────────────────────────────
        Copied from site.css so the signed-in page wears the same chrome as
@@ -192,8 +146,7 @@
     .account__item { display: block; width: 100%; text-align: left; font-size: 14.5px; font-weight: 500; padding: 10px 12px; border-radius: var(--radius-nested); transition: background 0.15s ease; }
     .account__item:hover { background: var(--surface); }
 
-    /* Only the row. The artwork behind it belongs to #app-screen::before,
-       so this is an overlay on the band rather than a band of its own. */
+    /* Only the row of links and the copyright, without index's art band. */
     .footer { flex-shrink: 0; padding: 0 0 clamp(12px, 1.2vw, 18px); }
     .footer__inner { max-width: var(--site-container); margin: 0 auto; padding: 0 var(--gutter); display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
     .footer__links { display: flex; gap: 4px 22px; flex-wrap: wrap; }
@@ -304,16 +257,21 @@
        2 profiles, 296px at 12, and 24px with overflow at 25. */
     .profile-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
       max-height: calc(2 * 34px + 8px); overflow-y: auto; }
-    .profile-tab { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 180px; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease; }
+    .profile-tab { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 180px; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease, opacity 0.18s ease; }
     /* min-width: 0 is what actually lets a long name shrink inside the flex
        tab; without it the max-width above is ignored and the pill just grows. */
     .profile-tab > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .profile-tab:hover { color: var(--ink); }
-    /* Solid ink, white text — this file's usual active state. The mode's
-       own colour stays on the status pill at the other end of the row. */
-    .profile-tab.active { color: var(--paper); font-weight: 500; background: var(--ink); }
-    .profile-tab.locked { opacity: 0.6; }
-    .profile-tab.locked:hover { opacity: 0.85; }
+    /* White pill, black text. Inactive tabs share the same white ground
+       (--surface is paper inside .app-card), so the ink text and weight are
+       what mark the active one. */
+    .profile-tab.active { color: var(--ink); font-weight: 500; background: var(--paper); }
+    /* Every inactive tab wears what used to be the locked look: faded at
+       rest, coming most of the way back on hover. Locked tabs are never the
+       active one, so this covers them too; the lock icon is what still sets
+       them apart. */
+    .profile-tab:not(.active) { opacity: 0.6; }
+    .profile-tab:not(.active):hover { opacity: 0.85; }
     .profile-tab-lock { display: inline-flex; align-items: center; margin-left: 6px; }
     .profile-tab.has-delete { padding-right: 10px; }
     .profile-tab-delete { display: inline-flex; align-items: center; margin-left: 6px; font-size: 1.2rem; line-height: 1; color: var(--muted); opacity: 0; transition: opacity 0.15s, color 0.15s; }
@@ -860,7 +818,7 @@
           <span class="app-nav__name">Please Don’t Scroll</span>
         </a>
         <div class="app-nav__links">
-          <a href="pricing.html" class="app-nav__link">Pricing</a>
+          <a href="index.html" class="app-nav__link">Home</a>
           <div class="account">
             <button class="account__avatar" id="account-avatar-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Account menu"></button>
             <div class="account__menu" id="account-dropdown">
@@ -1123,7 +1081,6 @@
       <div class="footer__inner">
         <div class="footer__links">
           <a href="pricing.html">Pricing</a>
-          <a href="dashboard.html">Dashboard</a>
           <a href="privacy.html">Privacy</a>
           <a href="https://instagram.com/pleasedontscroll" target="_blank" rel="noopener">Instagram</a>
           <a href="https://tiktok.com/@pleasedontscroll.com" target="_blank" rel="noopener">TikTok</a>

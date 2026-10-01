@@ -840,7 +840,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   height: clamp(260px, 32vw, 460px);
   background:
     linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--paper) 55%),
-    url('assets/images/testthis.webp') center center / cover no-repeat;
+    url('assets/images/landscape.webp') center center / cover no-repeat;
 }
 
 /* ---------- Closing painting ---------------------------------------------
@@ -877,7 +877,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
       rgba(255, 255, 255, 0.03) 86%,
       rgba(255, 255, 255, 0.06) 92%,
       rgba(255, 255, 255, 0.1) 100%),
-    url('assets/images/testthis.webp');
+    url('assets/images/landscape.webp');
   /* No flat-color layer at the bottom any more, and no lift off the edge to
      make room for one — the photograph itself runs all the way to the
      footer's true bottom edge. The top fade's own gradient now carries a

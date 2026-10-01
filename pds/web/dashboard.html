@@ -133,11 +133,13 @@
            bottom rather than as an edge, and the tail (92% to 100%) keeping
            its slight extra wash so the last sliver isn't a hard stop.
            Keep the two in step; site.css owns the original. */
-        linear-gradient(to top,
+        linear-gradient(to bottom,
           var(--paper) 0%,
-          var(--paper) 50%,
-          rgba(255, 255, 255, 0.2) 100%),
-        url('assets/images/testthis.webp');
+          var(--paper) 40%,
+          rgba(255, 255, 255, 0.60) 74%,
+          rgba(255, 255, 255, 0.0) 92%,
+          rgba(255, 255, 255, 0.0) 100%),
+        url('assets/images/landscape.webp');
       background-size: 100% 100%, cover;
       background-position: center top, center bottom;
       background-repeat: no-repeat;
@@ -2544,7 +2546,7 @@
       return new Date(2000, 0, 1, hour, 0).toLocaleTimeString([], { hour: 'numeric' });
     }
 
-    /** En dash, not an em dash — docs/ARCHITECTURE.md bans em dashes in user-facing copy. */
+    /** En dash, not an em dash — CLAUDE.md bans em dashes in user-facing copy. */
     function formatSlotRange(startMin, endMin) {
       // Compact when both ends land on the hour and share a period, which
       // is what fits in a day column ("9 – 11 AM" instead of

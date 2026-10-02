@@ -326,8 +326,7 @@ extension's MV3 background service worker; see the note at the top of
   true — but clicking one shakes (generic `.shake`, not scoped to
   `.pause-toggle` anymore — reused via `shakeElement()`) and shows a
   rejection toast instead of routing to `pricing.html` — see
-  `showToast()`'s `isError` variant below, not an inline `error-msg`
-  element. `proLocked` (Pro-gated) takes priority over `modeLocked`
+  `showToast()`'s `isError` variant below. `proLocked` (Pro-gated) takes priority over `modeLocked`
   (Strict-Mode-gated) when a tab is both,
   since pricing is still the more useful click target for a profile that's
   permanently unavailable regardless of mode. Blocklist rows get the same
@@ -353,12 +352,16 @@ extension's MV3 background service worker; see the note at the top of
   gets the same "never shifts anything" property for free (fixed-position,
   outside document flow entirely) without needing its own positioning
   hack. The row wrapper whose `position: relative` anchored that element
-  went with it (and the wrapper itself no longer exists). Form-validation errors
-  (login, signup, password fields, etc.) deliberately still use the plain
-  inline `error-msg`/`showError()` pattern — founder's call: those benefit
-  from staying anchored to the specific field they're about, which a
-  floating toast would lose, and the layout shift there was accepted as
-  fine. Don't consolidate those into toasts too without asking first.
+  went with it (and the wrapper itself no longer exists). **Every other
+  dashboard error is a toast too now, form validation included** (sign in,
+  sign up, forgot/reset password, change password, new profile, the
+  blocklist's add field). They used to be inline red `.error-msg` lines
+  under each form, kept that way on the theory that an error should stay
+  anchored to its field; the founder reversed that so errors read the same
+  everywhere and never shift a form. `showError(msg)` is now a one-line
+  wrapper over `showToast(msg, true)`, and the `.error-msg` elements,
+  their CSS and `hideError()` are gone. The toast carries `role="status"`
+  so a screen reader still hears what an inline line used to say.
   **A gotcha worth remembering for any future trigger on a table that's
   ever reached via `ON DELETE CASCADE`**: `delete-account` cascade-deletes
   `blocked_urls` and `profiles` when an account is removed, and cascade
@@ -392,7 +395,7 @@ extension's MV3 background service worker; see the note at the top of
   doesn't bounce the user back to the block screen. It is honored on the
   cached mode too (earned here, seconds ago), never in Strict, and entering
   Strict forfeits every pass. `paused_until` now has one writer, the
-  dashboard's pause switch. Read writer 2 below as history.
+  dashboard's pause control. Read writer 2 below as history.
 - **Pause blocking has two triggers writing to the same source of truth,
   by design — not dashboard-only after all.** `user_settings.paused_until`
   (`008_pause.sql`, TIMESTAMPTZ) is the single source of truth, read by the
@@ -538,10 +541,13 @@ extension's MV3 background service worker; see the note at the top of
     doesn't duplicate it. A Friction-mode user is, by definition, not
     currently under that hold's protection, so pausing doesn't need a
     second one stacked on top.
-  - **The control is a bare pause/play glyph, and one pill states the
-    status.** They are two separate elements, right-aligned on the profile
-    tabs row: `#mode-status` (the pill) and `#pause-toggle` (a 36px button
-    with no background, holding a 25px glyph in `--ink`).
+  - **One pill states the status; a round bubble beside it is the
+    control.** Both sit right-aligned on the profile tabs row inside
+    `.mode-status-wrap`: `#mode-status` (a plain 34px pill, not a button)
+    and `#pause-toggle` (`.pause-bubble`, a 34px circle on `--surface`,
+    which is white inside the card, holding a 20px ink glyph, darkening to
+    `--surface-deep` on hover). Same footprint as the "+ profile" ring at
+    the other end of the row, so the two read as a matched pair.
     - **The glyph shows the ACTION, media-player style**: blocking running
       shows pause, paused shows play. The two SVGs share one grid cell and
       cross-fade with a scale and counter-rotation rather than morphing the
@@ -551,7 +557,8 @@ extension's MV3 background service worker; see the note at the top of
     - **`applyModeIndicator()` is the only thing that writes the pill**, and
       it has three states: "Friction Mode active" on `--friction`, "Strict
       Mode active" on `--strict`, and "Paused until 3:45 PM" (or "Paused
-      indefinitely") on a neutral `--surface-deep`. **Paused wins**, because
+      indefinitely") on `--surface` (white in the card) with ink text.
+      **Paused wins**, because
       a blue "Friction Mode active" beside a paused button would be untrue.
       A scheduled Strict block composes as "Strict Mode active until
       11:00 PM". Separate "Blocking on" / "Paused until" labels used to sit
@@ -567,10 +574,9 @@ extension's MV3 background service worker; see the note at the top of
       direction, and needing that space is what drove several failed
       layouts. As rows they can also read properly: "Until I turn it back
       on" replaced an ∞ glyph that needed a tooltip.
-      `.site-options-menu--tight` trims the base 14px offset to 8px, since
-      this menu has no chevron to clear. **That modifier must stay after
-      the base rule** — same specificity, so source order decides, and
-      placed before it the base silently won.
+      It uses the base `.site-options-menu` offset (`calc(100% + 4px)`);
+      the old `.site-options-menu--tight` modifier went once the quick-add
+      chevrons it was compensating for were removed.
     - The iOS-style track-and-knob switch this replaced is gone, along with
       `.pause-toggle-knob`, `.pause-options-pill`, `.pause-durations` and
       `.pause-duration-btn`. Its geometry was heavily documented here
@@ -581,9 +587,10 @@ extension's MV3 background service worker; see the note at the top of
     dashboard-only (not the extension popup — the popup already has the
     fast path to every other control, so putting this one behind "open a
     browser tab, sign in if needed" is the point, not an oversight), and
-    Strict Mode can't be paused at all — clicking the pause button while
-    in Strict shakes it and shows an error toast instead of opening the
-    duration menu. Checked fresh via `fetchBlockingMode()` at three points
+    Strict Mode can't be paused at all — `applyModeIndicator()` hides the
+    bubble outright in Strict, leaving the pill on its own, and if a stale
+    page still gets a click through, `refreshPauseUI()`'s guard shakes it
+    and toasts a refusal instead of opening the duration menu. Checked fresh via `fetchBlockingMode()` at three points
     in the dashboard (opening the menu, right before committing when a
     duration is clicked, and on `visibilitychange`), and independently
     again in `background/index.js`'s `checkAndBlockTab()`, which now also
@@ -625,7 +632,7 @@ extension's MV3 background service worker; see the note at the top of
     `pauseUntil` in `GET_STATE`) displays this global pause unchanged — same
     field names as the old mechanism, no popup-side code changed.
   - **Overlapping clicks are handled with a "latest click wins" token, not a
-    lock.** A `disabled`-attribute lock (block the switch/duration buttons
+    lock.** A `disabled`-attribute lock (block the pause/duration buttons
     while a click's `await` chain is in flight) was tried first and
     explicitly rejected — a user must always be able to press/unpress these
     buttons on demand, and a lock is also fragile: `fetch()` has no
@@ -633,7 +640,7 @@ extension's MV3 background service worker; see the note at the top of
     server did this in practice) left the control disabled indefinitely
     with no way to recover short of a reload. The fix is a single shared
     monotonic counter, `pauseActionToken`, incremented at the start of
-    every pause-related handler (`refreshPauseUI()`, the switch's click
+    every pause-related handler (`refreshPauseUI()`, the pause bubble's click
     handler, each duration button's click handler). Each handler captures
     its own value (`const myToken = ++pauseActionToken`) and, after every
     `await`, checks `if (myToken !== pauseActionToken) return` before
@@ -647,103 +654,41 @@ extension's MV3 background service worker; see the note at the top of
     If you add another pause-related control later, mint its token from
     the same `pauseActionToken` counter — don't give it a separate one, or
     two genuinely concurrent flows could each think they're the latest.
-- **Quick-add chips for common distracting sites**, above the manual
-  url-input row on `dashboard.html`'s Blocklist card (`#quick-add-row`).
-  `QUICK_ADD_SITES` is a plain const array (Instagram, TikTok, YouTube,
-  X, Facebook) — not exhaustive by design, the founder explicitly signed
-  off on tuning this list later; Snapchat was in the original 8 and was
-  dropped per the founder's request, then Reddit and Twitch.
-  **The chips now live INSIDE the url input, right-justified, and the
-  "Quick add" label is gone.** `.url-input-wrap` is the visible input box:
-  it carries the ground, the radius and (via `:focus-within`) the focus
-  ring, while the `<input>` inside it is transparent and the chip row is a
-  flex sibling pinned right. Built that way rather than absolutely
-  positioning the chips over a padded input, so typed text can never run
-  under them however long the list gets. Two things to keep:
-  **the chips are bare glyphs again, `background: none`**, so hover is a
-  `scale(1.1)` plus the muted-to-ink glyph color rather than a fill (a
-  `--card-ground` circle was tried first; note `--surface` would have been
-  invisible there, since it is white inside `.app-card` and the input box
-  is white too); and below 560px the chips drop to their own line inside the same box
-  (`flex-wrap`, the field at `flex: 1 0 100%`, the row at `width: 100%`),
-  since five chips leave under 170px to type in. **That media query has to
-  sit after the `.url-input-row .field` rule it overrides** — same
-  specificity, so source order decides, and while it sat before that rule
-  the padding applied but the flex-basis was silently ignored. Each chip is a
-  button that went through several rounds of visual iteration this
-  session, each swapped per the founder's direct feedback — both the icon
-  drawn inside it and, eventually, whether there was an outer chip shape
-  at all:
-  1. That site's DuckDuckGo favicon (same service/pattern as the blocklist
-     row favicons below).
-  2. Each platform's real brand mark from Simple Icons (simpleicons.org,
-     MIT licensed) — first as a white glyph on a filled circle in that
-     platform's own brand color (plus a `rgba(0,0,0,0.14)` 1px outline,
-     added after the founder found the colors alone read as too flat
-     against the white chip), briefly also tried as the *outer* chip's own
-     background before reverting to the white outer circle. Dropped
-     entirely — the founder felt the page had "too much color" with 7
-     different brand colors on screen at once, and separately found even
-     the recolored (gray, no fill) version of these same detailed
-     Simple Icons paths still looked visually "bad"/too busy — these are
-     exact, intricate corporate logo reproductions, not simple icons
-     despite the library's name.
-  3. A plain stroke-only glyph — `fill="none"`, `stroke="currentColor"`
-     (color driven by the `.quick-add-chip svg` CSS rule, `var(--text-muted)`
-     at rest / `var(--text)` on hover, same currentColor pattern the lock
-     icon elsewhere in these notes already uses), from Tabler Icons'
-     "brand-*" outline set (tabler.io/icons, MIT licensed) instead of
-     Simple Icons. This is deliberately a simplified, generic-shape
-     representation of each brand (e.g. Instagram is a rounded square + a
-     circle + a dot, not the real logo's precise curves) rather than an
-     exact logo reproduction — matching the same minimal
-     geometric-shapes-not-detail style as this codebase's own lock icon,
-     which is what the founder asked for by name. `icon` on each
-     `QUICK_ADD_SITES` entry is raw inner `<path>` markup (some icons need
-     more than one path, e.g. Reddit's two solid eye dots use their own
-     `fill="currentColor"` override against the parent's `fill="none"`)
-     rather than a single `d` string, injected directly into the wrapping
-     `<svg>` in `renderQuickAddChips()`. `stroke-width="2"` matches
-     Tabler's own authored value (their curves are tuned for that
-     thickness).
-  4. **Current**: the outer white circle/shadow chip shape (steps 1-3 all
-     kept it, matching `.account-avatar`'s circle-icon precedent) is gone
-     entirely — the founder asked to drop the card/circle container and
-     let the bare glyph sit directly in the row, rather than an icon
-     inside a button shape. `.quick-add-chip` is still a real `<button>`
-     element at a fixed 28px size (so there's still a consistent
-     click/tap target, and a stable anchor point for the options-menu
-     positioning and the sectioned-chip chevron), but with no visible
-     fill, border, or shadow — `background: none`, no `box-shadow`. Hover
-     feedback changed to match: no more shadow-lift/translateY (nothing to
-     lift), just a small `transform: scale(1.1)` plus the existing
-     icon-darkens-on-hover color change. The icon itself renders at
-     22x22px, same size as before the chip disappeared around it.
-  5. **Current**: back to a filled glyph, not stroked — Remix Icon's
-     "-fill" set (remixicon.com, Apache 2.0) instead of Tabler. Before
-     committing to this, the founder was shown a side-by-side comparison
-     (Tabler stroke vs. Phosphor stroke vs. two Remix Icon variants,
-     rendered at actual chip size) and picked Remix's filled glyphs over
-     all three stroke-based options, including the one already live.
-     Unlike Simple Icons' exact logo traces (step 2, dropped for looking
-     "bad"/too busy), Remix's fill icons are simplified interpretations —
-     similar simplification level to Tabler's, just solid instead of
-     stroked — which is what keeps them from reading as busy the same
-     way. `icon` on each `QUICK_ADD_SITES` entry changed from Tabler's
-     multi-`<path>` stroke markup to a single filled `<path>` per site;
-     the wrapping `<svg>` in `renderQuickAddChips()` changed from
-     `fill="none" stroke="currentColor" stroke-width="1.7" ...` to plain
-     `fill="currentColor"` (no stroke attributes needed for a filled
-     glyph) — `color` on `.quick-add-chip svg` still drives it via
-     `currentColor` either way, so no CSS changes were needed, only the
-     SVG markup itself.
-  All versions of the icon itself were fetched/pasted in verbatim rather
-  than loaded from a CDN at runtime, so this stays self-contained with no
-  new runtime dependency and no failure mode if either icon service is
-  ever unreachable or ad-blocked — consistent with every other build-free
-  choice in this codebase. Only the main blocklist row list below still
-  uses live DuckDuckGo favicons — those cover arbitrary user-typed sites,
-  where a pre-baked icon set obviously isn't possible.
+- **Quick-add chips for common distracting sites**, inside the url input
+  on `dashboard.html`'s Blocklist pane (`#quick-add-row`).
+  `QUICK_ADD_SITES` is a plain const array, currently **Instagram, YouTube
+  and Facebook**, all three sectioned (see Path-scoped blocking below). Not
+  exhaustive by design; the founder tunes it by hand. Snapchat, then Reddit
+  and Twitch, then TikTok and X have all been dropped from it over time.
+  **Current shape:**
+  - `.url-input-wrap` is the visible input box: it carries the ground, the
+    radius and (via `:focus-within`) the focus ring, while the `<input>`
+    inside it is transparent and the chip row is a flex sibling pinned
+    right. Built that way rather than absolutely positioning the chips over
+    a padded input, so typed text can never run under them. The "Quick add"
+    label that used to sit beside the row is gone.
+  - Each chip is a 32px `<button>` with no fill, holding an 18px Tabler
+    "brand-*" stroke glyph (`stroke-width="1.5"`, tabler.io/icons, MIT).
+    `.quick-add-row` has `gap: 0` on purpose: touching 32px buttons put
+    exactly 12px between 20px-ish glyphs, which is also the glyph's
+    distance from the box's right edge. The glyph is `--muted` at rest,
+    `--ink` on hover or while its menu is open, `--faint` once added.
+  - Below 560px the chips drop to their own line inside the same box
+    (`flex-wrap`, the field at `flex: 1 0 100%`, the row at `width: 100%`).
+    **That media query has to sit after the `.url-input-row .field` rule
+    it overrides** — same specificity, so source order decides, and while
+    it sat before that rule the flex-basis was silently ignored.
+  - The sectioned-chip chevron (`.quick-add-chip-arrow`) is gone, and the
+    options menu opens at `calc(100% + 4px)` now that there is nothing
+    under the chip to clear.
+  **How it got here, briefly**, so none of it comes back: DuckDuckGo
+  favicons → Simple Icons brand marks on brand-colored circles (too much
+  color, then too busy even in gray) → Tabler stroke glyphs in a white
+  circle → bare glyphs with a `scale(1.1)` hover → Remix Icon fills →
+  back to Tabler strokes, bare, with colour-only hover. Every version was
+  pasted in verbatim rather than CDN-loaded, so nothing here depends on an
+  icon service being reachable. Only the blocklist rows still use live
+  DuckDuckGo favicons, since those cover arbitrary user-typed sites.
   One click adds that hostname via the same `addBlockedUrl()` used by the
   manual input — no separate code path. A site already on the current
   profile's blocklist renders as a non-interactive "added" state (grayed,
@@ -762,7 +707,7 @@ extension's MV3 background service worker; see the note at the top of
   Duplicate-prevention is two-layered, same reasoning as every other guard
   in these notes: `handleQuickAdd()` disables its own chip for the duration
   of its request (the established one-shot-button pattern already used by
-  `handleAddUrl()`'s "Block site" button — distinct from the pause toggle's
+  `handleAddUrl()`'s "Add" button — distinct from the pause toggle's
   deliberate never-disable rule, which only applies to persistent state
   toggles, not one-shot submits), and `012_blocked_urls_unique.sql` adds a
   `UNIQUE (profile_id, url)` constraint at the database so even a request
@@ -819,7 +764,7 @@ extension's MV3 background service worker; see the note at the top of
   navigation, no hostname-keyed Map needed for a fast-path reject.
   **This fixed a real, previously-live bug as a side effect, not a
   regression**: before this change, if a user manually typed
-  `youtube.com/shorts` into the free-text "Block site" input, it already
+  `youtube.com/shorts` into the free-text input, it already
   passed `isValidBlocklistUrl()` (which only ever validated the hostname
   portion via `normalizeToHostname()`) and got stored verbatim — but
   `background/index.js` then collapsed it back down to bare `youtube.com`
@@ -844,39 +789,17 @@ extension's MV3 background service worker; see the note at the top of
   an earlier pass — that part stuck. The "— already blocked" suffix on an
   already-added row (both the collapsed whole-chip title and each menu
   row) was also shortened to just "— blocked" per the founder's request.
-  This was chosen over a second, cramped *clickable* hit-target (a
-  chevron functioning as its own button) on a 28px circle — the whole
-  chip stays the only click target either way. The purely decorative
-  "more options here" hint next to a sectioned chip went through two
-  versions: first a small corner dot (`.quick-add-chip.has-sections::after`,
-  a pseudo-element on the chip itself), then — after the outer
-  circle/shadow chip shape was dropped entirely (see the icon-treatment
-  history above) and the founder asked for something more distinct — a
-  small non-interactive v-shaped chevron (`.quick-add-chip-arrow`, a real
-  `<span>` sibling of `.quick-add-chip` inside `.quick-add-item`, not a
-  pseudo-element, since it needs to sit *below* the chip rather than in
-  its corner) sitting centered underneath the chip. `pointer-events: none`
-  keeps it purely visual — the chip itself is still the only click target,
-  same reasoning as the corner-dot version it replaced. `.quick-add-chip:
-  not(.added):hover ~ .quick-add-chip-arrow` darkens it in step with the
-  icon on hover, via a plain CSS sibling selector (the arrow has to come
-  after the chip in the DOM for this to work, which `renderQuickAddChips()`
-  already does naturally). `.site-options-menu`'s `top` offset was bumped
-  from `calc(100% + 8px)` to `+ 16px` to clear the chevron's own space
-  below the chip without overlapping it when the menu opens. The chevron
-  itself went through one more visibility round: first shrunk to
-  6x4px/`stroke-width:1.25` with `opacity: 0.5` at rest (still "too
-  visible" per the founder), then settled on **hidden entirely at rest**
-  (`opacity: 0`, back to its original 8x5px/`stroke-width:1.5` size since
-  legibility while hidden doesn't matter) and only faded in to `opacity: 1`
-  (alongside the existing color darken) on `:hover`. The row now looks
-  completely clean by default — the affordance only reveals itself once
-  someone's actually hovering that specific chip, a deliberate discovery-
-  vs-minimalism tradeoff the founder chose after weighing both directly
-  against each other. Once the
+  (That suffix still carries an em dash, which the user-facing copy rule
+  below forbids; the landing page's copy of the menu writes "Reels
+  blocked" instead.)
+  The whole chip is the only click target; a second, cramped clickable
+  chevron was rejected. The decorative "more options here" hint went
+  corner dot → chevron under the chip → chevron hidden until hover →
+  **removed entirely**; there is no visual hint now, the menu itself is
+  the discovery. Once the
   whole domain is already blocked, though, the chip collapses to the
   exact same greyed-out, non-interactive `.added` state a plain chip
-  gets — no menu, no chevron, no click handler — rather than presenting a
+  gets — no menu, no click handler — rather than presenting a
   menu that looks available but has nothing left to offer (every row in
   it would show as covered). This was a deliberate revision after the
   founder tried the first version and asked for it: fully-blocked sites
@@ -886,8 +809,8 @@ extension's MV3 background service worker; see the note at the top of
   state, i.e. the whole domain isn't blocked yet, so at least one section
   is uncovered. A section row shows as added if its exact path entry
   exists. The menu itself (`.site-options-menu`) is modeled
-  directly on the existing `.account-dropdown` pattern (nav avatar
-  dropdown) — same absolute-positioning/white/border/shadow-card shape,
+  directly on the nav's account dropdown — same
+  absolute-positioning/white/shadow-card shape,
   same toggle-open + close-on-outside-click JS shape (`e.stopPropagation()`
   on the trigger, a `document.addEventListener('click', ...)` that closes
   every open `.site-options-menu`) — reusing the only dropdown pattern
@@ -898,7 +821,7 @@ extension's MV3 background service worker; see the note at the top of
   disable-during-request → `addBlockedUrl()` → `loadBlocklist()` +
   `pokeExtension()` path.
   **While a chip's options menu is open, that chip keeps its hover look**
-  (`transform: scale(1.1)`, darkened icon, chevron faded in) rather than
+  (the darkened ink glyph) rather than
   reverting the instant the cursor leaves it to move down into the menu
   itself — found by the founder as a real inconsistency (the trigger would
   visually "let go" mid-interaction while its own menu was still visibly
@@ -954,7 +877,7 @@ extension's MV3 background service worker; see the note at the top of
   time — one comparison function underpins both "does this tab URL match
   this stored entry" and "does this stored entry make that other stored
   entry redundant."
-  `dashboard.html`'s `handleAddUrl()` (the manual "Block site" input) now
+  `dashboard.html`'s `handleAddUrl()` (the manual input's "Add" button) now
   rejects a redundant add with its own message ("That site is already
   covered by an existing entry in your blocklist.", shaking the covering
   row) — checked after, not instead of, the pre-existing exact-duplicate
@@ -1131,7 +1054,7 @@ extension's MV3 background service worker; see the note at the top of
     icon; the same line shows any server refusal for a few seconds —
     those used to fail silently). The dashboard mirrors it with
     `isScheduleBlockLocked(block)` (shake + toast naming the end time),
-    the pause toast, and "Mode active: Strict until 11:00 PM".
+    the pause toast, and a mode pill reading "Strict Mode active until 11:00 PM".
   - **The RPC has to be allowed to do what a human may not** (Strict →
     Strict on another profile, restoring Friction after a Strict block),
     so it sets a transaction-local GUC, `set_config('pds.applying_schedule',
@@ -1509,8 +1432,9 @@ manifest.json          ← Lives at the project root (pds/manifest.json), not
                          history shows the whole directory replaced in one
                          go. `assets/images/` holds three files:
                          `logo-no-bg.png` (every page, popup and blocked
-                         page), `testthis.webp` (both of index.html's photo
-                         bands, see §4) and `share.png` (the 1200x630 link
+                         page), `landscape.webp` (both of index.html's photo
+                         bands, see DESIGN.md; the dashboard no longer
+                         uses it) and `share.png` (the 1200x630 link
                          preview, a render of the hero; og:/twitter: tags on
                          index, pricing and privacy). The unreferenced
                          `hero-top.webp`, `hero-painting.jpg` and
@@ -1538,18 +1462,25 @@ manifest.json          ← Lives at the project root (pds/manifest.json), not
   index.html, pricing.html, dashboard.html   ← import from /core for all
                          auth/sync/blocklist/billing logic. Contain only DOM
                          rendering and event wiring.
-                         All three duplicate the same account-menu markup in
-                         their nav (avatar-in-a-circle + dropdown once
-                         logged in: Dashboard, Settings, Sign out — replaces
-                         the Sign in/Get started pill; no shared component
-                         system in this build-free codebase for markup, so
-                         it's the same markup copied three times, with the
-                         behavior shared via site.js). "Settings"
-                         on all three links to `dashboard.html#settings-card`
-                         — account settings (email, change password, cancel
-                         subscription) intentionally live as a section
-                         inside dashboard.html, not a separate page; this
-                         was a deliberate choice over a new settings.html.
+                         index.html and pricing.html carry the same
+                         account-menu markup in their nav (avatar-in-a-circle
+                         + dropdown once logged in: Dashboard, Settings,
+                         Sign out — replaces the Sign in/Get started pill;
+                         no shared component system for markup, so it is
+                         copied, with the behavior shared via site.js).
+                         Their "Settings" links to
+                         `dashboard.html#settings-card`.
+                         dashboard.html wears the same nav and the footer's
+                         link row too, copied verbatim from site.css (nav
+                         at 1120px `--site-container`, not the shell's
+                         1020px), but its menu is only Settings + Sign out
+                         and its own handlers: Settings calls
+                         `showSection('settings')` in place, and the
+                         sidebar no longer carries an avatar or a sign-out
+                         button. Account settings (email, change password,
+                         cancel subscription) intentionally live as a
+                         section inside dashboard.html, not a separate
+                         page; a deliberate choice over a settings.html.
                          index.html's and pricing.html's "Get Focus Pro"
                          CTAs go straight to Stripe Checkout (and to the
                          billing portal for someone already subscribed)

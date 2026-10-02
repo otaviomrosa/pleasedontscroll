@@ -110,8 +110,6 @@
     .auth-forgot a:hover, .auth-toggle a:hover, .auth-resend a:hover { opacity: 0.6; }
     .auth-toggle { text-align: center; margin-top: 4px; }
     .auth-success { font-size: 14px; color: var(--ink); background: var(--paper); border-radius: var(--radius-field); padding: 12px 14px; }
-    .error-msg { display: none; font-size: 14px; color: var(--error); }
-    .error-msg.visible { display: block; }
     .btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; margin-top: 6px; background: var(--ink); color: var(--paper); border-radius: var(--radius-pill); font-weight: 500; transition: opacity 0.18s ease, transform 0.18s var(--ease-out); }
     .btn-primary:hover { opacity: 0.86; }
     .btn-primary:active { transform: scale(0.98); }
@@ -666,17 +664,24 @@
     .sched-block-name { font-size: 12px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sched-block-time { font-size: 11px; line-height: 1.2; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sched-ghost { pointer-events: none; opacity: 0.7; }
-    .sched-block-handle { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--ink); opacity: 0; transition: opacity 0.15s ease; cursor: ns-resize; }
+    /* z-index 3 clears the sticky day header (2). Neither .sched-col nor
+       .sched-block sets a z-index, so neither is a stacking context and the
+       handle competes directly with the header and with the next column.
+       The z-index lives here permanently, not on a hover rule, so it holds
+       for the whole fade-out instead of dropping the moment hover ends. */
+    .sched-block-handle { position: absolute; z-index: 3; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--ink); opacity: 0; transition: opacity 0.15s ease; cursor: ns-resize; }
     .sched-block-handle::before { content: ''; position: absolute; inset: -6px; }
     .sched-block-handle[data-edge="start"] { top: -5px; right: -3px; }
     .sched-block-handle[data-edge="end"]   { bottom: -5px; left: -3px; }
-    .sched-block:hover .sched-block-handle, .sched-block.selected .sched-block-handle { opacity: 1; }
+    /* Hit-testable only while shown. At opacity 0 a handle still caught
+       pointers, and its 22px hit area overhangs the neighbouring day and
+       the slots above/below the block, so a paint drag started there
+       silently became a resize of a block you couldn't see. Hovering the
+       handle keeps its block :hover (it's a descendant), so it stays live
+       while you reach for it. */
+    .sched-block-handle { pointer-events: none; }
+    .sched-block:hover .sched-block-handle, .sched-block.selected .sched-block-handle { opacity: 1; pointer-events: auto; }
     .sched.is-dragging .sched-block { pointer-events: none; }
-    /* A block's start handle hangs 3px past its column's right edge, and
-       the next column (later in the DOM) would paint over it. Lift the
-       column that owns the hovered/selected block above its neighbours
-       (still below the sticky header at z-index 2). */
-    .sched-col:has(.sched-block:hover), .sched-col:has(.sched-block.selected) { z-index: 1; }
     .sched-pop { position: fixed; z-index: 400; min-width: 200px; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
     .sched-pop-caption { font-size: 12px; font-weight: 500; color: var(--muted); padding: 8px 12px 6px; }
     .sched-pop-modes { display: flex; gap: 6px; padding: 4px 6px 6px; }
@@ -722,7 +727,6 @@
 
         <p class="auth-forgot"><a href="#" id="show-forgot">Forgot your password?</a></p>
 
-        <p class="error-msg" id="auth-error"></p>
         <!-- Shown only when sign-in fails specifically because the account
              exists but hasn't confirmed its email yet (see friendlyAuthError's
              "email not confirmed" case) — the one point where we reliably
@@ -749,7 +753,6 @@
           <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
         </div>
 
-        <p class="error-msg" id="signup-error"></p>
         <!-- Shown after any signup attempt that lands on "check your email"
              — covers both a brand-new signup and a repeat attempt with an
              already-registered-but-unconfirmed email, since Supabase's
@@ -775,7 +778,6 @@
           <input class="field" type="email" id="forgot-email" placeholder="Email" autocomplete="email">
         </div>
 
-        <p class="error-msg" id="forgot-error"></p>
         <p class="auth-success hidden" id="forgot-success">If an account exists for that email, a reset link is on its way.</p>
 
         <button class="btn-primary" id="forgot-btn">Send reset link</button>
@@ -798,7 +800,6 @@
           <input class="field" type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password">
         </div>
 
-        <p class="error-msg" id="reset-error"></p>
 
         <button class="btn-primary" id="reset-btn">Update password</button>
       </div>
@@ -945,7 +946,6 @@
                 <button class="btn-sm dark" id="new-profile-confirm">Add</button>
                 <button class="btn-sm light" id="new-profile-cancel">Cancel</button>
               </div>
-              <p class="error-msg" id="profile-error"></p>
             </div>
 
             <div class="url-input-row">
@@ -961,7 +961,6 @@
               </div>
               <button class="btn-sm dark" id="add-url-btn">Add</button>
             </div>
-            <p class="error-msg" id="url-error"></p>
 
             <div class="blocklist-surface">
               <ul class="url-list" id="url-list">
@@ -1020,7 +1019,6 @@
                     <div class="form-group" style="margin-bottom: 0;">
                       <input class="field" type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password">
                     </div>
-                    <p class="error-msg" id="password-error"></p>
                     <button class="btn-sm dark" id="change-password-btn" style="margin-top: 12px;">Update password</button>
                   </div>
                 </div>
@@ -1091,7 +1089,7 @@
   </div>
 
   <!-- Toast for success messages (e.g. upgrade confirmation) -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script type="module">
     import { webStorageAdapter } from '../core/auth/storage.js';
@@ -1239,7 +1237,7 @@
       window.history.replaceState({}, '', window.location.pathname);
       showAuthScreen();
       showView('login-card');
-      showError('auth-error', 'That link has expired or has already been used. Sign in below, or use "Forgot your password?" / sign up again to request a new one.');
+      showError('That link has expired or has already been used. Sign in below, or use "Forgot your password?" / sign up again to request a new one.');
       return true;
     }
 
@@ -1853,16 +1851,11 @@
 
     // ─── Error helpers ─────────────────────────────────────────────────────────
 
-    function showError(id, msg) {
-      const el = document.getElementById(id);
-      el.textContent = msg;
-      el.classList.add('visible');
-    }
-
-    function hideError(id) {
-      const el = document.getElementById(id);
-      el.textContent = '';
-      el.classList.remove('visible');
+    // Every error on this page is a toast, form validation included. Fields
+    // used to carry their own inline red line; that was dropped so errors
+    // read the same everywhere and never shift the form they belong to.
+    function showError(msg) {
+      showToast(msg, true);
     }
 
     // ─── Profiles ──────────────────────────────────────────────────────────────
@@ -2471,18 +2464,17 @@
     async function handleAddUrl() {
       if (!selectedProfile) return;
 
-      hideError('url-error');
       const input = document.getElementById('url-input');
       const url   = input.value.trim();
       if (!url) return;
 
       if (!isValidBlocklistUrl(url)) {
-        showError('url-error', 'Enter a valid site, like instagram.com.');
+        showError('Enter a valid site, like instagram.com.');
         return;
       }
 
       if (isOwnDomain(url)) {
-        showError('url-error', "Can't block pleasedontscroll.com. That would lock you out of this dashboard.");
+        showError("Can't block pleasedontscroll.com. That would lock you out of this dashboard.");
         return;
       }
 
@@ -2498,7 +2490,7 @@
         (entry) => entry.hostname === parsedNewEntry.hostname && entry.pathPrefix === parsedNewEntry.pathPrefix,
       );
       if (existingDuplicate) {
-        showError('url-error', 'That site is already in your blocklist.');
+        showError('That site is already in your blocklist.');
         const existingRow = document.querySelector(`.url-item[data-url-id="${existingDuplicate.id}"]`);
         if (existingRow) shakeElement(existingRow);
         return;
@@ -2512,7 +2504,7 @@
       // exact-match case keeps its own more specific error message.
       const coveringEntry = currentBlocklistEntries.find((entry) => entryCovers(entry, parsedNewEntry));
       if (coveringEntry) {
-        showError('url-error', 'That site is already covered by an existing entry in your blocklist.');
+        showError('That site is already covered by an existing entry in your blocklist.');
         const existingRow = document.querySelector(`.url-item[data-url-id="${coveringEntry.id}"]`);
         if (existingRow) shakeElement(existingRow);
         return;
@@ -2534,7 +2526,7 @@
       btn.textContent = 'Block site';
       btn.disabled    = false;
 
-      if (!created) { showError('url-error', 'Could not add that site. Please try again.'); return; }
+      if (!created) { showError('Could not add that site. Please try again.'); return; }
 
       // Same redundant-cleanup handleBlockWholeSite() does for the
       // quick-add chips' "Block the whole site" row — a manually-typed
@@ -3301,7 +3293,6 @@
 
     document.getElementById('show-forgot').addEventListener('click', (e) => {
       e.preventDefault();
-      hideError('forgot-error');
       document.getElementById('forgot-success').classList.add('hidden');
       showView('forgot-card');
     });
@@ -3312,12 +3303,11 @@
     });
 
     document.getElementById('forgot-btn').addEventListener('click', async () => {
-      hideError('forgot-error');
       document.getElementById('forgot-success').classList.add('hidden');
 
       const email = document.getElementById('forgot-email').value.trim();
       if (!isValidEmail(email)) {
-        showError('forgot-error', 'Enter a valid email address.');
+        showError('Enter a valid email address.');
         return;
       }
 
@@ -3331,27 +3321,26 @@
       btn.textContent = 'Send reset link';
       btn.disabled = false;
 
-      if (!ok) { showError('forgot-error', error); return; }
+      if (!ok) { showError(error); return; }
 
       document.getElementById('forgot-email').value = '';
       document.getElementById('forgot-success').classList.remove('hidden');
     });
 
     document.getElementById('reset-btn').addEventListener('click', async () => {
-      hideError('reset-error');
       const newPassword     = document.getElementById('reset-password').value;
       const confirmPassword = document.getElementById('reset-password-confirm').value;
 
       if (!isValidPassword(newPassword)) {
-        showError('reset-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        showError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
         return;
       }
       if (newPassword !== confirmPassword) {
-        showError('reset-error', 'Passwords do not match.');
+        showError('Passwords do not match.');
         return;
       }
       if (!recoveryAccessToken) {
-        showError('reset-error', 'This reset link has expired. Request a new one.');
+        showError('This reset link has expired. Request a new one.');
         return;
       }
 
@@ -3364,7 +3353,7 @@
       btn.textContent = 'Update password';
       btn.disabled = false;
 
-      if (!ok) { showError('reset-error', error); return; }
+      if (!ok) { showError(error); return; }
 
       recoveryAccessToken = null;
       document.getElementById('reset-password').value = '';
@@ -3386,14 +3375,13 @@
     });
 
     document.getElementById('login-btn').addEventListener('click', async () => {
-      hideError('auth-error');
       document.getElementById('auth-resend').classList.add('hidden');
       const email    = document.getElementById('email-input').value.trim();
       const password = document.getElementById('password-input').value;
       const btn      = document.getElementById('login-btn');
 
       if (!isValidEmail(email) || !password) {
-        showError('auth-error', 'Enter a valid email and your password.');
+        showError('Enter a valid email and your password.');
         return;
       }
 
@@ -3406,7 +3394,7 @@
       btn.disabled    = false;
 
       if (error) {
-        showError('auth-error', error);
+        showError(error);
         // Only "email not confirmed" gets a resend offer — this is the one
         // sign-in failure where we reliably know (from Supabase's own
         // distinct error, not a guess) that resending is the right next
@@ -3434,18 +3422,17 @@
     });
 
     document.getElementById('signup-btn').addEventListener('click', async () => {
-      hideError('signup-error');
       document.getElementById('signup-resend').classList.add('hidden');
       const email    = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const btn      = document.getElementById('signup-btn');
 
       if (!isValidEmail(email)) {
-        showError('signup-error', 'Enter a valid email address.');
+        showError('Enter a valid email address.');
         return;
       }
       if (!isValidPassword(password)) {
-        showError('signup-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        showError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
         return;
       }
 
@@ -3464,7 +3451,7 @@
       btn.disabled    = false;
 
       if (error) {
-        showError('signup-error', error);
+        showError(error);
         // "Check your email..." covers both a brand-new signup AND a repeat
         // attempt with an already-registered-but-unconfirmed email — offer
         // resend either way, since Supabase's response is deliberately
@@ -3529,16 +3516,15 @@
 
     // ─── Settings: change password ─────────────────────────────────────────────
     document.getElementById('change-password-btn').addEventListener('click', async () => {
-      hideError('password-error');
       const newPassword     = document.getElementById('new-password-input').value;
       const confirmPassword = document.getElementById('confirm-password-input').value;
 
       if (!isValidPassword(newPassword)) {
-        showError('password-error', `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        showError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
         return;
       }
       if (newPassword !== confirmPassword) {
-        showError('password-error', 'Passwords do not match.');
+        showError('Passwords do not match.');
         return;
       }
 
@@ -3554,7 +3540,7 @@
       btn.textContent = 'Update password';
       btn.disabled = false;
 
-      if (!ok) { showError('password-error', error); return; }
+      if (!ok) { showError(error); return; }
 
       document.getElementById('new-password-input').value = '';
       document.getElementById('confirm-password-input').value = '';
@@ -3632,24 +3618,21 @@
 
     // New profile form
     document.getElementById('add-profile-btn').addEventListener('click', () => {
-      hideError('profile-error');
       document.getElementById('new-profile-form').classList.add('visible');
       document.getElementById('new-profile-name').focus();
     });
 
     document.getElementById('new-profile-cancel').addEventListener('click', () => {
-      hideError('profile-error');
       document.getElementById('new-profile-form').classList.remove('visible');
       document.getElementById('new-profile-name').value = '';
     });
 
     async function handleCreateProfile() {
-      hideError('profile-error');
       const input = document.getElementById('new-profile-name');
       const name  = input.value.trim();
 
       if (!isValidProfileName(name)) {
-        showError('profile-error', 'Enter a profile name (up to 40 characters).');
+        showError('Enter a profile name (up to 40 characters).');
         return;
       }
 
@@ -3664,7 +3647,7 @@
       btn.disabled    = false;
 
       if (!newProfile) {
-        showError('profile-error', 'Could not create that profile. Please try again.');
+        showError('Could not create that profile. Please try again.');
         return;
       }
 

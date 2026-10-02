@@ -238,10 +238,14 @@ p { margin: 0; }
   min-height: 30px;
 }
 
-/* Same pill as the dashboard's .profile-tab, scaled to the popup: gray surface,
-   muted text, the active one solid ink. Capped width + ellipsis so one
-   long name can't push the row past the popup's edge (the full name is
-   in the title tooltip popup.js sets). */
+/* Same pill as the dashboard's .profile-tab, scaled to the popup. The
+   dashboard draws its tabs white on a gray card; the popup is white, so
+   here the pill keeps the gray --surface ground and the rest of the rule
+   carries over: the active pill is ink text at weight 500, every other
+   pill is the same shape at opacity 0.6 (0.85 on hover), with muted text.
+   Locked pills share that look and add the lock glyph. Capped width +
+   ellipsis so one long name can't push the row past the popup's edge
+   (the full name is in the title tooltip popup.js sets). */
 .profile-pill {
   display: inline-flex;
   align-items: center;
@@ -253,7 +257,7 @@ p { margin: 0; }
   color: var(--muted);
   font-size: 0.8rem;
   max-width: 240px;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: opacity 0.18s ease, color 0.18s ease;
 }
 
 .profile-pill-name {
@@ -263,18 +267,17 @@ p { margin: 0; }
   text-overflow: ellipsis;
 }
 
-.profile-pill:hover { color: var(--ink); }
+.profile-pill:not(.active) { opacity: 0.6; }
+.profile-pill:not(.active):hover { opacity: 0.85; color: var(--ink); }
 
 .profile-pill.active {
-  background: var(--ink);
-  color: var(--paper);
+  color: var(--ink);
   font-weight: 500;
 }
 
 /* Locked for Focus Pro (routes to pricing) or for Strict Mode (not
-   clickable at all) — same look, same lock glyph as the dashboard tabs. */
-.profile-pill.locked { opacity: 0.6; }
-.profile-pill.locked:hover { opacity: 0.85; }
+   clickable at all). Strict-locked pills don't react to hover, since a
+   click does nothing. */
 .profile-pill.mode-locked { cursor: default; }
 .profile-pill.mode-locked:hover { opacity: 0.6; color: var(--muted); }
 
@@ -322,8 +325,9 @@ p { margin: 0; }
 
 .stat-line.paused { color: var(--ink); font-weight: 500; }
 
-/* The row's one action: small ink pill, matching the active profile pill's
-   shape so it reads as "the actionable one", not a fourth button style. */
+/* The row's one action: small ink pill, the same 30px shape as the
+   profile pills so it reads as "the actionable one", not a fourth button
+   style. */
 .stat-manage-link {
   display: inline-flex;
   align-items: center;

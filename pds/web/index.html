@@ -138,17 +138,37 @@
           <h2 class="display">Built around your day.</h2>
           <p class="lede">One profile to start. Focus Pro adds more, each with its own blocklist. Switch in a click.</p>
         </div>
+        <!-- The dashboard's Blocklist pane, rebuilt at the same sizes: one gray
+             card, white surfaces inside it. Profiles, quick add and removal
+             work (see the script below); the mode pill, the pause bubble,
+             the + profile ring and the input are pictures of the real ones. -->
         <div class="preview" data-reveal>
-          <div class="preview__row" role="group" aria-label="Example profiles">
-            <button class="pill pill--on" data-profile="Deep Work" aria-pressed="true">Deep Work</button>
-            <button class="pill" data-profile="Evening Unwind" aria-pressed="false">Evening Unwind</button>
-            <button class="pill" data-profile="Weekend" aria-pressed="false">Weekend</button>
-            <span class="pill pill--add" aria-hidden="true">+ New profile</span>
+          <div class="preview__row">
+            <div class="preview__tabs" role="group" aria-label="Example profiles">
+              <button class="preview__tab is-on" type="button" data-profile="Deep Work" aria-pressed="true"><span>Deep Work</span></button>
+              <button class="preview__tab" type="button" data-profile="Evening Unwind" aria-pressed="false"><span>Evening Unwind</span></button>
+              <button class="preview__tab" type="button" data-profile="Weekend" aria-pressed="false"><span>Weekend</span></button>
+              <span class="preview__addprofile" aria-hidden="true">
+                <svg class="preview__addprofile-ring" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="16.5" stroke="currentColor" stroke-width="1" stroke-dasharray="3.75 2.73"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </span>
+            </div>
+            <div class="preview__status" aria-hidden="true">
+              <span class="mode-pill mode-pill--friction">Friction Mode active</span>
+              <span class="pause-bubble">
+                  <span class="pause-icon" aria-hidden="true">
+                    <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
+                    <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                  </span>
+              </span>
+            </div>
           </div>
-          <div class="preview__input" aria-hidden="true"><span class="preview__field">e.g. instagram.com</span><span class="preview__btn">Block site</span></div>
-          <div class="preview__quick">
-            <span class="preview__quick-label">Quick add</span>
-            <div class="preview__icons" id="preview-chips"><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="instagram.com" data-site="Instagram" aria-label="Block Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></button><span class="preview__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="tiktok.com" data-site="TikTok" aria-label="Block TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg></button></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="youtube.com" data-site="YouTube" aria-label="Block YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></button><span class="preview__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="x.com" data-site="X" aria-label="Block X"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></button></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="facebook.com" data-site="Facebook" aria-label="Block Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></button><span class="preview__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="reddit.com" data-site="Reddit" aria-label="Block Reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg></button></span><span class="preview__quickitem"><button class="preview__chip" type="button" data-host="twitch.tv" data-site="Twitch" aria-label="Block Twitch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></button></span></div>
+          <div class="preview__input">
+            <div class="preview__field">
+              <span class="preview__placeholder" aria-hidden="true">e.g. netflix.com</span>
+              <div class="preview__icons" id="preview-chips"><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="instagram.com" data-site="Instagram" aria-label="Block Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="youtube.com" data-site="YouTube" aria-label="Block YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="facebook.com" data-site="Facebook" aria-label="Block Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div></div>
+            </div>
+            <span class="preview__btn" aria-hidden="true">Add</span>
           </div>
           <div class="preview__sites">
             <div id="preview-list" aria-live="polite"></div>
@@ -162,29 +182,59 @@
         <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Simple to set up. Easy to live with.</h2>
         <div class="tiles" data-reveal>
           <div class="tile">
-            <div class="tile__icons" aria-hidden="true"><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></span><span class="tile__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><span class="site-options-menu"><span class="site-options-menu-inner"><span class="site-options-menu-item">Block Instagram</span><span class="site-options-menu-item">Block Reels</span></span></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></span><span class="tile__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><span class="site-options-menu"><span class="site-options-menu-inner"><span class="site-options-menu-item">Block YouTube</span><span class="site-options-menu-item">Block Shorts</span></span></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></span><span class="tile__chip-arrow" aria-hidden="true"><svg width="8" height="5" viewBox="0 0 8 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l3 3 3-3"/></svg></span><span class="site-options-menu"><span class="site-options-menu-inner"><span class="site-options-menu-item">Block Facebook</span><span class="site-options-menu-item">Block Reels</span><span class="site-options-menu-item">Block Marketplace</span></span></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg></span></span><span class="tile__quickitem"><span class="tile__chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></span></span></div>
+            <div class="tile__card">
+              <!-- A picture, not a control: the brands in their own colours, the
+                   way they sit on a phone's home screen. -->
+              <div class="tile__stage" aria-hidden="true"><div class="tile__apps"><span class="app-icon app-icon--instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></span><span class="app-icon app-icon--tiktok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg></span><span class="app-icon app-icon--youtube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></span><span class="app-icon app-icon--x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></span><span class="app-icon app-icon--facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></span><span class="app-icon app-icon--reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg></span><span class="app-icon app-icon--twitch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></span></div></div>
+            </div>
             <h3>Block any site</h3>
             <p>Add the usual suspects with one click, or type any address. Block just a section if you like, such as YouTube Shorts on its own.</p>
           </div>
           <div class="tile">
-            <div class="tile__switchrow"><button class="switch" type="button" id="tile-switch" aria-pressed="true" aria-label="Pause blocking"><span class="switch__knob"></span></button><span class="tile__durations" id="tile-durations"><button type="button" data-minutes="30">30m</button><button type="button" data-minutes="60">1h</button><button type="button" data-minutes="120">2h</button><button type="button" data-minutes="360">6h</button><button type="button" data-minutes="720">12h</button><button type="button" class="tile__infinite" data-minutes="infinite" aria-label="Pause until you turn it back on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.096 0-7.646-8-12.906-8-4.789 0-4.789 8 0 8 5.26 0 7.81-8 12.906-8z"/></svg></button></span><span class="tile__pauselabel hidden" id="tile-pause-label"></span></div>
+            <div class="tile__card">
+              <!-- A zoomed-in crop of the dashboard's Blocklist pane, the same
+                   one "Built around your day" shows whole: the profile tabs
+                   and the + ring trailing off to the left, and the pill and
+                   pause bubble in focus. Only the bubble is
+                   live: it toggles the pill between running and "Blocking
+                   paused", with no durations. -->
+              <div class="tile__stage tile__stage--zoom">
+                <div class="zoom">
+                  <div class="zoom__row">
+                    <span class="zoom__dim zoom__tab" aria-hidden="true">Deep Work</span>
+                    <span class="zoom__dim zoom__tab" aria-hidden="true">Evening Unwind</span>
+                    <span class="zoom__dim zoom__add" aria-hidden="true"><svg viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="16.5" stroke="currentColor" stroke-width="1" stroke-dasharray="3.75 2.73"/></svg><svg class="zoom__plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>
+                    <span class="zoom__status">
+                      <span class="mode-pill mode-pill--friction" id="tile-mode">Friction Mode active</span>
+                      <button class="pause-bubble" type="button" id="tile-pause" aria-pressed="false" aria-label="Pause blocking">
+                      <span class="pause-icon" aria-hidden="true">
+                        <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
+                        <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                      </span>
+                  </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <h3>Pause when you need to</h3>
             <p>Take a break from blocking for half an hour, a few hours, or until you turn it back on. One switch in your dashboard.</p>
           </div>
           <div class="tile">
-            <div class="tile__week" aria-hidden="true"><i class="f"></i><i></i><i class="f"></i><i class="s"></i><i class="f"></i><i></i><i class="s"></i></div>
+            <div class="tile__card">
+              <div class="tile__stage" aria-hidden="true"><div class="tile__week"><span class="tile__day"><b>Mon</b><i class="f"></i></span><span class="tile__day"><b>Tue</b><i></i></span><span class="tile__day"><b>Wed</b><i class="f"></i></span><span class="tile__day"><b>Thu</b><i class="s"></i></span><span class="tile__day"><b>Fri</b><i class="f"></i></span><span class="tile__day"><b>Sat</b><i></i></span><span class="tile__day"><b>Sun</b><i class="s"></i></span></div></div>
+            </div>
             <h3>Scheduled blocking</h3>
             <p>Paint your week: which profile, which mode, which hours. It switches on its own, so you do not have to remember.</p>
           </div>
           <div class="tile">
-            <!-- The lock and the label are one link together, so the icon is
-                 part of the target rather than decoration beside it. -->
+            <div class="tile__card">
+              <!-- The hand-drawn lock with the policy link beside it: the one card
+                   whose contents are a real link. -->
+              <div class="tile__stage tile__stage--privacy"><span class="tile__lock" aria-hidden="true"><svg viewBox="0 0 232 229"><path d="M166.5 88.86C170.95 90.62 177.62 89.58 182.44 90.14C190.42 91.06 198.01 94.83 203.74 100.42C215.43 111.83 215.62 127.43 215.71 142.83C215.85 166.02 218.11 189.3 195.48 202.67C183.54 209.73 166.18 207.75 152.83 207.75C130.28 207.75 107.72 207.75 85.17 207.75C72.74 207.75 58.49 209.21 46.42 205.79C16.62 197.35 18.08 168.09 18.29 142.83C18.41 128.43 18.36 113.84 28.3 102.48C34.18 95.76 42.69 91.16 51.56 90.14C56.4 89.58 63.01 90.6 67.5 88.87C68.88 84.9 67.76 78.73 67.76 74.5C67.76 60.49 65.4 44.13 72.2 31.36C81.77 13.36 98 10.25 116.83 10.25C136.76 10.25 153.7 13.51 162.79 33.38C168.48 45.8 166.25 61.49 166.25 74.83C166.25 78.98 165.17 84.96 166.5 88.86ZM146.35 89.17C147.67 84.9 146.67 78.99 146.67 74.5C146.67 63.05 149.51 44.92 141.05 36.12C134.99 29.81 127.01 30.03 118.83 30.03C108.17 30.03 96.65 29.14 90.29 39.45C85.42 47.35 87.34 59.26 87.34 68.17C87.34 74.02 86.03 83.82 87.65 89.17C107.22 89.17 126.78 89.17 146.35 89.17ZM60.21 109.15C56.52 109.32 52.1 109.62 48.73 111.21C34.12 118.14 38 140.39 38.05 153.5C38.08 162.04 36.76 173.35 42.34 180.49C49.79 190.02 64.42 187.87 75.17 187.96C103.83 188.2 132.5 187.98 161.17 187.95C172.67 187.93 187.77 189.46 193.74 177.23C197.25 170.04 195.93 159.59 195.95 151.83C195.99 141.47 198.19 123.48 190.78 115.39C182.43 106.27 165.98 109 154.83 109C123.39 109 91.62 107.7 60.21 109.15ZM100.88 138.8C107.91 137.96 115.42 138.67 122.5 138.67C126.47 138.67 131.24 137.97 135.08 139.12C140.6 140.78 142.79 147.39 140.88 152.41C139.96 154.8 137.43 157.05 135.02 157.84C129.71 159.56 113.27 158.25 106.83 158.25C102.76 158.25 98.69 158.63 95.47 155.7C89.41 150.19 92.89 139.74 100.88 138.8Z" fill="currentColor" fill-rule="evenodd"/></svg></span><a href="privacy.html" class="textlink">Read the privacy policy</a></div>
+            </div>
             <h3>Private by design</h3>
             <p>Your browsing never leaves your device. We only ever know the sites you chose to block, and we never sell or share anything.</p>
-            <a href="privacy.html" class="tile__lockrow">
-              <span class="tile__lock" aria-hidden="true"><svg viewBox="0 0 232 229"><path d="M166.5 88.86C170.95 90.62 177.62 89.58 182.44 90.14C190.42 91.06 198.01 94.83 203.74 100.42C215.43 111.83 215.62 127.43 215.71 142.83C215.85 166.02 218.11 189.3 195.48 202.67C183.54 209.73 166.18 207.75 152.83 207.75C130.28 207.75 107.72 207.75 85.17 207.75C72.74 207.75 58.49 209.21 46.42 205.79C16.62 197.35 18.08 168.09 18.29 142.83C18.41 128.43 18.36 113.84 28.3 102.48C34.18 95.76 42.69 91.16 51.56 90.14C56.4 89.58 63.01 90.6 67.5 88.87C68.88 84.9 67.76 78.73 67.76 74.5C67.76 60.49 65.4 44.13 72.2 31.36C81.77 13.36 98 10.25 116.83 10.25C136.76 10.25 153.7 13.51 162.79 33.38C168.48 45.8 166.25 61.49 166.25 74.83C166.25 78.98 165.17 84.96 166.5 88.86ZM146.35 89.17C147.67 84.9 146.67 78.99 146.67 74.5C146.67 63.05 149.51 44.92 141.05 36.12C134.99 29.81 127.01 30.03 118.83 30.03C108.17 30.03 96.65 29.14 90.29 39.45C85.42 47.35 87.34 59.26 87.34 68.17C87.34 74.02 86.03 83.82 87.65 89.17C107.22 89.17 126.78 89.17 146.35 89.17ZM60.21 109.15C56.52 109.32 52.1 109.62 48.73 111.21C34.12 118.14 38 140.39 38.05 153.5C38.08 162.04 36.76 173.35 42.34 180.49C49.79 190.02 64.42 187.87 75.17 187.96C103.83 188.2 132.5 187.98 161.17 187.95C172.67 187.93 187.77 189.46 193.74 177.23C197.25 170.04 195.93 159.59 195.95 151.83C195.99 141.47 198.19 123.48 190.78 115.39C182.43 106.27 165.98 109 154.83 109C123.39 109 91.62 107.7 60.21 109.15ZM100.88 138.8C107.91 137.96 115.42 138.67 122.5 138.67C126.47 138.67 131.24 137.97 135.08 139.12C140.6 140.78 142.79 147.39 140.88 152.41C139.96 154.8 137.43 157.05 135.02 157.84C129.71 159.56 113.27 158.25 106.83 158.25C102.76 158.25 98.69 158.63 95.47 155.7C89.41 150.19 92.89 139.74 100.88 138.8Z" fill="currentColor" fill-rule="evenodd"/></svg></span>
-              <span class="textlink">Read the privacy policy</span>
-            </a>
           </div>
         </div>
       </div>
@@ -263,8 +313,6 @@
   <script type="module">
     // ─── Hero demo ──────────────────────────────────────────────────────
     // Plays the real Friction flow on a loop: count down, complete, reset.
-    // Runs at roughly 3x so a visitor sees the whole mechanic without
-    // waiting the real 30 seconds; every number is still shown in order.
     // Idle whenever it is off screen or the tab is hidden, and it does not
     // run at all for someone who asked for reduced motion.
     ;(() => {
@@ -274,7 +322,9 @@
       if (!page || !arc || !count) return
 
       // Real time, no speed-up: the point of the mechanic is that 30s is 30s.
-      const START = 30, TICK = 1000, HOLD = 3200, REST = 1000
+      // REST is how long a fresh 30 sits on screen before the first tick,
+      // counted from the moment the completion screen starts to leave.
+      const START = 30, TICK = 1000, HOLD = 3200, REST = 1800
       const CIRC = 2 * Math.PI * 100          // r=100, matching the viewBox
       const still = window.matchMedia('(prefers-reduced-motion: reduce)')
       let n = START, timer = null, phase = 'count', visible = false, mode = 'friction'
@@ -293,10 +343,12 @@
           n -= 1; paint()
           if (n <= 0) { phase = 'done'; page.classList.add('is-done'); timer = setTimeout(step, HOLD); return }
           timer = setTimeout(step, TICK)
-        } else if (phase === 'done') {
-          phase = 'reset'; page.classList.remove('is-done'); timer = setTimeout(step, REST)
         } else {
-          phase = 'count'; n = START; paint(true); timer = setTimeout(step, TICK)
+          // Refill while the countdown is still faded out, so it fades back
+          // in already reading 30 on a full ring. Resetting after it had
+          // reappeared showed a 0 and an empty ring that then snapped to 30.
+          n = START; paint(true)
+          phase = 'count'; page.classList.remove('is-done'); timer = setTimeout(step, REST)
         }
       }
 
@@ -394,7 +446,8 @@
       'Weekend':        [],
     }
     let activeProfile = 'Deep Work'
-    const pills = document.querySelectorAll('.preview button.pill[data-profile]')
+    const GLOBE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.6"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/></svg>'
+    const pills = document.querySelectorAll('.preview__tab[data-profile]')
     const list  = document.getElementById('preview-list')
     const chips = document.querySelectorAll('#preview-chips .preview__chip')
 
@@ -402,17 +455,24 @@
       activeProfile = name
       pills.forEach((p) => {
         const on = p.dataset.profile === name
-        p.classList.toggle('pill--on', on)
+        p.classList.toggle('is-on', on)
         p.setAttribute('aria-pressed', String(on))
       })
 
       const sites   = PREVIEW_PROFILES[name]
       const entries = sites.map(parseBlocklistEntry)
-      // Same favicon service and row shape as the dashboard's blocklist.
+      // Same favicon service, globe fallback and row shape as the
+      // dashboard's renderUrlList().
       const X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
       list.innerHTML = sites.length
-        ? sites.map((site) => `<div class="preview__site"><span class="preview__site-left"><img class="preview__favicon" src="https://icons.duckduckgo.com/ip3/${site.split('/')[0]}.ico" alt="" onerror="this.style.visibility='hidden'"><span>${site}</span></span><button class="preview__site-x" type="button" data-url="${site}" aria-label="Remove ${site}">${X}</button></div>`).join('')
+        ? sites.map((site) => `<div class="preview__site"><span class="preview__site-left"><img class="preview__favicon" src="https://icons.duckduckgo.com/ip3/${site.split('/')[0]}.ico" alt=""><span class="preview__site-name">${site}</span></span><button class="preview__site-x" type="button" data-url="${site}" aria-label="Remove ${site}">${X}</button></div>`).join('')
         : '<div class="preview__empty">No sites blocked in this profile yet.</div>'
+      list.querySelectorAll('.preview__favicon').forEach((img) => img.addEventListener('error', () => {
+        const globe = document.createElement('span')
+        globe.className = 'preview__favicon-fallback'
+        globe.innerHTML = GLOBE
+        img.replaceWith(globe)
+      }, { once: true }))
 
       // Chip state is derived from the list on every render, never tracked
       // alongside it, so a chip can never disagree with what is blocked.
@@ -515,46 +575,25 @@
     renderPreview('Deep Work')
 
     // ─── Feature tile: pause ────────────────────────────────────────────
-    // Mirrors the dashboard's refreshPauseUI(): pick a duration and the
-    // switch flips, with the real "Paused until 3:45 PM" wording. As there,
-    // no class is the default and means blocking is on; .paused is the
-    // exception state.
+    // A toy, not the dashboard's pause: the bubble flips the pill between
+    // the running mode and "Blocking paused", with no durations. Same
+    // .paused convention as the dashboard's .pause-bubble: no class means
+    // blocking is on.
     ;(() => {
-      const sw    = document.getElementById('tile-switch')
-      const durs  = document.getElementById('tile-durations')
-      const label = document.getElementById('tile-pause-label')
-      if (!sw || !durs || !label) return
-
-      function setPaused(text) {
-        sw.classList.add('paused')
-        sw.setAttribute('aria-pressed', 'false')
-        label.textContent = text
-        label.classList.remove('hidden')
-        durs.classList.add('hidden')
-      }
-      function resume() {
-        sw.classList.remove('paused')
-        sw.setAttribute('aria-pressed', 'true')
-        label.classList.add('hidden')
-        durs.classList.remove('hidden')
-      }
-
-      durs.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-        const m = b.dataset.minutes
-        if (m === 'infinite') { setPaused('Paused indefinitely'); return }
-        const until = new Date(Date.now() + Number(m) * 60000)
-        setPaused(`Paused until ${until.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)
-      }))
-
-      sw.addEventListener('click', () => {
-        if (sw.classList.contains('paused')) { resume(); return }
-        // Blocking is already on, so the durations are the real control.
-        // Point at them rather than leaving the click unanswered.
-        durs.classList.remove('nudge')
-        void durs.offsetWidth
-        durs.classList.add('nudge')
+      const bubble = document.getElementById('tile-pause')
+      const pill   = document.getElementById('tile-mode')
+      if (!bubble || !pill) return
+      const RUNNING = pill.textContent
+      const runningClass = [...pill.classList].find((c) => c.startsWith('mode-pill--'))
+      bubble.addEventListener('click', () => {
+        const paused = !bubble.classList.contains('paused')
+        bubble.classList.toggle('paused', paused)
+        bubble.setAttribute('aria-pressed', String(paused))
+        bubble.setAttribute('aria-label', paused ? 'Resume blocking' : 'Pause blocking')
+        pill.textContent = paused ? 'Blocking paused' : RUNNING
+        pill.classList.toggle(runningClass, !paused)
+        pill.classList.toggle('mode-pill--paused', paused)
       })
-      durs.addEventListener('animationend', () => durs.classList.remove('nudge'))
     })()
   </script>
 </body>

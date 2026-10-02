@@ -38,6 +38,11 @@
   --radius-nested:  12px;
   --radius-pill:    999px;
   --shadow-float:   0 12px 40px rgba(0, 0, 0, 0.12);
+  /* The one resting shadow, on every gray card that frames white content
+     (the hero's browser, the preview, the feature tiles, the plans) and
+     the dashboard's .app-card. A tight contact shadow plus a wide ambient
+     one, so it reads as depth rather than as a floating menu. */
+  --shadow-card:    0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.07);
   /* Frosted pills. Two independent sets, so the footer and the hero eyebrow
      can be tuned separately: the footer sits on grass, where a faint white
      shows fine; the eyebrow sits on sky and cloud, where it needs more. */
@@ -310,6 +315,7 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   aspect-ratio: 4 / 3;
   grid-template-rows: auto 1fr;
   gap: clamp(8px, 1vw, 11px);
+  box-shadow: var(--shadow-card);
 }
 .browser__bar { display: flex; align-items: center; gap: 12px; padding: 2px 2px 0; }
 .browser__dots { display: flex; gap: 6px; flex-shrink: 0; padding-left: 4px; }
@@ -439,9 +445,9 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
 .tag--pro-solid { background: var(--paper); color: var(--ink); }
 
 /* ─── Product preview (a real mini-version of the dashboard's controls) ── */
-/* Laid out exactly like the dashboard's Blocklist section: gray pills on
-   the white page, the input row, then the gray blocklist surface with the
-   quick-add glyphs and the rows sitting directly on it (no per-site card). */
+/* Laid out exactly like the dashboard's Blocklist pane inside its card:
+   profile tabs with the mode pill and pause bubble, the input with the
+   quick-add glyphs inside it, then the white list surface. */
 /* Copy left, the live preview right. The preview used to sit under the copy
    capped at 760px inside a 1120px container, which left ~280px of the row
    permanently empty at every desktop width. */
@@ -452,83 +458,134 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   align-items: center;
 }
 .profiles__copy { display: grid; gap: 18px; align-content: center; }
+/* The dashboard's own card: gray ground, soft two-layer shadow, every
+   surface inside it white. Sizes are copied from dashboard.html (34px tabs
+   and bubbles, a 44px input and Add button, 15px rows), so change them there
+   first and here second. */
 .preview {
-  display: grid;
-  gap: 16px;
-}
-.preview__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pill {
-  display: inline-flex; align-items: center;
-  height: 34px; padding: 0 16px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 14px;
-  white-space: nowrap;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-button.pill:not(.pill--on):hover { color: var(--ink); }
-.pill--on { background: var(--ink); color: var(--paper); font-weight: 500; }
-.pill--add { background: none; color: var(--muted); }
-.preview__input { display: flex; gap: 8px; }
-.preview__field { flex: 1; display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 15px; }
-.preview__btn { display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; white-space: nowrap; }
-/* Quick add sits above the list surface, never inside it, and its chips
-   take the same gray circle the dashboard gives them. */
-.preview__quick { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
-.preview__quick-label { font-size: 0.72rem; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
-.preview__icons { display: flex; flex-wrap: wrap; gap: 8px; }
-.preview__chip {
-  display: grid; place-items: center; width: 36px; height: 36px;
-  border-radius: 50%; background: var(--surface);
-  border: 0; padding: 0; cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease;
-}
-.preview__chip svg { width: 18px; height: 18px; color: var(--muted); display: block; transition: color 0.15s ease; }
-.preview__chip:hover, .preview__chip:focus-visible,
-.preview__chip.menu-open { background: var(--surface-deep); }
-.preview__chip:hover svg, .preview__chip:focus-visible svg,
-.preview__chip.menu-open svg { color: var(--ink); }
-/* The trigger keeps its hover look while its own menu is open, instead of
-   letting go the moment the cursor moves down into the menu. */
-.preview__quickitem { position: relative; display: flex; }
-.preview__chip-arrow {
-  position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
-  display: flex; color: var(--ink); opacity: 0; pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-.preview__chip:not(.added):hover ~ .preview__chip-arrow,
-.preview__chip.menu-open ~ .preview__chip-arrow { opacity: 1; }
-/* Already on this profile's list: reads as done and stops responding. */
-.preview__chip.added { opacity: 0.4; cursor: default; }
-.preview__chip.added:hover { background: var(--surface); }
-.preview__chip.added:hover svg { color: var(--muted); }
-/* A fixed height, not a minimum: the quick-add chips can push this past seven
-   rows, and min-height let that stretch the whole #profiles grid. Overflow
-   scrolls inside the gray surface instead, so the section never moves. */
-.preview__sites {
+  display: grid; gap: 12px; min-width: 0;
   background: var(--surface);
   border-radius: var(--radius-surface);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+.preview__row { display: flex; align-items: flex-start; gap: 12px; }
+.preview__tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+/* Active is white with ink text; the rest are the same white at 0.6, the
+   dashboard's "locked look", which lifts on hover. */
+.preview__tab {
+  display: inline-flex; align-items: center; flex-shrink: 0; max-width: 180px;
+  height: 34px; padding: 0 16px; border-radius: var(--radius-pill);
+  background: var(--paper); color: var(--muted); font-size: 14px; white-space: nowrap;
+  opacity: 0.6; transition: opacity 0.18s ease, color 0.18s ease;
+}
+.preview__tab > span { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.preview__tab:hover { opacity: 0.85; color: var(--ink); }
+.preview__tab.is-on { opacity: 1; color: var(--ink); font-weight: 500; }
+.preview__addprofile {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; color: var(--faint);
+}
+.preview__addprofile-ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+.preview__status { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* The mode pill and pause bubble, shared by the preview and the pause tile.
+   Copied from the dashboard's .mode-status / .pause-bubble / .pause-icon. */
+.mode-pill {
+  display: inline-flex; align-items: center; flex-shrink: 0; height: 34px; padding: 0 16px;
+  border-radius: var(--radius-pill); font-size: 14px; font-weight: 500;
+  color: var(--paper); white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.mode-pill--friction { background: var(--friction); }
+.mode-pill--strict   { background: var(--strict); }
+.mode-pill--paused   { background: var(--paper); color: var(--ink); }
+.pause-bubble {
+  display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px;
+  border-radius: 50%; background: var(--paper); color: var(--ink);
+  border: 0; padding: 0; transition: background 0.18s ease;
+}
+button.pause-bubble { cursor: pointer; }
+@media (hover: hover) { button.pause-bubble:hover { background: var(--surface-deep); } }
+.pause-icon { position: relative; top: -1px; display: grid; place-items: center; width: 20px; height: 20px; }
+.pause-icon svg { grid-area: 1 / 1; width: 20px; height: 20px; fill: currentColor;
+  transition: opacity 0.22s ease, transform 0.28s var(--ease-out); }
+.pause-icon__pause { opacity: 1; transform: none; }
+.pause-icon__play  { opacity: 0; transform: scale(0.5) rotate(-30deg); }
+.pause-bubble.paused .pause-icon__pause { opacity: 0; transform: scale(0.5) rotate(30deg); }
+.pause-bubble.paused .pause-icon__play  { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .pause-icon svg { transition: opacity 0.01s; } }
+
+/* The input box with the quick-add glyphs inside it, right-aligned, as in
+   the dashboard's .url-input-wrap. */
+.preview__input { display: flex; gap: 8px; }
+.preview__field {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 6px 0 16px; border-radius: var(--radius-nested);
+  background: var(--paper);
+}
+.preview__placeholder { flex: 1; min-width: 0; color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview__btn { display: inline-flex; align-items: center; flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.preview__icons { display: flex; align-items: center; flex-shrink: 0; }
+.preview__quickitem { position: relative; display: flex; }
+/* Bare glyph in a 32px target: muted at rest, ink on hover or while its
+   menu is open, faint once the whole site is blocked. */
+.preview__chip {
+  display: grid; place-items: center; width: 32px; height: 32px;
+  border-radius: 50%; background: none; border: 0; padding: 0; cursor: pointer;
+}
+.preview__chip svg { width: 18px; height: 18px; color: var(--muted); display: block; transition: color 0.18s ease; }
+.preview__chip:not(.added):hover svg, .preview__chip:focus-visible svg,
+.preview__chip.menu-open svg { color: var(--ink); }
+.preview__chip.added { cursor: default; }
+.preview__chip.added svg { color: var(--faint); }
+.preview .site-options-menu { top: calc(100% + 4px); }
+.preview .site-options-menu-item:hover { background: var(--surface-deep); }
+.preview .site-options-menu-item.added:hover { background: none; }
+/* A fixed height, not a minimum: quick adds can push this past seven rows,
+   and a minimum let that stretch the whole #profiles grid. Overflow scrolls
+   inside the white surface instead, so the section never moves. */
+.preview__sites {
+  background: var(--paper);
+  border-radius: var(--radius-surface);
   padding: 12px;
-  height: 190px;
+  height: 214px;
   overflow-y: auto;
 }
 .preview__site {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 9px 10px 9px 14px;
-  font-size: 15px;
+  padding: 9px 10px 9px 14px; border-radius: var(--radius-nested);
+  font-size: 15px; transition: background 0.15s ease;
 }
 .preview__site-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.preview__favicon { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+.preview__site-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preview__favicon, .preview__favicon-fallback { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+.preview__favicon { opacity: 0.9; transition: opacity 0.15s ease; }
+.preview__favicon-fallback { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); }
 .preview__site-x {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; border-radius: 50%; color: var(--muted);
   background: none; border: 0; padding: 0; cursor: pointer; flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
-.preview__site-x:hover { background: var(--surface-deep); color: var(--ink); }
+.preview__site-x:hover { color: var(--ink); }
 .preview__site-x svg { width: 12px; height: 12px; }
+/* Row fill and the remove button on hover only, gated on a real pointer
+   so a tap never leaves a row stuck filled and touch always shows the x. */
+@media (hover: hover) {
+  .preview__site:hover { background: var(--surface); }
+  .preview__site:hover .preview__favicon { opacity: 1; }
+  .preview__site .preview__site-x { opacity: 0; }
+  .preview__site:hover .preview__site-x, .preview__site-x:focus-visible { opacity: 1; }
+}
 .preview__empty { padding: 18px 0; text-align: center; color: var(--muted); font-size: 14px; }
+/* Under ~560px the status pair cannot share a line with three tabs, so it
+   moves above them, right-aligned, where the dashboard's mobile layout has
+   its own status. */
+@media (max-width: 560px) {
+  .preview__row { flex-direction: column-reverse; align-items: stretch; }
+  .preview__status { align-self: flex-end; }
+}
 
 /* ─── Plans ─────────────────────────────────────────────────────────────── */
 .plans {
@@ -543,6 +600,7 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   display: flex;
   flex-direction: column;
   gap: 22px;
+  box-shadow: var(--shadow-card);
 }
 .plan--pro { background: var(--ink); color: var(--paper); }
 .plan__head { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -587,109 +645,102 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
 .site-options-menu-item:hover { background: var(--surface); }
 .site-options-menu-item.added { color: var(--muted); font-weight: 400; cursor: default; }
 .site-options-menu-item.added:hover { background: none; }
-/* In the feature tile the menu is a picture of the real one, never a control. */
-.tile .site-options-menu { pointer-events: none; }
-.tile__quickitem:hover .site-options-menu { grid-template-rows: 1fr; opacity: 1; }
 
 /* ─── Feature tiles (2 x 2) ─────────────────────────────────────────────── */
-/* grid-auto-rows: 1fr so every tile matches the tallest, not just the two
-   sharing its row. Without it the second row ran taller than the first. */
-.tiles { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 20px; }
-.tile {
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 5vw, 56px) clamp(24px, 4vw, 56px); }
+/* Each feature is a small card holding only its picture, with the heading
+   and copy on the page below it. The card is the same thin gray frame
+   around a white body as the hero's browser and the preview, spanning its
+   column at one fixed height, so all four cards match and the headings
+   line up across each row. */
+.tile { display: flex; flex-direction: column; gap: 12px; }
+.tile__card {
+  width: 100%;
   background: var(--surface);
   border-radius: var(--radius-surface);
-  padding: clamp(24px, 3.5vw, 36px);
-  display: flex; flex-direction: column; gap: 14px; align-items: flex-start;
+  padding: 8px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 8px;
 }
 .tile h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.02em; font-size: 1.25rem; }
 .tile p { color: var(--muted); font-size: 1rem; max-width: 34em; }
-.tile__icons { display: flex; gap: 18px; color: var(--muted); padding: 4px 0 2px; }
-.tile__chip svg { width: 22px; height: 22px; display: block; }
-/* The same glyph treatment .quick-add-chip has in the dashboard: no container,
-   just the glyph, darkening and growing slightly on hover. */
-.tile__chip {
-  display: grid; place-items: center; color: var(--muted);
-  transition: color 0.15s ease, transform 0.15s ease;
+/* The white body, its picture centred. The controls that sit white on gray
+   elsewhere (the pause bubble, the paused pill, the week's day cells, the
+   zoomed tab and field) take the --surface gray in here instead, or they
+   would vanish. */
+.tile__stage {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  height: 124px; padding: 0 28px;
+  background: var(--paper);
+  border-radius: calc(var(--radius-surface) - 6px);
 }
-.tile__quickitem:hover .tile__chip { color: var(--ink); }
-/* Sectioned sites show the real options menu on hover, so a visitor learns a
-   section can be blocked on its own without opening the app. Illustration
-   only: pointer-events stays off the whole thing, and the interactive version
-   lives in the "Built around your day" preview. */
-.tile__quickitem { position: relative; display: grid; place-items: center; }
-.tile__chip-arrow {
-  position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
-  display: flex; color: var(--ink); opacity: 0; pointer-events: none;
-  transition: opacity 0.15s ease;
+/* Block any site: the brands as app icons in their own colours. Brand
+   colour is allowed here for the same reason the favicons and the hero's
+   traffic lights are: it depicts something real, the brand isn't speaking. */
+/* Sized off the viewport below ~430px so all seven hold one line inside
+   the tile on a 360px phone. */
+.tile__apps { display: flex; gap: clamp(5px, 1.5vw, 10px); }
+.app-icon {
+  display: grid; place-items: center; width: clamp(26px, 7.4vw, 40px); aspect-ratio: 1;
+  border-radius: 28%; color: #ffffff;
 }
-.tile__quickitem:hover .tile__chip-arrow { opacity: 1; }
-.tile__chip-arrow svg { width: 8px; height: 5px; display: block; }
-/* The dashboard's pause switch, drawn at its real size and wired to match.
-   Same convention as .pause-toggle there: NO class is the default and means
-   blocking is on (ink track, knob right); .paused is the exception state. Do
-   not rename it to .active, which would invert how it reads. */
-.switch {
-  width: 42px; height: 24px; border-radius: 12px; background: var(--ink);
-  position: relative; flex-shrink: 0; border: 0; padding: 0; cursor: pointer;
-  transition: background 0.25s ease;
+.app-icon svg { width: 55%; height: 55%; display: block; }
+.app-icon--instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.app-icon--tiktok    { background: #000000; }
+.app-icon--youtube   { background: #ff0000; }
+.app-icon--x         { background: #000000; }
+.app-icon--facebook  { background: #1877f2; }
+.app-icon--reddit    { background: #ff4500; }
+.app-icon--twitch    { background: #9146ff; }
+/* Pause when you need to: a zoomed-in crop of the dashboard's tabs row,
+   laid out at the dashboard's real sizes and scaled up from its right
+   end, so the bubble lands right of centre with the pill beside it. The
+   tabs and the + ring are dimmed and fade out to the left, which leaves
+   the bubble as what the eye lands on. */
+.tile__stage--zoom { position: relative; overflow: hidden; }
+.zoom {
+  position: absolute; top: calc(50% - 20px); right: 18%;
+  transform: scale(1.18); transform-origin: top right;
 }
-.switch.paused { background: var(--surface-deep); }
-/* 2px inset on a 24px track leaves a 20px knob and 42 - 2*2 - 20 = 18px of
-   travel, exactly as .pause-toggle-knob is built. A real element rather than
-   ::after, so the knob transitions on its own. */
-.switch__knob {
-  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
-  border-radius: 50%; background: var(--paper);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-  transform: translateX(18px); transition: transform 0.25s ease;
+.zoom__row { display: flex; align-items: center; gap: 8px; }
+/* White fading to clear over the card's left fifth: the white body is
+   already white, so it stays whole while the row fades out under it. */
+.tile__stage--zoom::after {
+  content: ''; position: absolute; inset: 0 auto 0 0; width: 22%;
+  background: linear-gradient(to right, var(--paper) 15%, rgba(255, 255, 255, 0));
+  pointer-events: none;
 }
-.switch.paused .switch__knob { transform: translateX(0); }
-.tile__switchrow { display: flex; align-items: center; gap: 12px; min-height: 30px; }
-.tile__durations { display: flex; gap: 6px; flex-wrap: wrap; }
-.tile__durations.hidden { display: none; }
-.tile__durations button {
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--paper); border: 0; border-radius: 999px;
-  padding: 5px 10px; font: inherit; font-size: 12.5px; color: var(--muted);
-  cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+.zoom__status { display: flex; align-items: center; gap: 6px; margin-left: 4px; }
+.zoom__dim { opacity: 0.5; }
+.zoom__tab {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 16px;
+  border-radius: var(--radius-pill); background: var(--surface);
+  color: var(--muted); font-size: 14px; white-space: nowrap; flex-shrink: 0;
 }
-.tile__durations button:hover { color: var(--ink); background: var(--surface-deep); }
-.tile__durations .tile__infinite { padding: 5px 9px; }
-.tile__durations .tile__infinite svg { width: 16px; height: 16px; display: block; }
-/* Occupies the row the durations vacate, so the tile's height never moves. */
-.tile__pauselabel { font-size: 13px; color: var(--muted); white-space: nowrap; }
-.tile__pauselabel.hidden { display: none; }
-/* Clicking the switch while blocking is on points at the real control rather
-   than leaving a dead button. Motion-gated, so it is the only cue for someone
-   who has asked for less movement, hence no other feedback depends on it. */
-@media (prefers-reduced-motion: no-preference) {
-  .tile__durations.nudge { animation: tile-nudge 0.4s ease; }
+.zoom__add { position: relative; display: grid; place-items: center; width: 34px; height: 34px; color: var(--faint); flex-shrink: 0; }
+.zoom__add svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.zoom__add .zoom__plus { position: static; width: 14px; height: 14px; }
+@media (max-width: 560px) {
+  .zoom { right: 8%; transform: none; top: calc(50% - 17px); }
 }
-@keyframes tile-nudge {
-  0%, 100% { transform: translateX(0); }
-  30% { transform: translateX(3px); }
-  60% { transform: translateX(-2px); }
+.tile__stage .pause-bubble,
+.tile__stage .mode-pill--paused { background: var(--surface); }
+@media (hover: hover) {
+  .tile__stage button.pause-bubble:hover { background: var(--surface-deep); }
 }
+/* Private by design: the hand-drawn lock and the policy link share the
+   card, the one card whose contents are a real link. */
 .tile__lock { color: var(--ink); display: inline-flex; }
-/* Lock and label are one link, sized to its contents so only that pair is
-   the target and not the full width of the tile. Sits in the top row, where
-   the other tiles put their graphic. */
-.tile__lockrow {
-  display: inline-flex; align-items: center; gap: 9px;
-  width: fit-content;
-  margin-top: auto;
-  padding: 6px 0 0;
-  transition: opacity 0.18s ease;
-}
-.tile__lockrow:hover { opacity: 0.6; }
-/* The label already dims with the row above, so it must not dim twice. */
-.tile__lockrow:hover .textlink { opacity: 1; }
-.tile__lock svg { width: 20px; height: 20px; }
-.tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; max-width: 300px; }
-.tile__week i { display: block; height: 56px; border-radius: 8px; background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: relative; }
-.tile__week i.f::after, .tile__week i.s::after { content: ''; position: absolute; left: 4px; right: 4px; border-radius: 5px; }
-.tile__week i.f::after { top: 8px; height: 20px; background: var(--friction); }
-.tile__week i.s::after { top: 28px; height: 20px; background: var(--strict); }
+.tile__lock svg { width: 38px; height: 38px; }
+.tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; width: 100%; }
+/* Monday first, the same as the dashboard's grid, with its 3-letter
+   uppercase day headings. */
+.tile__day { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tile__day b { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); text-align: center; line-height: 1; }
+.tile__week i { display: block; height: 76px; border-radius: 8px; background: var(--surface); position: relative; }
+.tile__week i.f::after, .tile__week i.s::after { content: ''; position: absolute; left: 5px; right: 5px; border-radius: 7px; }
+.tile__week i.f::after { top: 8px; height: 28px; background: var(--friction); }
+.tile__week i.s::after { top: 40px; height: 28px; background: var(--strict); }
 
 /* ─── Quote ─────────────────────────────────────────────────────────────── */
 .quote {
@@ -815,7 +866,6 @@ button.pill:not(.pill--on):hover { color: var(--ink); }
   .hero__actions { flex-direction: column; align-items: stretch; gap: 6px; }
   .hero__actions .btn { width: 100%; }
   .hero__actions .textlink { justify-content: center; padding: 12px; }
-  .preview__icons { gap: 8px; }
 }
 
 .nowrap { white-space: nowrap; }

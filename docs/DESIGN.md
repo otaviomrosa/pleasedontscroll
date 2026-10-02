@@ -47,11 +47,31 @@ over the old pages, so nothing in the repo carries the old look any more.
   longer describes what the colors do. Second, both clear 4.5:1 against
   white text (Friction 4.7:1, Strict 7.1:1), which matters because the
   12-13px mode labels sit on solid fills of each.
+  **Known drift, unreconciled:** `dashboard.html`'s `:root` currently has
+  `--friction: #388ce0` (a lighter blue, about 3.5:1 against white text,
+  below the 4.5:1 above) and `--paper: #fefeff`, while `site.css`,
+  `popup.css` and `blocked.css` all still say `#0071e3` / `#ffffff`, and
+  `site.css`'s `--surface` is `#f5f5f9` against `#f5f5f7` elsewhere. So
+  the landing page's preview and the dashboard it depicts show two
+  different Friction blues. Pick one and copy it to all four files.
 - **Shapes.** Surfaces are 24px radius (`--radius-surface`), inner
   items 14–16px (`--radius-inner`), fields 12px, and every button, tab,
   chip and toggle is a full pill (`--radius-pill: 999px`). Active state
-  everywhere is "solid ink, white text" (sidebar item, profile tab,
-  the Blocklist → link) — not an outline, not a color.
+  is "solid ink, white text" in the popup (the Blocklist → link) and on
+  the marketing pages, not an outline, not a color. The dashboard has two
+  deliberate exceptions, both by the founder's call: the active sidebar
+  item is ink text with a 3px ink bar at its left edge, and the active
+  profile tab is a white pill with ink text at weight 500, while every
+  inactive tab is the same white pill at `opacity: 0.6` (0.85 on hover),
+  the look a locked tab used to have on its own. A locked tab still adds
+  its lock icon. The extension popup's profile pills follow the same
+  rule (active ink at 500, the rest at 0.6), but keep the gray
+  `--surface` ground, since the popup sits on white rather than on a gray
+  card. The "+ profile" button is a 34px circle drawn with a
+  dashed SVG ring (16 dashes, `stroke-dasharray: 3.75 2.73`, `--faint`),
+  the one outlined control in the system: a dashed edge is the usual
+  "this makes a new thing" cue. An SVG, because a CSS dashed border at
+  1px renders ~50 specks on a 34px circle.
 - **Type.** `DM Sans` (400/500/600) for all UI at 14–15px, and
   `Plus Jakarta Sans` **700** with `letter-spacing: -0.03em` for display
   moments only: page/section headlines, the sign-in title, the blocked
@@ -66,10 +86,16 @@ over the old pages, so nothing in the repo carries the old look any more.
 - **Sizing.** 44–48px primary buttons and fields, 34px tabs/pills
   (30px in the 300px-wide popup), 16px side gutters at phone width.
 - **The signed-in dashboard is one gray card holding white surfaces, which
-  inverts these notes's usual "gray surface on white" rule.** It is the same
+  inverts this document's usual "gray surface on white" rule.** It is the same
   two-surface relationship the hero's browser mock uses (gray frame, white
   screen), and it exists because a white shell on a white page had no
   visible edge, so the margin read as unfinished rather than as framing.
+  The card carries the system's one resting shadow (founder's call): a
+  tight contact shadow plus a wide ambient one,
+  `0 1px 2px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.07)`, soft enough
+  to read as depth rather than as a floating menu. The page behind it is
+  plain white; a `--page-ground` token is still defined in `:root` but
+  nothing uses it now.
   **The card holds the shell; the status lives in the profile tabs row.**
   The mode pill and the pause control sit right-aligned on that row, and
   the "Blocklist syncs every minute" note sits below the card on the white
@@ -161,17 +187,31 @@ over the old pages, so nothing in the repo carries the old look any more.
   this system rules out. The favicon lifts from `opacity: 0.90` to full in
   the same hover.
 - **The dashboard app shell is one fixed box pinned to the viewport**,
-  not a scrolling page: `#app-screen` is `height: 100vh; overflow: hidden`
-  and `.page-wrap` is a four-row grid. Five tokens in `dashboard.html`'s
-  `:root` cover size — `--container` (1020px), `--shell-max-h` (620px),
-  `--shell-pad-top` (40px), `--shell-pad-bottom` (72px) and
-  `--sidebar-w` (200px, down from 232 via 216).
-  `--shell-max-h` replaced an earlier `calc((100vh - …) * 0.88)`, which
-  grew the shell on every tall monitor. The binding constraint on
-  `--sidebar-w` is `.sidebar-footer`, not the nav labels: the avatar,
-  the Pro tag and "Sign out" share one row and are the first thing to
-  wrap if it narrows further. At 200px that row has about 4px of slack,
-  so check it in a render before going below ~190px.
+  not a scrolling page: `#app-screen` is a flex column,
+  `height: 100vh; overflow: hidden`, holding the site nav, `.page-wrap`
+  (a four-row grid, `flex: 1; min-height: 0`) and the footer's link row.
+  `min-height: 0` matters: a flex item's default minimum is its content,
+  which let the grid's spacer floors push the footer below the viewport.
+  Size tokens in `dashboard.html`'s `:root`: `--container` (1020px, the
+  shell), `--site-container` (1120px, the nav and footer, matching
+  site.css so they line up with the marketing pages), `--shell-max-h`
+  (620px), `--shell-pad-top` (40px), `--shell-pad-bottom` (72px),
+  `--sidebar-w` (200px), `--nav-h` (68px) and `--footer-h` (38px of
+  footer pills plus the footer's own bottom padding). The shell's height
+  calc subtracts the nav, the footer, both pads, the card padding and the
+  note row. `--shell-max-h` replaced an earlier
+  `calc((100vh - …) * 0.88)`, which grew the shell on every tall monitor.
+  `.sidebar-footer` holds only the Pro tag now (the avatar and "Sign out"
+  moved to the nav's account menu), so it no longer constrains
+  `--sidebar-w`; the nav labels do.
+- **The dashboard wears the site's nav and the footer's link row, copied
+  verbatim from site.css** (17px/1.55 type, the curly apostrophe in
+  "Please Don’t Scroll", 1120px container), because the dashboard does not
+  import site.css. If the nav or footer changes there, change it here too,
+  and check the two pixel-for-pixel against a signed-in index.html. The
+  dashboard's account menu is Settings (opens the section in place) and
+  Sign out. The footer keeps `.footer--art`'s frosted pills, which are
+  invisible on the plain white page and do no harm.
   **The shell sits high on the page, and how it gets there took three
   tries — don't "simplify" it back.** The founder wants a small margin
   above and a large one below. Top-aligning (`align-content: start`)
@@ -183,18 +223,35 @@ over the old pages, so nothing in the repo carries the old look any more.
   `minmax(var(--shell-pad-top), 1fr)` and
   `minmax(var(--shell-pad-bottom), 3fr)`, so free space splits a
   quarter above / three-quarters below and the two tokens act as
-  *floors* rather than fixed margins. The pause row and
-  `.dashboard-shell` need explicit `grid-row: 2` / `grid-row: 3`, since
-  auto-placement would otherwise drop them into the spacers. **Retune by
-  changing the 1fr:3fr ratio**, not the floors and not the alignment.
-  Measured top/bottom: 40/94 at 1280x800, 59/176 at 1440x900, 134/401
-  at 1440x1200.
+  *floors* rather than fixed margins. `.app-card` and `.sync-hint` need
+  explicit `grid-row: 2` / `grid-row: 3`, since auto-placement would
+  otherwise drop them into the spacers. **Retune by changing the 1fr:3fr
+  ratio**, not the floors and not the alignment. Measured from the nav's
+  bottom to the card, and from the card to the footer row (which includes
+  the 30px note row): 40/102 at 1280x800 and 1440x900, 99/325 at
+  1440x1200.
   **The mobile block must release the clamp** (`#app-screen { height:
   auto; overflow: visible }`, `.page-wrap { height: auto; display:
   block }`) since the shell is auto-height and scrolls there; without
   that the page is cut off at 100vh.
 - **Copy.** Sentence case, direct, feature-led ("Stop scrolling for
-  good."), no em dashes in anything a user reads (§8).
+  good."), no em dashes in anything a user reads (see ARCHITECTURE.md's
+  user-facing copy rule).
+- **Every dashboard error is a toast.** Form validation included: no
+  inline red lines under fields, no layout shift. `showError(msg)` wraps
+  `showToast(msg, true)`; the toast is `role="status"`.
+- **Schedule resize handles always paint on top.** `.sched-block-handle`
+  carries `z-index: 3` permanently, above the sticky day header (2), and
+  neither `.sched-col` nor `.sched-block` sets a z-index, so neither is a
+  stacking context that could trap it. The old fix lifted the hovered
+  block's column with a `:has(:hover)` rule instead; that z-index dropped
+  the instant hover ended, so the handles got clipped by the next column
+  during their 0.15s fade-out, and it never cleared the header at all.
+  The handles are `pointer-events: none` until their block is hovered or
+  selected. Invisible handles used to stay hit-testable, and their 22px
+  hit areas overhang the neighbouring day and the slots around the block,
+  so roughly one paint drag in three near an existing block silently
+  became a resize of a block the user couldn't see.
 - **Illustrations** are hand-drawn artwork pasted in as inline SVG, one
   filled path per drawing with `fill="currentColor"` so a CSS color drives
   it. Each exported file ships two paths, a background shape and the ink;
@@ -255,36 +312,68 @@ CSS diff. Contrast and spacing are worth measuring rather than eyeballing:
 several bugs here were invisible until measured (white-on-white controls,
 a note that failed AA over the background image).
 
-**`index.html`'s three live demos.** The hero's blocked-page mock, the
-"Built around your day" preview and two of the four feature tiles are
-working controls, not pictures of controls, and they hold state in plain
-module-scope memory in that page's own inline `<script type="module">`
-(no Supabase, no `localStorage`, gone on reload). Three rules worth
-keeping:
-- **The preview imports its add rules from `/core`**
-  (`parseBlocklistEntry`, `entryCovers` from `blocklist/hostname.js`), so
-  quick-adding `youtube.com` retires an existing `youtube.com/shorts` row
-  and a redundant add is refused, exactly as `handleAddUrl()` does in the
-  dashboard. Don't reimplement the comparison here; §8's "matching logic
-  lives in `/core`" covers the marketing page too.
-- **`.preview__sites` has a fixed `height`, not `min-height`.** The chips
-  can push it past seven rows, and a minimum let that stretch the whole
-  `#profiles` grid; overflow scrolls inside the gray surface instead.
-- **The quick-add options menu exists in both sections, but only one is
-  real.** `.site-options-menu` is copied verbatim from `dashboard.html`
-  so the two cannot drift. In the feature tile it opens on hover and
-  carries `pointer-events: none` (illustration only, teaching that a
-  section can be blocked on its own); in the preview it is a real menu
-  with the dashboard's own behavior, including the chip keeping its
-  hover look via `.menu-open` and a fully blocked site collapsing to the
-  plain greyed `.added` state with no menu at all. The feature tile's row
-  is otherwise decorative and JS-free, and `.tile__chip svg` (not
-  `.tile__icons svg`) sizes the glyphs, since the broader selector also
-  caught the 8x5 chevron. A label line under that row was tried and
-  removed: it left the tile a 52px gap above its heading where every
-  other tile has 14px.
-The pause tile mirrors `refreshPauseUI()`, including the `.paused`
-naming convention (no class is the default and means blocking is on).
+**`index.html`'s demos.** Two are working controls holding state in
+plain module-scope memory in the page's own inline `<script type="module">`
+(no Supabase, no `localStorage`, gone on reload), and two tiles are toys:
+- **The hero's blocked-page mock** loops the real Friction flow in real
+  time: 30s countdown, the completion screen, then back. The reset to 30
+  happens while the countdown is still faded out under the completion
+  screen, so it fades back in already full; resetting after it had
+  reappeared showed a 0 and an empty ring that then snapped to 30.
+- **The "Built around your day" preview is the dashboard's Blocklist
+  pane, rebuilt at the dashboard's sizes**: one gray card with the same
+  resting shadow, white tabs (active ink, inactive at 0.6), the dashed
+  "+" ring, the Friction pill and pause bubble, the input with the three
+  quick-add glyphs inside it and an "Add" button, then the white list
+  surface with hover-only remove buttons. Profiles, quick add (including
+  the section menus) and removal work; the pill, the bubble, the ring and
+  the input are pictures. When the dashboard's pane changes, change this
+  to match. Three rules:
+  - **Its add rules come from `/core`** (`parseBlocklistEntry`,
+    `entryCovers` from `blocklist/hostname.js`), so quick-adding
+    `youtube.com` retires an existing `youtube.com/shorts` row and a
+    redundant add is refused, exactly as `handleAddUrl()` does. Don't
+    reimplement the comparison here.
+  - **`.preview__sites` has a fixed `height`, not `min-height`.** Adds can
+    push it past seven rows, and a minimum let that stretch the whole
+    `#profiles` grid; overflow scrolls inside the surface instead.
+  - **Chip state is derived from the list on every render**, never
+    tracked, same as `currentBlocklistEntries` in the dashboard.
+  Below 560px the pill and bubble move above the tabs, right-aligned.
+- **Each feature is a small card holding only its picture, with the
+  heading and copy on the page below it.** `.tile__card` is the same thin
+  gray frame (8px of `--surface`) around a white body (`.tile__stage`) as
+  the hero's browser and the preview, spanning its whole column (the same
+  width as the text below it, identical for all four) at one fixed 124px
+  height, so the headings line up across each row. Each picture is
+  centred and sized for that box: 40px app icons, a Monday-first week of 76px-tall
+  day cells filling the card's width under the dashboard's 3-letter
+  uppercase day names, the lock and link at their normal size. Inside the white body the controls that
+  sit white on gray elsewhere (the pause bubble, the paused pill, the
+  week's day cells) take `--surface` instead, or they would vanish. The
+  privacy card holds the hand-drawn lock and the "Read the privacy
+  policy" link side by side, the one card whose contents are a real link.
+- **One resting shadow, `--shadow-card`**
+  (`0 1px 2px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.07)`), on every
+  card of the landing page (the hero's browser, the preview, the feature
+  tiles, both plans) and on the dashboard's `.app-card`.
+- **"Block any site" shows the brands as app icons in their own colours**
+  (`.app-icon--*`: Instagram's gradient, TikTok and X black, YouTube red,
+  Facebook blue, Reddit orange, Twitch purple), white Tabler glyphs on
+  rounded squares, no interaction. Brand colour is allowed here for the
+  same reason the favicons and the traffic lights are: it depicts
+  something real. 40px icons, 10px apart, shrinking with the viewport
+  (`clamp(26px, 7.4vw, 40px)`) so all seven fit one line inside
+  the tile on a 360px phone.
+- **"Pause when you need to" is a toy, drawn as a zoomed-in crop of the
+  dashboard's tabs row** (the same pane "Built around your day" shows
+  whole): two tabs and the + ring dimmed and fading out under a white
+  gradient on the card's left edge, then the "Friction Mode active" pill
+  and the pause bubble, scaled up 1.18x from the row's right end so the
+  bubble is the focus (unscaled below 560px). The bubble toggles the pill
+  to "Blocking paused" and back, with no durations. It must stay on
+  Friction: Strict can't be paused, and the dashboard hides the bubble
+  in Strict.
 
 **Two deliberate exceptions to "no imagery": `index.html`'s photographic
 bands.** The landing page opens with `.prelude` and closes with `.footer--art`,
@@ -315,7 +404,7 @@ easy to undo by accident:
   nav readable rather than see-through. Don't invert that default.
 - **`.nav__link` goes to full ink under `.nav--over`.** `--muted` is a
   light gray tuned for white and is illegible on the blue.
-It ships as **WebP** (`web/assets/images/testthis.webp`, 2560x1440,
+It ships as **WebP** (`web/assets/images/landscape.webp`, 2560x1440,
 ~177KB, the same file the footer band uses). Keep the format: the band is full
 bleed, so it needs roughly 2x the viewport width to stay sharp, and JPEG
 at that size cost 457KB for the same picture. An earlier halftone
@@ -325,7 +414,7 @@ re-exporting, encode WebP at q80-84 from the largest source available
 rather than shrinking a JPEG.
 
 The closing band is **`.footer--art`**, the footer itself carrying the
-artwork as a background (`assets/images/testthis.webp`, the same file the
+artwork as a background (`assets/images/landscape.webp`, the same file the
 sky uses) with a white-to-transparent overlay fading its top into the
 page. It is not the old gouache-background treatment returning: one image,
 on one page, below all the content, where it cannot make any surface

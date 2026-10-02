@@ -346,8 +346,8 @@ plain module-scope memory in the page's own inline `<script type="module">`
   the hero's browser and the preview, spanning its whole column (the same
   width as the text below it, identical for all four) at one fixed 124px
   height, so the headings line up across each row. Each picture is
-  centred and sized for that box: 40px app icons, a Monday-first week of 76px-tall
-  day cells filling the card's width under the dashboard's 3-letter
+  centred and sized for that box: 40px app icons, a Monday-first week of 62px-tall
+  day cells, up to 380px wide, under the dashboard's 3-letter
   uppercase day names, the lock and link at their normal size. Inside the white body the controls that
   sit white on gray elsewhere (the pause bubble, the paused pill, the
   week's day cells) take `--surface` instead, or they would vanish. The

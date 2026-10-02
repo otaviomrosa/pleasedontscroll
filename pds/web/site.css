@@ -732,15 +732,15 @@ button.pause-bubble { cursor: pointer; }
    card, the one card whose contents are a real link. */
 .tile__lock { color: var(--ink); display: inline-flex; }
 .tile__lock svg { width: 38px; height: 38px; }
-.tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; width: 100%; }
+.tile__week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; width: min(380px, 100%); }
 /* Monday first, the same as the dashboard's grid, with its 3-letter
    uppercase day headings. */
 .tile__day { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .tile__day b { font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); text-align: center; line-height: 1; }
-.tile__week i { display: block; height: 76px; border-radius: 8px; background: var(--surface); position: relative; }
+.tile__week i { display: block; height: 62px; border-radius: 8px; background: var(--surface); position: relative; }
 .tile__week i.f::after, .tile__week i.s::after { content: ''; position: absolute; left: 5px; right: 5px; border-radius: 7px; }
-.tile__week i.f::after { top: 8px; height: 28px; background: var(--friction); }
-.tile__week i.s::after { top: 40px; height: 28px; background: var(--strict); }
+.tile__week i.f::after { top: 7px; height: 22px; background: var(--friction); }
+.tile__week i.s::after { top: 33px; height: 22px; background: var(--strict); }
 
 /* ─── Quote ─────────────────────────────────────────────────────────────── */
 .quote {

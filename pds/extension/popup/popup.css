@@ -29,8 +29,8 @@
      which the brighter reds below it do not. --error keeps the old deeper
      red on purpose: it is a separate semantic token, and form errors
      never appear beside a mode pill. */
-  --friction:     #0071e3;
-  --strict:       #2a55a5;
+  --friction:     #2081e3;
+  --strict:       #2250a6;
 
   --radius-pill:  999px;
   --radius-inner: 14px;
@@ -44,11 +44,21 @@
 /* ─── Reset ─────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The popup is a gray ground with one white card on it. The gray shows
+   as a 12px margin all round, and the card (.container) holds everything,
+   header included, with the dashboard card's resting shadow lifting it
+   off the gray. 294px leaves the card just wide enough inside for
+   "Paused until 11:45 PM" beside the Blocklist button; narrow the popup
+   or widen any padding and that line starts to clip. */
 body {
-  width: 300px;
+  width: 244px;
   margin: 0;
-  padding: 0;
-  background: var(--paper);
+  padding: 0px;
+  /* White, like the card on it, so the two read as one white popup. The
+     card and its margin are kept on purpose (founder's call): set this
+     back to #f5f5f7 and restore the card's shadow to get the gray-ground
+     version back. */
+  background: var(--white);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: 14px;
@@ -68,10 +78,19 @@ p { margin: 0; }
    (not a flex gap: popup.js's showView() sets `display: block` inline on
    the active view, which would silently defeat a gap), so no section
    carries its own trailing margin. */
+/* The white card. Controls inside it take the gray --surface from :root,
+   so nothing here redefines it. .panel is only the wrapper for what sits
+   under the header; it paints nothing of its own. */
 .container {
-  padding: 18px 20px 20px;
+  padding: 17px;
+  background: var(--paper);
+  border-radius: 18px;
 }
 
+.panel > * + * { margin-top: 20px; }
+
+/* 20px between every group, and 20px to every edge (17px of padding plus
+   body's 3px), so the popup has one rhythm. They were 22 / 24 / 19. */
 .container > * + * { margin-top: 20px; }
 
 /* ─── Header ─────────────────────────────────────────────────────────────────── */
@@ -96,26 +115,7 @@ p { margin: 0; }
   filter: invert(1);
 }
 
-/* Flat gray rounded rectangle, not a pill, not colored — the founder's
-   call for a tag that sits in the header permanently. Same treatment as
-   the dashboard's sidebar tag. */
-.pro-tag {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: var(--surface);
-  border-radius: 6px;
-  padding: 3px 7px;
-  line-height: 1.2;
-}
-
 /* ─── Section labels ────────────────────────────────────────────────────────── */
-.mode-label,
-.profiles-label,
 .confirm-label {
   display: block;
   font-size: 0.7rem;
@@ -163,7 +163,7 @@ p { margin: 0; }
 .mode-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;   /* was 10: the line under the toggle belongs to it, so it sits close */
 }
 
 /* A gray track with two pill options — the active one takes its mode's
@@ -211,9 +211,10 @@ p { margin: 0; }
    scheduled Strict block is in force; ink-colored `.notice` for a
    few-second reply to a refused click. */
 .mode-status {
-  font-size: 0.78rem;
+  font-size: 0.72rem;   /* was 0.78: a caption under the toggle, not a status of its own */
   color: var(--muted);
   line-height: 1.4;
+  text-align: center;
 }
 
 .mode-status.notice { color: var(--ink); }
@@ -223,12 +224,6 @@ p { margin: 0; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.profiles-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .profile-pills {
@@ -256,7 +251,9 @@ p { margin: 0; }
   background: var(--surface);
   color: var(--muted);
   font-size: 0.8rem;
-  max-width: 240px;
+  /* Never wider than the card's content area, whatever the card's width
+     is: a fixed pixel cap overflowed as soon as the card got narrower. */
+  max-width: 100%;
   transition: opacity 0.18s ease, color 0.18s ease;
 }
 
@@ -303,8 +300,13 @@ p { margin: 0; }
 }
 
 /* ─── Stat row ───────────────────────────────────────────────────────────────── */
+/* The status and the button share a line when they fit ("3 sites
+   blocked"). A longer status ("Paused until 8:46 PM", "No sites blocked
+   yet") keeps its full text and the button drops to its own line, on the
+   right, instead of the text being cut to an ellipsis. */
 .stat-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -317,7 +319,11 @@ p { margin: 0; }
 .stat-line {
   font-size: 0.82rem;
   color: var(--muted);
-  min-width: 0;
+  /* Never shrinks beside the button (that is what makes the button wrap
+     instead); still capped at the row's width, with an ellipsis, for a
+     string longer than the popup itself. */
+  flex-shrink: 0;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -342,6 +348,7 @@ p { margin: 0; }
   white-space: nowrap;
   flex-shrink: 0;
   transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
+  margin-left: auto;   /* right-aligned on its own line too, when the status pushes it down */
 }
 
 .stat-manage-link:hover  { opacity: 0.86; }
@@ -413,11 +420,11 @@ p { margin: 0; }
   margin: 2px 0 0;
 }
 
-/* The sign-in view is one form, so it lays itself out with margins
-   instead of the container's 18px section gap (which would space each
-   input like a section). */
-#view-auth > * + * { margin-top: 0; }
-#view-auth .header-row { margin-bottom: 18px; }
+/* The sign-in view is one form, so inside its panel it lays itself out
+   with its own margins instead of the panel's section gap (which would
+   space each input like a section). */
+#view-auth .panel > * + * { margin-top: 0; }
+#view-auth .header-row { margin-bottom: 0; }
 #view-auth .auth-headline { margin-bottom: 16px; }
 
 .form-group { margin: 0 0 8px; }
@@ -437,7 +444,8 @@ p { margin: 0; }
 }
 
 .field::placeholder { color: var(--muted); }
-.field:focus { box-shadow: 0 0 0 3px rgba(41, 108, 226, 0.26); }
+/* No focus glow (founder's call): a focused field is marked by its text
+   caret alone. A blue ring used to appear here. */
 
 .auth-forgot {
   font-size: 0.78rem;

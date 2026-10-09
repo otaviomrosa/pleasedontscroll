@@ -32,8 +32,8 @@
       --border: rgba(0, 0, 0, 0.09);           /* gridlines only, never boxes */
       --error: #d70015;
 
-      --friction:     #388ce0;
-      --strict:       #2a55a5;
+      --friction:     #2081e3;
+      --strict:       #2250a6;
       /* Legacy aliases, kept pointing at the same values so older selectors
          in this file keep working. Not separate colors. */
       --friction-teal: var(--friction);
@@ -55,9 +55,9 @@
       --container: 1020px;
       --site-container: 1120px;   /* site.css's --container: the nav and footer use this, not the shell's */
       --shell-max-h: 620px;
-      --shell-pad-top: 40px;
+      --shell-pad-top: 22px;   /* was 40: the mode + pause row now sits in this space, so the card would otherwise start 84px down */
       --shell-pad-bottom: 72px;
-      --sidebar-w: 200px;
+      --sidebar-w: 182px;
       /* The whole app sits in one gray card and every surface inside it is
          white: the same two-surface relationship the hero's browser mock
          uses (gray frame, white screen), just inverted from how this file
@@ -72,6 +72,7 @@
       --card-ground: var(--surface);
       --card-pad: 16px;
       --note-block-h: 30px;
+      --status-bar-h: 44px;   /* the mode + pause row above the card: 34px + its 10px margin */
       --footer-h: calc(38px + clamp(12px, 1.2vw, 18px));   /* footer row: 38px of pills + its bottom padding, same clamp as .footer */
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -88,6 +89,16 @@
     .display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; }
 
     /* ─── Auth screen ─────────────────────────────────────────────────── */
+    /* The same artwork as the signed-in screen (#app-screen), so signing
+       in doesn't change the page behind the card. One wrapper holds every
+       signed-out view (sign in, create account, forgot and reset
+       password), so they all get it. min-height keeps it covering the
+       window when the form is short; --paper shows until the image loads.
+       If the dashboard's background changes, change both. */
+    #auth-screen { min-height: 100vh; background: var(--paper) url('assets/images/dashback3.webp') center / cover no-repeat; }
+    /* #57575c, not --muted, over the artwork: the same fix as .app-nav__link. */
+    #auth-screen .public-nav-link { color: #57575c; }
+    #auth-screen .public-nav-link:hover { color: var(--ink); }
     .public-nav { height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; max-width: var(--container); margin: 0 auto; padding: 0 var(--gutter); }
     .public-nav-logo { height: 26px; width: auto; filter: invert(1); }
     .public-nav-brand { display: inline-flex; align-items: center; gap: 12px; }
@@ -103,7 +114,9 @@
     .form-group { margin: 0; }
     .field { display: block; width: 100%; height: 48px; padding: 0 16px; font: inherit; color: var(--ink); background: var(--paper); border: 0; border-radius: var(--radius-field); outline: none; transition: box-shadow 0.15s ease; }
     .field::placeholder { color: var(--muted); }
-    .field:focus { box-shadow: 0 0 0 3px rgba(41, 108, 226, 0.26); }
+    /* No focus glow (founder's call): a focused field is marked by its
+       text caret alone. A blue ring used to appear here and on
+       .url-input-wrap. */
     .field-inline { width: auto; flex: 1; min-width: 0; }
     .auth-forgot, .auth-toggle, .auth-resend { font-size: 14px; color: var(--muted); }
     .auth-forgot a, .auth-toggle a, .auth-resend a { color: var(--ink); font-weight: 500; }
@@ -117,8 +130,10 @@
 
     /* ─── App shell ───────────────────────────────────────────────────── */
     /* One fixed box that never scrolls: nav at the top, the card in the
-       middle, the footer row at the bottom, on a plain white page. */
-    #app-screen { position: relative; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--paper); }
+       middle, the footer row at the bottom, over a full-bleed artwork with
+       no fade or wash (founder's call). --paper stays underneath as the
+       ground while the image loads. */
+    #app-screen { position: relative; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--paper) url('assets/images/dashback3.webp') center / cover no-repeat; }
 
     /* ─── App nav + closing footer ──────────────────────────────────────
        Copied from site.css so the signed-in page wears the same chrome as
@@ -126,13 +141,16 @@
        site.css (see the design notes), so these are duplicates: if the nav
        or footer changes there, change it here too. */
     .app-nav, .footer { font-size: 17px; line-height: 1.55; }   /* site.css's body: these inherit it on index */
-    .app-nav { position: sticky; top: 0; z-index: 40; height: var(--nav-h); background: var(--paper); flex-shrink: 0; }
+    /* Transparent: an opaque nav would cut a white strip across the artwork. */
+    .app-nav { position: sticky; top: 0; z-index: 40; height: var(--nav-h); background: transparent; flex-shrink: 0; }
     .app-nav__inner { height: 100%; max-width: var(--site-container); margin: 0 auto; padding: 0 var(--gutter); display: flex; align-items: center; justify-content: space-between; }
     .app-nav__brand { display: inline-flex; align-items: center; gap: 12px; }
     .app-nav__logo { height: 26px; width: auto; filter: invert(1); }
     .app-nav__name { font-family: var(--font-display); font-weight: 600; font-size: 1rem; letter-spacing: -0.01em; }
     .app-nav__links { display: flex; align-items: center; gap: 28px; }
-    .app-nav__link { padding: 10px 2px; font-size: 15px; font-weight: 500; color: var(--muted); transition: color 0.18s ease; }
+    /* #57575c, not --muted: --muted is tuned for white and measured 4.36:1
+       over the artwork; this is the same darker gray site.css uses over the sky. */
+    .app-nav__link { padding: 10px 2px; font-size: 15px; font-weight: 500; color: #57575c; transition: color 0.18s ease; }
     .app-nav__link:hover { color: var(--ink); }
 
     .account { position: relative; }
@@ -188,11 +206,47 @@
         minmax(var(--shell-pad-top), 1fr)
         auto
         auto
+        auto
         minmax(var(--shell-pad-bottom), 3fr);
     }
     /* Explicit, because auto-placement would drop these into the spacers. */
-    .page-wrap > .app-card   { grid-row: 2; }
-    .page-wrap > .sync-hint  { grid-row: 3; }
+    .page-wrap > .status-bar { grid-row: 2; }
+    .page-wrap > .app-card   { grid-row: 3; }
+    .page-wrap > .sync-hint  { grid-row: 4; }
+    /* The mode pill and pause bubble, above the card, their right edge on
+       the card's own right edge. They sit on the page's artwork, not on
+       the card, so they wear the frosted glass the landing page's footer
+       pills use (--glass-bg / --glass-blur) instead of a solid fill.
+       --status-bar-h (the 34px row plus this margin) comes out of the
+       shell's height, so the card gives up that much instead of the
+       footer being pushed. */
+    .status-bar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+    /* #mode-status, not .mode-status: the pill's own state rules
+       (.mode-status.mode-friction and friends) come later in this file
+       at the same class specificity and would repaint it solid. */
+    .status-bar #mode-status,
+    .status-bar .pause-bubble {
+      background: rgba(255, 255, 255, 0.1); color: var(--ink);
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+              backdrop-filter: blur(var(--glass-blur));
+    }
+    .status-bar .pause-bubble:hover { background: rgba(255, 255, 255, 0.5); }
+    /* 400, the footer links' weight, not the pill's usual 500: over the
+       artwork the lighter text sits back with the rest of the page chrome. */
+    .status-bar #mode-status { font-weight: 400; }
+    /* Everything in the wrap is lifted 14px into the empty strip at the
+       foot of the nav (its logo and avatar end 16px above its bottom
+       edge), which is the only room left once --shell-pad-top is 0. A
+       relative offset, not a negative margin: a margin just hands the
+       space back to the grid's top spacer row and nothing moves. The 14px
+       it frees goes to the gap above the footer. z-index 41 puts the
+       status row over the nav (40), which is transparent but would
+       otherwise swallow clicks on the part that overlaps it. Desktop
+       only: on a phone the nav's row is full. */
+    @media (min-width: 769px) {
+      .page-wrap > .status-bar, .page-wrap > .app-card, .page-wrap > .sync-hint { position: relative; top: -14px; }
+      .page-wrap > .status-bar { z-index: 41; }
+    }
     /* The card is the app's ground. Redefining --surface here, and nowhere
        else, is what turns every gray surface inside it white in one move:
        sidebar, blocklist, fields, pills, chips, settings rows. --surface-deep
@@ -213,29 +267,49 @@
       display: grid; grid-template-columns: var(--sidebar-w) 1fr; gap: 18px;
       height: min(
         calc(100vh - var(--nav-h) - var(--footer-h) - var(--shell-pad-top) - var(--shell-pad-bottom)
-             - 2 * var(--card-pad) - var(--note-block-h)),
+             - 2 * var(--card-pad) - var(--note-block-h) - var(--status-bar-h)),
         var(--shell-max-h));
-      min-height: 480px;
+      /* 436, down from 480 by exactly --status-bar-h: on a short window the
+         shell sits at this floor, and the row above the card would
+         otherwise have pushed the note into the footer. */
+      min-height: 436px;
     }
+
+    /* ─── STATUS BAR SWITCHED OFF (for now) ─────────────────────────────
+       The mode pill and the pause button above the card are hidden, by
+       the founder's call, while it's decided whether that state and its
+       live controls belong here or only in the extension. Nothing was
+       deleted: the markup (.status-bar), its styles, the pause menu and
+       all the JS behind them (applyModeIndicator, refreshPauseUI, the
+       pause handlers) are intact and still run against the hidden
+       elements.
+       TO BRING IT BACK, delete this whole block. It does four things, and
+       all four are undone by removing it:
+         1. hides the row;
+         2. zeroes --status-bar-h, so the shell gets those 44px back;
+         3. puts --shell-pad-top back to 40px and cancels the 14px lift,
+            both of which only existed to make room for the row;
+         4. restores the shell's 480px floor.
+       While this is off there is NO pause control anywhere: the popup
+       shows a pause but cannot start or end one. A timed pause still
+       runs out by itself; an "until I turn it back on" pause cannot be
+       ended from any screen. */
+    .status-bar { display: none; }
+    :root { --status-bar-h: 0px; --shell-pad-top: 40px; }
+    @media (min-width: 769px) {
+      .page-wrap > .app-card, .page-wrap > .sync-hint { top: 0; }
+    }
+    .dashboard-shell { min-height: 480px; }
     .sidebar { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--radius-surface); padding: 16px 12px 12px; }
     .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
     .sidebar-nav-item { display: block; position: relative; width: 100%; text-align: left; font-size: 15px; font-weight: 500; color: var(--muted); padding: 11px 14px; border-radius: var(--radius-inner); transition: background 0.18s ease, color 0.18s ease; }
     .sidebar-nav-item:hover { color: var(--ink); background: var(--surface-deep); }
-    /* Active: a small ink bar at the right edge instead of a solid fill —
-       one deliberate exception to this file's "solid ink, white text" rule
-       for active state, by the founder's request. The bar is a pseudo-
-       element rather than a border so it doesn't shift the text's padding,
-       and it's inset from the item's own edge (not the sidebar's) so it
-       reads as part of this control, not the sidebar frame. */
+    /* Active is ink text alone, against the muted labels around it. The
+       small ink bar that used to mark it was removed by the founder's call. */
     .sidebar-nav-item.active { color: var(--ink); }
-    .sidebar-nav-item.active::after {
-      content: ''; position: absolute; left: 1px; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 50%; border-radius: var(--radius-pill); background: var(--ink);
-    }
     .sidebar-nav-item.locked { display: flex; align-items: center; justify-content: space-between; color: var(--muted); }
     .sidebar-nav-lock { display: inline-flex; align-items: center; }
     .sidebar-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 14px 4px 2px; }
-    .pro-tag { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--card-ground); /* card flip: sidebar is white now */ border-radius: 6px; padding: 3px 8px; line-height: 1.2; }
     .sidebar-hamburger, .sidebar-backdrop { display: none; }
     .content-pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 4px 0 0; }
     .content-section { display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0; }
@@ -255,6 +329,25 @@
        2 profiles, 296px at 12, and 24px with overflow at 25. */
     .profile-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
       max-height: calc(2 * 34px + 8px); overflow-y: auto; }
+    /* "There is more this way": when the two-row cap hides profiles, the
+       row's cut edge fades out instead of ending on a clean line, which
+       reads as a full list. Bottom while there is more below, top once
+       scrolled. A mask, so it works on any ground and costs no layout.
+       The fade runs over the last 26px down to 8%, strong enough that the
+       second row visibly dissolves. Classes are set by
+       updateScrollHints(); with JS off there is simply no fade. */
+    .profile-tabs.more-below, .sched-profiles.more-below {
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+              mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+    }
+    .profile-tabs.more-above, .sched-profiles.more-above {
+      -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+              mask-image: linear-gradient(to top, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+    }
+    .profile-tabs.more-above.more-below, .sched-profiles.more-above.more-below {
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0, #000 26px, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+              mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0, #000 26px, #000 calc(100% - 26px), rgba(0, 0, 0, 0.08) 100%);
+    }
     .profile-tab { display: inline-flex; align-items: center; flex-shrink: 0; max-width: 180px; height: 34px; padding: 0 16px; border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: 14px; white-space: nowrap; transition: background 0.18s ease, color 0.18s ease, opacity 0.18s ease; }
     /* min-width: 0 is what actually lets a long name shrink inside the flex
        tab; without it the max-width above is ignored and the pill just grows. */
@@ -270,11 +363,23 @@
        them apart. */
     .profile-tab:not(.active) { opacity: 0.6; }
     .profile-tab:not(.active):hover { opacity: 0.85; }
-    .profile-tab-lock { display: inline-flex; align-items: center; margin-left: 6px; }
+    /* flex-shrink: 0 on both: the tab is a flex row capped at 180px, so a
+       long name used to squeeze the icon instead of ellipsing itself, and
+       the lock got smaller the longer the name was. */
+    .profile-tab-lock { display: inline-flex; align-items: center; margin-left: 6px; flex-shrink: 0; }
+    .profile-tab-lock svg { flex-shrink: 0; }
     .profile-tab.has-delete { padding-right: 10px; }
-    .profile-tab-delete { display: inline-flex; align-items: center; margin-left: 6px; font-size: 1.2rem; line-height: 1; color: var(--muted); opacity: 0; transition: opacity 0.15s, color 0.15s; }
+    /* flex-shrink: 0, like the lock: otherwise a long name squeezes the x. */
+    .profile-tab-delete { display: inline-flex; align-items: center; margin-left: 6px; flex-shrink: 0; color: var(--muted); opacity: 0; transition: opacity 0.15s, color 0.15s; }
+    .profile-tab-delete svg { flex-shrink: 0; display: block; }
     .profile-tab:not(.active):hover .profile-tab-delete { opacity: 1; }
     .profile-tab-delete:hover { color: var(--ink); }
+    /* Strict Mode: a non-active tab can't be switched to, but it can be
+       deleted. At rest it shows the lock; on hover the x takes the lock's
+       place. Both are 11px SVGs with the same margin, so nothing moves. */
+    .profile-tab.mode-locked .profile-tab-delete { display: none; }
+    .profile-tab.mode-locked:hover .profile-tab-lock { display: none; }
+    .profile-tab.mode-locked:hover .profile-tab-delete { display: inline-flex; opacity: 1; }
     /* An outlined "+" at the row's 34px tab height, not a filled pill. The
        dashed ring is a deliberate exception to this file's no-borders rule,
        by the founder's call: a dashed outline is the usual "this makes a NEW
@@ -308,7 +413,10 @@
        system's usual pill, inherited from .btn-sm. align-self stays for the
        <560px case, where the wrap grows to two lines and stretch would
        otherwise pin this to the top. */
-    #add-url-btn { height: 44px; padding: 0 18px; align-self: center; }
+    /* 14px side padding, the same as the new-profile form's "Add"
+       (.new-profile-form .btn-sm below), so the two Add buttons are one
+       size. Change both together. */
+    #add-url-btn { height: 44px; padding: 0 14px; align-self: center; }
     .btn-sm.dark:hover { opacity: 0.86; }
     /* card flip: was --surface on an --surface .settings-item, i.e. already
        invisible at rest before the flip. One step off white fixes both. */
@@ -336,8 +444,6 @@
       background: var(--surface); border-radius: var(--radius-field);
       transition: box-shadow 0.15s ease;
     }
-    /* The ring belongs to the box the user sees, not the transparent input. */
-    .url-input-wrap:focus-within { box-shadow: 0 0 0 3px rgba(41, 108, 226, 0.26); }
     .url-input-row .field { flex: 1; min-width: 0; background: transparent; height: 42px; padding-right: 8px; }
     .url-input-row .field:focus { box-shadow: none; }
     /* Below ~560px the five chips leave under 170px to type in, so they drop
@@ -475,7 +581,8 @@
     @media (max-width: 768px) {
       /* The shell is auto-height and scrolls on mobile, so the desktop
          viewport clamp has to come off or the page gets cut at 100vh. */
-      #app-screen { height: auto; overflow: visible; }
+      /* min-height so the artwork still covers the screen when the content is short. */
+      #app-screen { height: auto; min-height: 100vh; overflow: visible; }
       .page-wrap { height: auto; display: block; padding: 24px 20px 56px; }
       .dashboard-shell { grid-template-columns: 1fr; height: auto; min-height: 0; }
       .sidebar-hamburger { display: grid; place-items: center; position: fixed; top: 14px; left: 14px; z-index: 260; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; color: var(--ink); }
@@ -571,9 +678,36 @@
     /* The glyph's ink sits ~1 viewBox unit below its own box's centre, so a
        1px lift is what actually centres it in the circle. */
     .pause-bubble .pause-icon { position: relative; top: -1px; }
-    .mode-status-dot { display: none; }
-    .mode-status.mode-friction { background: var(--friction); }
-    .mode-status.mode-strict   { background: var(--strict); }
+    /* A small dot to the left of the label, in the colour of the mode
+       that is running: --friction, --strict, or gray while paused. It is
+       the one place the dashboard's pill shows the mode colours, and the
+       design system's sanctioned form for them ("or as a small dot").
+       While a mode is running the dot has a halo of its own colour that
+       breathes: out to twice the dot's size over 2.5s and back over 2.5s,
+       easing at both ends, never vanishing. Paused, the dot is gray and
+       still, since nothing is running. The colour is set once as `color`
+       so the dot and its halo can never disagree. */
+    .mode-status-dot { position: relative; flex-shrink: 0; width: 7px; height: 7px; margin-right: 10px; border-radius: 50%; color: var(--faint); background: currentColor; transition: color 0.18s ease; }
+    .mode-status.mode-friction .mode-status-dot { color: var(--friction); }
+    .mode-status.mode-strict   .mode-status-dot { color: var(--strict); }
+    .mode-status.mode-paused   .mode-status-dot { color: var(--faint); }
+    .mode-status-dot::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; background: currentColor;
+      opacity: 0.3; transform: scale(1.5);
+      animation: mode-dot-breathe 2s ease-in-out infinite alternate;
+    }
+    @keyframes mode-dot-breathe {
+      from { transform: scale(1.15); opacity: 0.2; }
+      to   { transform: scale(1.8);  opacity: 0.2; }
+    }
+    .mode-status.mode-paused .mode-status-dot::after { display: none; }
+    @media (prefers-reduced-motion: reduce) { .mode-status-dot::after { animation: none; } }
+    /* All three states are the same white pill with ink text (founder's
+       call): the label says which mode is running, and the mode colours
+       stay for the schedule's blocks and the extension. The classes are
+       kept because applyModeIndicator() still toggles them. */
+    .mode-status.mode-friction,
+    .mode-status.mode-strict,
     .mode-status.mode-paused   { background: var(--surface); color: var(--ink); }
 
     /* ─── Quick-add row + site options menu ───────────────────────────── */
@@ -648,6 +782,16 @@
         repeating-linear-gradient(to bottom, transparent 0 calc(100% / 48 - 1px), rgba(0, 0, 0, 0.025) calc(100% / 48 - 1px) calc(100% / 48)); }
     .sched-col + .sched-col { box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.06); }
     .sched-head-cell--corner { background: transparent; }
+    /* Today: the day name goes from muted to ink. */
+    .sched-head-cell.is-today { color: var(--ink); font-weight: 600; }
+    /* The current time, across today's column only: a plain stick (it had
+       a round head, since removed), white with a 2px ink outline, the same
+       treatment as the resize handles so the grid has one kind of marker.
+       An informational line, which is the one kind this system allows.
+       It is drawn OVER the blocks (z-index 1; blocks set none), so it
+       shows on a block that is running, and UNDER the resize handles (3)
+       and the sticky day header (2). It never takes a click. */
+    .sched-now { position: absolute; left: 2px; right: 2px; /* inset by the outline's 2px, so the outline ends on the column's edges instead of spilling into its neighbours */ height: 2px; margin-top: -1px; background: var(--paper); box-shadow: 0 0 0 2px var(--ink); border-radius: var(--radius-pill); pointer-events: none; z-index: 1; }
     .sched-gutter + .sched-col { border-radius: var(--radius-field) 0 0 var(--radius-field); }
     .sched-col:last-child { border-radius: 0 var(--radius-field) var(--radius-field) 0; }
     /* The header is the top of that same white panel now, so the outer
@@ -664,6 +808,11 @@
     .sched-block-name { font-size: 12px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sched-block-time { font-size: 11px; line-height: 1.2; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sched-ghost { pointer-events: none; opacity: 0.7; }
+    /* A block that has been painted and is still being saved: it looks
+       like the ghost it replaces, so the paint never visibly drops out,
+       and it takes no pointer events (no popover, no handles, no delete)
+       until the server's row replaces it a moment later. */
+    .sched-pending { pointer-events: none; opacity: 0.7; }
     /* z-index 3 clears the sticky day header (2). Neither .sched-col nor
        .sched-block sets a z-index, so neither is a stacking context and the
        handle competes directly with the header and with the next column.
@@ -681,13 +830,34 @@
        while you reach for it. */
     .sched-block-handle { pointer-events: none; }
     .sched-block:hover .sched-block-handle, .sched-block.selected .sched-block-handle { opacity: 1; pointer-events: auto; }
+    /* A locked block (the scheduled Strict block in force) can't be resized
+       or deleted until it ends, so it offers neither control. */
+    .sched-block.locked .sched-block-handle, .sched-block.locked .sched-block-del { display: none; }
+    /* Delete, at the block's top left on hover: the third corner control,
+       opposite the two resize handles and built exactly like them, a 10px
+       white disc with a 2px ink ring, holding an ink x. Same visibility
+       and hit-testing rules as the handles: shown and clickable only
+       while its block is hovered or selected. */
+    .sched-block-del { position: absolute; z-index: 3; top: -5px; left: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 2px var(--ink); color: var(--ink); display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; cursor: pointer; }
+    .sched-block-del::before { content: ''; position: absolute; inset: -6px; }
+    .sched-block-del svg { display: block; position: relative; }
+    .sched-block:hover .sched-block-del, .sched-block.selected .sched-block-del { opacity: 1; pointer-events: auto; }
     .sched.is-dragging .sched-block { pointer-events: none; }
-    .sched-pop { position: fixed; z-index: 400; min-width: 200px; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
+    /* As wide as the Friction/Strict pair plus its own padding, and no
+       wider. The pair is the only thing allowed to size the popover: the
+       caption and every row contribute nothing to its width (width: 0)
+       and then stretch to fill it (min-width: 100%), so a long profile
+       name ends in an ellipsis inside the same margins instead of
+       stretching the card. */
+    .sched-pop { position: fixed; z-index: 400; width: max-content; background: var(--paper); border-radius: var(--radius-inner); box-shadow: var(--shadow-float); padding: 6px; }
     .sched-pop-caption { font-size: 12px; font-weight: 500; color: var(--muted); padding: 8px 12px 6px; }
+    .sched-pop-caption, .sched-pop .site-options-menu-item {
+      width: 0; min-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .sched-pop-modes { display: flex; gap: 6px; padding: 4px 6px 6px; }
     .sched-pop-modes .sched-mode-pill { height: 30px; padding: 0 12px; font-size: 13px; }
     .sched-pop-sep { height: 6px; }
-    .sched-pop .danger-link { color: var(--muted); }
     .sched-mobile-note { display: none; }
   </style>
   <!-- ─── Vercel Web Analytics ────────────────────────────────────────── -->
@@ -834,6 +1004,42 @@
 
     <div class="page-wrap">
 
+      <!-- Mode + pause, above the card and right-aligned with it. It is
+           account-wide state, so it sits over the whole card rather than
+           inside the Blocklist tab, and shows on every tab. -->
+      <div class="status-bar">
+        <!-- Two objects: the pill states what is running, the round
+             bubble beside it is the control. Same 34px gray circle as
+             the "+ profile" button at the other end of this row, so
+             the two read as a matched pair and the pill stays the
+             only coloured thing. The menu is their sibling inside
+             .mode-status-wrap and centres on the pair, not on the
+             34px bubble alone — centred on the bubble it would hang
+             off the card's right edge. -->
+        <div class="mode-status-wrap">
+          <span class="mode-status" id="mode-status">
+            <span class="mode-status-dot" aria-hidden="true"></span>
+            <span id="mode-status-label"></span>
+          </span>
+          <button class="pause-bubble" id="pause-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="true" title="Pause blocking">
+            <span class="pause-icon" aria-hidden="true">
+              <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
+              <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            </span>
+          </button>
+          <div class="site-options-menu" id="pause-menu">
+            <div class="site-options-menu-inner">
+              <button class="site-options-menu-item" data-minutes="30" type="button">30 minutes</button>
+              <button class="site-options-menu-item" data-minutes="60" type="button">1 hour</button>
+              <button class="site-options-menu-item" data-minutes="120" type="button">2 hours</button>
+              <button class="site-options-menu-item" data-minutes="360" type="button">6 hours</button>
+              <button class="site-options-menu-item" data-minutes="720" type="button">12 hours</button>
+              <button class="site-options-menu-item" data-minutes="infinite" type="button">Until I turn it back on</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="app-card">
 
       <div class="dashboard-shell">
@@ -868,17 +1074,9 @@
                clustered left, sign out pushed to the right via its own
                margin-left: auto. Avatar is static (no dropdown/click
                behavior); its initial letter is set once in showApp(). -->
-          <!-- Plan tag only. The avatar and Sign out live in the nav's
-               account menu now, so this row is no longer the account row. -->
-          <div class="sidebar-footer">
-            <!-- Always visible — loadPremiumStatus() swaps the label text
-                 between Pro/Free; the tag itself no longer changes color
-                 for either state, matching popup.css's own plain gray
-                 .pro-tag (see its CSS comment below). -->
-            <span class="pro-tag" id="pro-tag">
-              <span id="pro-tag-label">Pro</span>
-            </span>
-          </div>
+          <!-- The sidebar has no footer now: the plan tag that sat here was
+               removed (the plan is stated in Settings instead), and the
+               avatar and Sign out moved to the nav's account menu. -->
         </aside>
 
         <div class="content-pane">
@@ -889,41 +1087,11 @@
             <!-- Profile switcher — moved here from the old #profiles-card,
                  pinned at the top of this pane. -->
             <div class="profile-switcher">
-              <!-- Tabs left, status pinned right. The pause control lives
-                   INSIDE the mode pill now, so they read as one object and
-                   the separate bottom bar is gone. -->
+              <!-- Just the tabs now: the mode pill and pause bubble moved
+                   above the card (see .status-bar). -->
               <div class="profile-row">
                 <!-- Profile tabs (rendered by JS) -->
                 <div class="profile-tabs" id="profile-tabs"></div>
-                <!-- Two objects: the pill states what is running, the round
-                     bubble beside it is the control. Same 34px gray circle as
-                     the "+ profile" button at the other end of this row, so
-                     the two read as a matched pair and the pill stays the
-                     only coloured thing. The menu is their sibling inside
-                     .mode-status-wrap and centres on the pair, not on the
-                     34px bubble alone — centred on the bubble it would hang
-                     off the card's right edge. -->
-                <div class="mode-status-wrap">
-                  <span class="mode-status" id="mode-status">
-                    <span id="mode-status-label"></span>
-                  </span>
-                  <button class="pause-bubble" id="pause-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="true" title="Pause blocking">
-                    <span class="pause-icon" aria-hidden="true">
-                      <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
-                      <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-                    </span>
-                  </button>
-                  <div class="site-options-menu" id="pause-menu">
-                    <div class="site-options-menu-inner">
-                      <button class="site-options-menu-item" data-minutes="30" type="button">30 minutes</button>
-                      <button class="site-options-menu-item" data-minutes="60" type="button">1 hour</button>
-                      <button class="site-options-menu-item" data-minutes="120" type="button">2 hours</button>
-                      <button class="site-options-menu-item" data-minutes="360" type="button">6 hours</button>
-                      <button class="site-options-menu-item" data-minutes="720" type="button">12 hours</button>
-                      <button class="site-options-menu-item" data-minutes="infinite" type="button">Until I turn it back on</button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <!-- Add profile controls: starts hidden, shown by renderProfileTabs()
@@ -1098,7 +1266,7 @@
     import { fetchBlockedUrls, addBlockedUrl, removeBlockedUrl } from '../core/sync/blockedUrls.js';
     import { fetchIsPremium, fetchBlockingMode, fetchPauseUntil, setPauseUntil, setTimezoneIfUnset, INDEFINITE_PAUSE_ISO, isIndefinitePause } from '../core/sync/userSettings.js';
     import { fetchSchedules, createScheduleBlock, updateScheduleBlock, deleteScheduleBlock, applySchedule } from '../core/sync/schedules.js';
-    import { activeBlockAt } from '../core/schedule/active.js';
+    import { activeBlockAt, localDayAndMinute } from '../core/schedule/active.js';
     import { createPortalSession } from '../core/sync/billing.js';
     import { deleteAccount } from '../core/sync/account.js';
     import { EXTENSION_ID } from '../core/config.js';
@@ -1689,6 +1857,9 @@
       });
 
       closeSidebarDrawer();
+      // A hidden section's rows measure 0, so the fades are worked out
+      // again once the section is on screen.
+      requestAnimationFrame(updateScrollHints);
     }
 
     document.querySelectorAll('.sidebar-nav-item').forEach((btn) => {
@@ -1735,8 +1906,8 @@
     // ─── Premium status ────────────────────────────────────────────────────────
 
     /**
-     * Fetches is_premium from user_settings and updates the sidebar
-     * pro-tag + upgrade banner. RLS ensures users only ever see their
+     * Fetches is_premium from user_settings and updates the upgrade
+     * banner. RLS ensures users only ever see their
      * own row.
      */
     async function loadPremiumStatus() {
@@ -1746,7 +1917,6 @@
       const isPremium = await fetchIsPremium(accessToken, currentUser.id);
       isPremiumUser = isPremium;
 
-      document.getElementById('pro-tag-label').textContent = isPremium ? 'Pro' : 'Free';
       document.getElementById('upgrade-banner').classList.toggle('hidden', isPremium);
       // This function is also re-run on visibilitychange, so upgrading in
       // another tab unlocks the Schedule tab here without a reload.
@@ -1849,6 +2019,25 @@
       }, TOAST_HIDE_TRANSITION_MS);
     }
 
+    // ─── Scroll hints ──────────────────────────────────────────────────────────
+    // The two capped profile rows fade at whichever edge hides more
+    // profiles (see .more-below / .more-above). Recomputed after each
+    // render, on scroll, on resize, and when a section is shown (a hidden
+    // section's row measures 0); 1px of slack absorbs sub-pixel rounding
+    // so a fully scrolled row doesn't keep a ghost of a fade.
+    function updateScrollHints() {
+      for (const id of ['profile-tabs', 'sched-profiles']) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.classList.toggle('more-above', el.scrollTop > 1);
+        el.classList.toggle('more-below', el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+      }
+    }
+    for (const id of ['profile-tabs', 'sched-profiles']) {
+      document.getElementById(id)?.addEventListener('scroll', updateScrollHints, { passive: true });
+    }
+    window.addEventListener('resize', updateScrollHints);
+
     // ─── Error helpers ─────────────────────────────────────────────────────────
 
     // Every error on this page is a toast, form validation included. Fields
@@ -1872,6 +2061,17 @@
       renderProfileTabs();
       if (selectedProfile) loadBlocklist(selectedProfile.id);
     }
+
+    // The tab's delete glyph, drawn as an SVG on the lock's own 11px box
+    // and stroke weight rather than typed as a "×" character: a text glyph
+    // sits on the font's baseline and is sized by the font, so it was
+    // never the lock's size or on its centre line, and the two visibly
+    // jumped when one replaced the other on hover.
+    const PROFILE_TAB_X_SVG = `
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    `;
 
     function renderProfileTabs() {
       const container = document.getElementById('profile-tabs');
@@ -1901,7 +2101,7 @@
         const modeLocked = !proLocked && currentBlockingMode === 'strict' && !profile.is_active;
 
         const tab = document.createElement('button');
-        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}${(proLocked || modeLocked) ? ' locked' : ''}`;
+        tab.className = `profile-tab${profile.id === selectedProfile?.id ? ' active' : ''}${(proLocked || modeLocked) ? ' locked' : ''}${modeLocked ? ' mode-locked' : ''}`;
         tab.dataset.profileId = profile.id;
 
         const nameSpan = document.createElement('span');
@@ -1931,6 +2131,21 @@
               shakeElement(tab);
               showToast('Switch to Friction Mode to change profiles.', true);
             });
+            // Switching is refused in Strict; deleting a profile that isn't
+            // the active one is not, since its list isn't being enforced
+            // and can't become enforced without a switch. The x replaces
+            // the lock on hover (see .profile-tab.mode-locked). Server
+            // side this needs 020_strict_profile_delete.sql, or a profile
+            // with sites on it is refused by the cascade.
+            const del = document.createElement('span');
+            del.className = 'profile-tab-delete';
+            del.innerHTML = PROFILE_TAB_X_SVG;
+            del.title = 'Delete profile';
+            del.addEventListener('click', (e) => {
+              e.stopPropagation();
+              handleDeleteProfile(profile.id);
+            });
+            tab.appendChild(del);
           }
 
           container.appendChild(tab);
@@ -1942,7 +2157,7 @@
           tab.classList.add('has-delete');
           const del = document.createElement('span');
           del.className = 'profile-tab-delete';
-          del.textContent = '×';
+          del.innerHTML = PROFILE_TAB_X_SVG;
           del.title = 'Delete profile';
           del.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1959,7 +2174,8 @@
       // one left hidden below the fold. Done after the loop because tabs are
       // appended from two places (the locked branch returns early).
       const activeTab = container.querySelector('.profile-tab.active');
-      if (activeTab) requestAnimationFrame(() => activeTab.scrollIntoView({ block: 'nearest' }));
+      if (activeTab) requestAnimationFrame(() => { activeTab.scrollIntoView({ block: 'nearest' }); updateScrollHints(); });
+      else updateScrollHints();
 
       // Moved into the same flex container as the tabs (not left as a
       // separate block-level element below) so it always sits as a pill
@@ -2044,7 +2260,11 @@
       if (!accessToken) return;
 
       const ok = await deleteProfile(accessToken, profileId);
-      if (!ok) { console.error('[PDS] deleteProfile failed'); return; }
+      if (!ok) {
+        console.error('[PDS] deleteProfile failed');
+        showToast('Could not delete that profile. Please try again.', true);
+        return;
+      }
 
       profiles = profiles.filter(p => p.id !== profileId);
 
@@ -2688,7 +2908,7 @@
 
       const el = document.createElement('button');
       el.type = 'button';
-      el.className = `sched-block mode-${block.mode}${block.id === selectedScheduleBlockId ? ' selected' : ''}`;
+      el.className = `sched-block mode-${block.mode}${block.id === selectedScheduleBlockId ? ' selected' : ''}${block.pending ? ' sched-pending' : ''}`;
       el.dataset.blockId = block.id;
       el.style.top    = `${(startSlot / SCHED_SLOTS_PER_DAY) * 100}%`;
       el.style.height = `${(span / SCHED_SLOTS_PER_DAY) * 100}%`;
@@ -2714,6 +2934,17 @@
         handle.dataset.edge = edge;
         el.appendChild(handle);
       });
+
+      // A span, not a button: the block itself is a <button>, and a button
+      // can't contain another. Clicks are handled by delegation in
+      // handleSchedulePointerDown / the grid's click listener.
+      const del = document.createElement('span');
+      del.className = 'sched-block-del';
+      del.title = 'Delete block';
+      del.innerHTML = '<svg width="6" height="6" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4L20 20M20 4L4 20" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>';
+      el.appendChild(del);
+
+      if (block.id && isScheduleBlockLocked(block)) el.classList.add('locked');
 
       return el;
     }
@@ -2764,7 +2995,42 @@
       });
 
       document.getElementById('sched-hint').classList.toggle('hidden', scheduleBlocks.length > 0);
+      placeScheduleNowLine();
     }
+
+    /**
+     * Marks "now" on the grid: today's day name goes to ink, and a line
+     * sits across today's column at the current time. Reads this device's
+     * clock through the same helper the active-block mirror uses. Kept
+     * separate from renderScheduleGrid() so the minute timer below can move
+     * the line without rebuilding the grid, which must never happen
+     * mid-drag (see handleSchedulePointerUp).
+     */
+    function placeScheduleNowLine() {
+      const body = document.getElementById('schedule-body');
+      if (!body) return;
+      body.querySelectorAll('.sched-now').forEach((el) => el.remove());
+      body.querySelectorAll('.sched-head-cell.is-today').forEach((el) => el.classList.remove('is-today'));
+
+      const { day, minute } = localDayAndMinute();
+      const col = body.querySelector(`.sched-col[data-day="${day}"]`);
+      if (!col) return;
+
+      // Header cells are the corner, then one per day in SCHED_DAYS order.
+      const heads = body.querySelectorAll('.sched-head-cell:not(.sched-head-cell--corner)');
+      heads[SCHED_DAYS.indexOf(day)]?.classList.add('is-today');
+
+      // Appended last and given z-index 1, so it draws over the blocks in
+      // its column; the resize handles (z-index 3) still draw over it.
+      const line = document.createElement('div');
+      line.className = 'sched-now';
+      line.style.top = `${(minute / 1440) * 100}%`;
+      col.appendChild(line);
+    }
+    // Once a minute is as fine as the grid can show; also on returning to
+    // the tab, since timers are throttled while it is in the background.
+    setInterval(placeScheduleNowLine, 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) placeScheduleNowLine(); });
 
     /**
      * The paint palette: which profile and which mode the next drag will
@@ -2801,7 +3067,8 @@
       });
       // Now that this area can scroll, the painted profile must stay visible.
       const chosen = profileRow.querySelector('.sched-pill.selected');
-      if (chosen) requestAnimationFrame(() => chosen.scrollIntoView({ block: 'nearest' }));
+      if (chosen) requestAnimationFrame(() => { chosen.scrollIntoView({ block: 'nearest' }); updateScrollHints(); });
+      else updateScrollHints();
 
       [['friction', 'Friction'], ['strict', 'Strict']].forEach(([mode, label]) => {
         const pill = document.createElement('button');
@@ -2869,6 +3136,10 @@
       const col = e.target.closest('.sched-col');
       if (!col) return;
       const day = Number(col.dataset.day);
+
+      // The delete disc acts on click (below), never on press: without this
+      // the press would open the block's popover first.
+      if (e.target.closest('.sched-block-del')) return;
 
       const handleEl = e.target.closest('.sched-block-handle');
       const blockEl  = e.target.closest('.sched-block');
@@ -3140,20 +3411,8 @@
       });
       pop.appendChild(modes);
 
-      const sepDelete = document.createElement('div');
-      sepDelete.className = 'sched-pop-sep';
-      pop.appendChild(sepDelete);
-
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'site-options-menu-item danger-link';
-      del.textContent = 'Delete block';
-      del.addEventListener('click', async () => {
-        closeScheduleBlockPopover();
-        await handleDeleteScheduleBlock(block.id);
-      });
-      pop.appendChild(del);
-
+      // Deleting lives on the block itself now (.sched-block-del, top left
+      // on hover), or Delete/Backspace with the block focused.
       document.body.appendChild(pop);
 
       // Anchored off the block's own rect (visible by definition at click
@@ -3185,11 +3444,19 @@
     async function loadSchedule() {
       const accessToken = await currentAccessToken();
       if (!accessToken) return;
+      const epoch = scheduleEpoch;
       const rows = await fetchSchedules(accessToken);
+      // A block was created, changed or deleted here while this fetch was in
+      // flight, so these rows may be from before it. Drawing them would wipe
+      // a block that was just saved (it happened: paint right after coming
+      // back to the tab, and the block vanished when the older reload
+      // landed). Ask again instead.
+      if (epoch !== scheduleEpoch) return loadSchedule();
       if (rows === null) {
         showToast('Could not load your schedule. Please refresh.', true);
       } else {
-        scheduleBlocks = rows;
+        // Keep any block still being saved; the server doesn't have it yet.
+        scheduleBlocks = rows.concat(scheduleBlocks.filter(b => b.pending));
       }
       renderSchedulePalette();
       renderScheduleGrid();
@@ -3208,9 +3475,37 @@
       await syncScheduleState();
     }
 
+    // Bumped when any schedule mutation starts and again when it finishes.
+    // loadSchedule() reads it before and after its fetch: if it moved, the
+    // rows it just received may predate a change this tab already made, so
+    // they are thrown away and fetched again rather than drawn over it.
+    let scheduleEpoch = 0;
+    let schedulePendingSeq = 0;
+
     async function handleCreateScheduleBlock(draft) {
+      // Optimistic, unlike the other two mutators: the block is drawn the
+      // moment the pointer comes up, as a faded "pending" block, and swapped
+      // for the server's row when the save returns. Drawing it only after
+      // the save left the grid empty for as long as the request took (the
+      // ghost was already gone), which looked exactly like the paint had
+      // failed and invited a second drag on the same spot. A pending block
+      // sits in scheduleBlocks, so freeCorridor() already refuses to paint
+      // over it, and it takes no pointer events (see .sched-pending).
+      const temp = { ...draft, id: `pending-${++schedulePendingSeq}`, pending: true, user_id: currentUser.id, version: 0 };
+      scheduleBlocks.push(temp);
+      scheduleEpoch++;
+      renderScheduleGrid();
+      const dropTemp = () => { scheduleBlocks = scheduleBlocks.filter(b => b.id !== temp.id); };
+
       const accessToken = await currentAccessToken();
-      if (!accessToken) return;
+      if (!accessToken) {
+        // Used to return silently, leaving nothing on screen and no reason.
+        dropTemp();
+        scheduleEpoch++;
+        renderScheduleGrid();
+        showToast('Could not save that block. Please sign in again.', true);
+        return;
+      }
       const { row, error } = await createScheduleBlock(accessToken, {
         userId:    currentUser.id,
         profileId: draft.profile_id,
@@ -3219,7 +3514,11 @@
         endMin:    draft.end_min,
         mode:      draft.mode,
       });
+      scheduleEpoch++;
+      dropTemp();
       if (!row) { await recoverScheduleAfter(error, 'Could not save that block. Please try again.'); return; }
+      // A reload that ran while this was pending may already hold the row.
+      scheduleBlocks = scheduleBlocks.filter(b => b.id !== row.id);
       scheduleBlocks.push(row);
       await afterScheduleChange();
     }
@@ -3227,7 +3526,9 @@
     async function handleUpdateScheduleBlock(id, patch) {
       const accessToken = await currentAccessToken();
       if (!accessToken) return;
+      scheduleEpoch++;
       const { row, error } = await updateScheduleBlock(accessToken, id, patch);
+      scheduleEpoch++;
       // No row and no error means the block no longer exists (deleted
       // elsewhere) — the re-fetch in the recovery path clears it here too.
       if (!row) { await recoverScheduleAfter(error, 'Could not update that block. Please try again.'); return; }
@@ -3239,7 +3540,9 @@
     async function handleDeleteScheduleBlock(id) {
       const accessToken = await currentAccessToken();
       if (!accessToken) return;
+      scheduleEpoch++;
       const { ok, error } = await deleteScheduleBlock(accessToken, id);
+      scheduleEpoch++;
       if (!ok) { await recoverScheduleAfter(error, 'Could not delete that block. Please try again.'); return; }
       scheduleBlocks = scheduleBlocks.filter(b => b.id !== id);
       if (selectedScheduleBlockId === id) selectedScheduleBlockId = null;
@@ -3255,6 +3558,13 @@
       if (scheduleDrag && e.pointerId === scheduleDrag.pointerId) handleScheduleDragMove(e.clientY);
     });
     scheduleBodyEl.addEventListener('pointerup', handleSchedulePointerUp);
+    scheduleBodyEl.addEventListener('click', (e) => {
+      const del = e.target.closest('.sched-block-del');
+      if (!del) return;
+      e.stopPropagation();
+      const id = del.closest('.sched-block')?.dataset.blockId;
+      if (id) { closeScheduleBlockPopover(); handleDeleteScheduleBlock(id); }
+    });
     scheduleBodyEl.addEventListener('pointercancel', cancelScheduleDrag);
     // Fires after a normal pointerup too, where scheduleDrag is already null
     // and this is a no-op. It's here for the abnormal cases (the element
@@ -3267,6 +3577,19 @@
     scheduleScrollEl().addEventListener('scroll', closeScheduleBlockPopover);
 
     document.addEventListener('keydown', (e) => {
+      // Delete / Backspace on a focused block removes it: the keyboard's
+      // route to the hover-only delete disc. A locked block has no delete.
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const focused = document.activeElement?.closest?.('.sched-block');
+        const id = focused?.dataset.blockId;
+        const block = id && scheduleBlocks.find((b) => b.id === id);
+        if (block && !isScheduleBlockLocked(block)) {
+          e.preventDefault();
+          closeScheduleBlockPopover();
+          handleDeleteScheduleBlock(id);
+        }
+        return;
+      }
       if (e.key !== 'Escape') return;
       if (scheduleDrag) cancelScheduleDrag();
       else closeScheduleBlockPopover();

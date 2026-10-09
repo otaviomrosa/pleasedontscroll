@@ -26,9 +26,9 @@ over the old pages, so nothing in the repo carries the old look any more.
   carry real information) and the one floating shadow
   (`--shadow-float: 0 12px 40px rgba(0,0,0,0.12)`) reserved for things
   that genuinely float over the page: menus, popovers, toasts.
-- **Color is for the two modes, nothing else.** Both are blue now, the
-  founder's own pick: Apple system blue `#0071e3` for Friction, deep navy
-  `#2a55a5` for Strict — `--friction` / `--strict` in every stylesheet
+- **Color is for the two modes, nothing else.** Both are blue, the
+  founder's own hand-picked pair: `#2081e3` for Friction, deep navy
+  `#2250a6` for Strict — `--friction` / `--strict` in every stylesheet
   (dashboard also keeps the legacy aliases `--friction-teal` /
   `--strict-burgundy`, now written as `var(--friction)` / `var(--strict)`
   rather than duplicated hexes, so they can never drift again). Used as
@@ -36,8 +36,7 @@ over the old pages, so nothing in the repo carries the old look any more.
   the blocked page's mode pill) or as a small dot — never as glows,
   tints, or borders. `--error` stays its own separate red `#d70015`, and
   is now the only red in the system. **Focus Pro has no
-  color**: the Pro tag is a flat gray rounded rectangle (`border-radius:
-  6px`, deliberately not a pill), and the upgrade CTA is white on an ink
+  color**: there is no Pro tag any more, and the upgrade CTA is white on an ink
   banner. Don't add a third color.
   Two things worth knowing about this pair specifically. First, it reads
   as one hue at two depths rather than two opposed signals, so Strict is
@@ -45,22 +44,29 @@ over the old pages, so nothing in the repo carries the old look any more.
   away from the signage look that killed the earlier blue/red pair, and
   the reason the old "Friction is calm, Strict is alarm" framing no
   longer describes what the colors do. Second, both clear 4.5:1 against
-  white text (Friction 4.7:1, Strict 7.1:1), which matters because the
-  12-13px mode labels sit on solid fills of each.
-  **Known drift, unreconciled:** `dashboard.html`'s `:root` currently has
-  `--friction: #388ce0` (a lighter blue, about 3.5:1 against white text,
-  below the 4.5:1 above) and `--paper: #fefeff`, while `site.css`,
-  `popup.css` and `blocked.css` all still say `#0071e3` / `#ffffff`, and
-  `site.css`'s `--surface` is `#f5f5f9` against `#f5f5f7` elsewhere. So
-  the landing page's preview and the dashboard it depicts show two
-  different Friction blues. Pick one and copy it to all four files.
+  white text for Strict (7.6:1) but not for Friction: `#2081e3` is 3.95:1,
+  under the 4.5:1 that the 12-13px mode labels on a solid fill call for
+  (the earlier `#0071e3` was 4.7:1). That is the cost of the lighter
+  blue; darken it a step if the labels ever need to pass.
+  The pair is identical in all four stylesheets as of this writing
+  (`site.css`, `dashboard.html`, `popup.css`, `blocked.css`), plus
+  `site.css`'s two `-dim` tints, which are the same colours at 10% and 9%.
+  Smaller drifts remain and are harmless: `dashboard.html`'s `--paper` is
+  `#fefeff` and `site.css`'s `--surface` is `#f5f5f9`.
+  **The dashboard's own mode pill is the exception: it carries no
+  colour.** "Friction Mode active" / "Strict Mode active" are a white
+  pill with ink text, identical to the "Paused until" state. In the
+  dashboard the mode colours now appear only on the schedule's blocks.
+  (The landing page's copies of that pill, in the preview and the pause
+  tile, are still blue.)
 - **Shapes.** Surfaces are 24px radius (`--radius-surface`), inner
   items 14–16px (`--radius-inner`), fields 12px, and every button, tab,
   chip and toggle is a full pill (`--radius-pill: 999px`). Active state
-  is "solid ink, white text" in the popup (the Blocklist → link) and on
+  is "solid ink, white text" in the popup (the "Dashboard" link) and on
   the marketing pages, not an outline, not a color. The dashboard has two
   deliberate exceptions, both by the founder's call: the active sidebar
-  item is ink text with a 3px ink bar at its left edge, and the active
+  item is ink text only (it briefly carried a 3px ink bar at its left
+  edge, since removed), and the active
   profile tab is a white pill with ink text at weight 500, while every
   inactive tab is the same white pill at `opacity: 0.6` (0.85 on hover),
   the look a locked tab used to have on its own. A locked tab still adds
@@ -84,7 +90,7 @@ over the old pages, so nothing in the repo carries the old look any more.
   `cubic-bezier(0.16, 1, 0.3, 1)` for anything that moves. Honor
   `prefers-reduced-motion`.
 - **Sizing.** 44–48px primary buttons and fields, 34px tabs/pills
-  (30px in the 300px-wide popup), 16px side gutters at phone width.
+  (30px in the popup, whose card is 276px wide), 16px side gutters at phone width.
 - **The signed-in dashboard is one gray card holding white surfaces, which
   inverts this document's usual "gray surface on white" rule.** It is the same
   two-surface relationship the hero's browser mock uses (gray frame, white
@@ -94,14 +100,53 @@ over the old pages, so nothing in the repo carries the old look any more.
   tight contact shadow plus a wide ambient one,
   `0 1px 2px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.07)`, soft enough
   to read as depth rather than as a floating menu. The page behind it is
-  plain white; a `--page-ground` token is still defined in `:root` but
-  nothing uses it now.
-  **The card holds the shell; the status lives in the profile tabs row.**
-  The mode pill and the pause control sit right-aligned on that row, and
-  the "Blocklist syncs every minute" note sits below the card on the white
-  page, so `.page-wrap` is four rows (spacer / card / note / spacer) with
-  the card and note carrying explicit `grid-row`s, since auto-placement
-  would drop them into the spacers. Keeping the note out of the card is
+  a full-bleed artwork, `assets/images/dashback3.webp` (2560px wide,
+  ~22KB, a soft peach-to-periwinkle glow fading to white at the bottom;
+  two earlier candidates, `dashback.webp` and `dashback2.webp`, are still
+  beside it), set as `#app-screen`'s background at
+  `center / cover` with no fade or overlay, by the founder's call. The nav
+  is transparent over it, and its link uses `#57575c` because `--muted`
+  measured too low over the first artwork. Both source files had a dark
+  1px edge (bottom and right); the WebPs are cropped in to drop it, so
+  re-crop
+  if it is ever re-exported. On phones `#app-screen` keeps
+  `min-height: 100vh` so the image still covers a short page. A
+  `--page-ground` token is still defined in `:root` but nothing uses it.
+  **The status row described next is currently switched off.** One
+  marked block in `dashboard.html` ("STATUS BAR SWITCHED OFF") hides it,
+  gives the shell its 44px back, restores the 40px top margin and
+  cancels the lift; deleting that block brings everything below back
+  exactly as described. The markup, styles and JS are all intact. While
+  it is off the dashboard has no mode readout and **no pause control**,
+  and the popup cannot start or end a pause either.
+  **The card holds the shell; the status sits above the card.** The mode
+  pill and the pause bubble are in `.status-bar`, a row over the card,
+  their right edge on the card's own right edge, on the page's artwork.
+  They are account-wide state, so they show on every tab. Both wear the
+  frosted glass of the landing page's footer pills (`--glass-bg`,
+  `--glass-blur`) rather than a solid fill, with the label at weight 400 like the footer links and, to its left, a
+  still 7px dot in the running mode's colour (`--friction`, `--strict`, or
+  `--faint` gray while paused), the one place this pill shows the mode
+  colours. While a mode runs, a halo of the same colour breathes behind
+  it (to twice its size and back over 5s); paused, the dot is gray and
+  still. A ring pinging outward every 2s was tried first and read as a
+  radar; the rule targets
+  `#mode-status` by id because the pill's state rules come later at the
+  same class specificity. `--shell-pad-top` is 0, and on desktop the
+  status row, the card and the note are additionally lifted 14px with a
+  relative offset into the empty strip at the foot of the nav, so the
+  card starts 31px under the nav's bottom edge. A negative margin does
+  not work for that lift: the grid's top spacer row absorbs it. The
+  status row takes `z-index: 41` so the transparent nav (40) does not
+  swallow clicks where the two overlap. The "Blocklist syncs every minute" note sits
+  below the card, so `.page-wrap` is five rows (spacer / status / card /
+  note / spacer) with the three content rows carrying explicit
+  `grid-row`s, since auto-placement would drop them into the spacers.
+  `--status-bar-h` (44px: the 34px row and its 10px margin) is subtracted
+  in the shell's height calc, and the shell's `min-height` floor dropped
+  from 480 to 436 by the same amount, so on a short window the note does
+  not run into the footer. The pair used to sit at the right end of the
+  profile tabs row, inside the card. Keeping the note out of the card is
   what lets `.blocklist-surface` run to the card's bottom edge: it is
   `flex: 1`, so it takes whatever is left. The note is hidden with
   `visibility` (`.sync-hint.is-off`), never `display`, so its row stays
@@ -122,7 +167,7 @@ over the old pages, so nothing in the repo carries the old look any more.
     gray, which would make a hovered control vanish into the card.
   - **Three rules needed a `/* card flip */` override**, all the same
     failure: a white element inside a parent that just became white.
-    `.pro-tag` in the sidebar, `.settings-item .field`, and
+    `.pro-tag` in the sidebar (since removed with the tag), `.settings-item .field`, and
     `.btn-sm.light`. That last one was *already* invisible before the flip
     (`--surface` on an `--surface` parent), so it is a fix, not a
     regression.
@@ -140,9 +185,12 @@ over the old pages, so nothing in the repo carries the old look any more.
     bottom margin; with it, the 72px `--shell-pad-bottom` floor is finally
     honest, and 1366x768 now measures 40 above / 72 below where the old
     layout gave 40/62.
-  - **The signed-out screen is untouched**, because `.auth-card` sits
-    outside `.app-card` and so never sees the override. It is still a gray
-    card with white fields on a white page. Verified.
+  - **The signed-out screens keep their own card**, because `.auth-card`
+    sits outside `.app-card` and so never sees the override: a gray card
+    with white fields. They share the signed-in page's artwork, though:
+    `#auth-screen` carries the same `dashback3.webp` background, so
+    signing in doesn't change the page behind the card. Change both
+    together if the background changes.
   **Check this class of change by measuring, not by looking**: walk every
   element under `#app-screen`, compare its background to the nearest
   ancestor that paints one, and flag any pair that matches with no border
@@ -165,6 +213,19 @@ over the old pages, so nothing in the repo carries the old look any more.
   and the pill just grows; and the scroll-into-view runs **after** the
   loop, because tabs are appended from two places (the locked branch
   returns early).
+  **The cut edge fades, so a capped row doesn't read as the full list.**
+  When profiles are hidden below, the row's bottom 26px fades down to 8%
+  (`.more-below`); once scrolled, the top does the same (`.more-above`).
+  It is a mask, set by `updateScrollHints()` after each render, on scroll,
+  on resize and when a section is shown (a hidden section's row measures
+  0). Applies to `.profile-tabs` and `.sched-profiles`. A thin scroll
+  indicator to the left of the row was tried in between and dropped.
+  A tab's delete x is an 11px SVG on the lock's own box and stroke weight,
+  not a typed "×", so the two are the same size on the same centre and
+  swap without a jump in Strict Mode.
+  The lock and the x are both `flex-shrink: 0`: the tab is a flex row
+  capped at 180px, and a long name used to squeeze the icon rather than
+  ellipsing itself.
   On the Schedule tab the same row also holds the Friction/Strict pair,
   pinned top-right with `align-items: flex-start` and `flex-wrap: nowrap`,
   separated from the profiles by a **32px minimum gap**. That gap is
@@ -196,22 +257,22 @@ over the old pages, so nothing in the repo carries the old look any more.
   shell), `--site-container` (1120px, the nav and footer, matching
   site.css so they line up with the marketing pages), `--shell-max-h`
   (620px), `--shell-pad-top` (40px), `--shell-pad-bottom` (72px),
-  `--sidebar-w` (200px), `--nav-h` (68px) and `--footer-h` (38px of
+  `--sidebar-w` (182px), `--nav-h` (68px) and `--footer-h` (38px of
   footer pills plus the footer's own bottom padding). The shell's height
   calc subtracts the nav, the footer, both pads, the card padding and the
   note row. `--shell-max-h` replaced an earlier
   `calc((100vh - …) * 0.88)`, which grew the shell on every tall monitor.
-  `.sidebar-footer` holds only the Pro tag now (the avatar and "Sign out"
-  moved to the nav's account menu), so it no longer constrains
-  `--sidebar-w`; the nav labels do.
+  The sidebar has no footer any more (the avatar and "Sign out" moved to
+  the nav's account menu and the Pro tag was removed), so only the nav
+  labels constrain `--sidebar-w`.
 - **The dashboard wears the site's nav and the footer's link row, copied
   verbatim from site.css** (17px/1.55 type, the curly apostrophe in
   "Please Don’t Scroll", 1120px container), because the dashboard does not
   import site.css. If the nav or footer changes there, change it here too,
   and check the two pixel-for-pixel against a signed-in index.html. The
   dashboard's account menu is Settings (opens the section in place) and
-  Sign out. The footer keeps `.footer--art`'s frosted pills, which are
-  invisible on the plain white page and do no harm.
+  Sign out. The footer keeps `.footer--art`'s frosted pills, which now
+  sit over the dashboard's artwork.
   **The shell sits high on the page, and how it gets there took three
   tries — don't "simplify" it back.** The founder wants a small margin
   above and a large one below. Top-aligning (`align-content: start`)
@@ -240,6 +301,27 @@ over the old pages, so nothing in the repo carries the old look any more.
 - **Every dashboard error is a toast.** Form validation included: no
   inline red lines under fields, no layout shift. `showError(msg)` wraps
   `showToast(msg, true)`; the toast is `role="status"`.
+- **The schedule marks "now".** Today's day name goes from muted to ink,
+  and a plain stick crosses today's column at the current time, white
+  with a 2px ink outline (it briefly had a round head), inset 2px so the
+  outline ends on the column's edges, the same
+  treatment as the resize handles (`placeScheduleNowLine()`, re-run every
+  minute and on returning to the tab, separately from the grid render so
+  it never rebuilds the grid mid-drag). It draws over the blocks
+  (`z-index: 1`) and under the resize handles (3) and the sticky header
+  (2). A plain ink line behind the blocks, white inside a running block,
+  was the first version. It reads the device's clock, the same as the
+  active-block mirror.
+- **A block's three corner controls.** On hover or selection: the two
+  resize handles (top right, bottom left) and a delete disc at the top
+  left, built exactly like a handle (a 10px white disc with a 2px ink
+  ring) and holding an ink x. Delete used to be a row in the popover; it is
+  also Delete/Backspace on a focused block. A locked block (the scheduled
+  Strict block in force) shows none of the three.
+- **The block popover is as wide as its Friction/Strict pair and no
+  wider.** The caption and every row are `width: 0; min-width: 100%`, so
+  they add nothing to the popover's width and then fill it; a long
+  profile name ends in an ellipsis inside the same 12px margins.
 - **Schedule resize handles always paint on top.** `.sched-block-handle`
   carries `z-index: 3` permanently, above the sticky day header (2), and
   neither `.sched-col` nor `.sched-block` sets a z-index, so neither is a
@@ -375,6 +457,19 @@ plain module-scope memory in the page's own inline `<script type="module">`
   Friction: Strict can't be paused, and the dashboard hides the bubble
   in Strict.
 
+**The extension popup is one white card on a white ground.** `body` is
+white with 3px of padding and `.container` is the white card (18px
+radius, no shadow, 17px of padding) holding everything, header included,
+so the popup reads as plain white with 20px to every edge and 20px
+between every group. The status line and the "Dashboard" button share a
+row when they fit; a longer status ("Paused until 8:46 PM", "No sites
+blocked yet") keeps its full text and the button wraps to its own line,
+right-aligned. Controls inside it
+take the gray `--surface`. Profile pills cap at
+`max-width: 100%` of the card's content area, not a pixel value, so a
+very long name ends in an ellipsis inside the card at any card width. `.panel` only wraps what sits under the header
+and paints nothing. The popup is 250px wide.
+
 **Two deliberate exceptions to "no imagery": `index.html`'s photographic
 bands.** The landing page opens with `.prelude` and closes with `.footer--art`,
 both full bleed, both fading into the page rather than ending on an edge.
@@ -402,6 +497,12 @@ easy to undo by accident:
   the most visible part of the sky. `site.js` toggles `.nav--over` while
   `scrollY < 8`; opaque is the CSS default, so a JS failure leaves the
   nav readable rather than see-through. Don't invert that default.
+- **Once scrolled, the nav is frosted rather than a flat white bar**:
+  `rgba(255,255,255,0.55)` with `backdrop-filter: blur(16px)
+  saturate(1.4)`, so the sky behind shows through as a soft blur.
+  It sits inside `@supports`, and opaque `--paper` stays the fallback, so
+  a browser without backdrop-filter never gets text over text. Shared by
+  pricing and privacy, where on plain white it just reads as white.
 - **`.nav__link` goes to full ink under `.nav--over`.** `--muted` is a
   light gray tuned for white and is illegible on the blue.
 It ships as **WebP** (`web/assets/images/landscape.webp`, 2560x1440,

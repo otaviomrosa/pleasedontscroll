@@ -334,6 +334,18 @@ extension's MV3 background service worker; see the note at the top of
   disabled/hidden) with a matching shake + rejection toast, and a
   `.btn-delete-url.locked:hover` override so the destructive red hover
   doesn't fire for a button that can't actually delete anything right now.
+  **A non-active profile can still be deleted in Strict (020).** Switching
+  to it stays refused, but its tab swaps the lock for an x on hover, and
+  the x deletes it. Nothing enforced is lost: its list isn't the one in
+  force and can't become so without a switch. Server side the profile
+  delete cascades to its `blocked_urls`, which used to hit
+  `enforce_lock_mode_blocklist_guard()` and roll the whole delete back for
+  any profile with a site on it. `020_strict_profile_delete.sql` redefines
+  that guard (same name, no `CREATE TRIGGER`) to let a row through when
+  its profile no longer exists, which is true only during that cascade;
+  `009`'s guard has already refused the active and the last profile by
+  then. A direct removal of a site is still refused in Strict, on any
+  profile. Covered by `test/sql/020_strict_profile_delete.test.sql`.
   **Signing out of the extension is refused in Strict too (fix sprint,
   audit R1).** It emptied the blocklist in one click. The popup sends
   `SIGN_OUT`; the background re-checks the mode live (cached when the server
@@ -542,8 +554,8 @@ extension's MV3 background service worker; see the note at the top of
     currently under that hold's protection, so pausing doesn't need a
     second one stacked on top.
   - **One pill states the status; a round bubble beside it is the
-    control.** Both sit right-aligned on the profile tabs row inside
-    `.mode-status-wrap`: `#mode-status` (a plain 34px pill, not a button)
+    control.** Both sit in `.status-bar`, a row above the dashboard's card,
+    right-aligned, inside `.mode-status-wrap`: `#mode-status` (a plain 34px pill, not a button)
     and `#pause-toggle` (`.pause-bubble`, a 34px circle on `--surface`,
     which is white inside the card, holding a 20px ink glyph, darkening to
     `--surface-deep` on hover). Same footprint as the "+ profile" ring at
@@ -555,11 +567,12 @@ extension's MV3 background service worker; see the note at the top of
       is a website as well as an extension surface. Honors
       `prefers-reduced-motion`.
     - **`applyModeIndicator()` is the only thing that writes the pill**, and
-      it has three states: "Friction Mode active" on `--friction`, "Strict
-      Mode active" on `--strict`, and "Paused until 3:45 PM" (or "Paused
-      indefinitely") on `--surface` (white in the card) with ink text.
-      **Paused wins**, because
-      a blue "Friction Mode active" beside a paused button would be untrue.
+      it has three states: "Friction Mode active", "Strict Mode active",
+      and "Paused until 3:45 PM" (or "Paused indefinitely"). All three
+      are the same pill, `--surface` (white in the card) with ink text;
+      the mode-coloured fills were dropped by the founder's call, so the
+      label alone says which mode is running. **Paused wins**, because
+      "Friction Mode active" beside a paused button would be untrue.
       A scheduled Strict block composes as "Strict Mode active until
       11:00 PM". Separate "Blocking on" / "Paused until" labels used to sit
       beside the switch; they were redundant once the pill said both, and
@@ -662,7 +675,8 @@ extension's MV3 background service worker; see the note at the top of
   and Twitch, then TikTok and X have all been dropped from it over time.
   **Current shape:**
   - `.url-input-wrap` is the visible input box: it carries the ground, the
-    radius and (via `:focus-within`) the focus ring, while the `<input>`
+    radius (there is no focus ring any more: fields show only their text
+    caret when focused, in the dashboard and the popup), while the `<input>`
     inside it is transparent and the chip row is a flex sibling pinned
     right. Built that way rather than absolutely positioning the chips over
     a padded input, so typed text can never run under them. The "Quick add"
@@ -1073,9 +1087,18 @@ extension's MV3 background service worker; see the note at the top of
     `schedules.js`'s three mutators, `switchProfileDetailed()` and
     `setBlockingModeDetailed()` use it; the boolean `switchProfile()` /
     `setBlockingMode()` are now thin wrappers, contract unchanged. The
-    dashboard's schedule mutators are pessimistic (write, mirror the
+    dashboard's update and delete are pessimistic (write, mirror the
     returned row, render, poke the extension, then `syncScheduleState()`
-    so a block covering now takes effect immediately); on a refusal they
+    so a block covering now takes effect immediately). **Create is
+    optimistic**: the painted block is drawn at once as a faded,
+    non-interactive `.sched-pending` block and swapped for the server's
+    row when the save returns. Drawn only after the save, the grid stayed
+    empty for as long as the request took, which read as "the paint
+    failed" and invited a second drag. `scheduleEpoch` is bumped when any
+    mutation starts and finishes; `loadSchedule()` compares it before and
+    after its fetch and refetches if it moved, because a reload that
+    started earlier (on `visibilitychange`, say) used to land after a
+    create and wipe the block that had just been saved. On a refusal they
     toast the server's message and re-fetch the grid, since a refusal
     usually means this tab was stale (a block painted on another device,
     or one that has since become active). `activateProfile()`'s failure

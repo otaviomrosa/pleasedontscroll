@@ -28,10 +28,10 @@
   --muted:        #6e6e73;
   --faint:        #aeaeb2;
   --on-ink-muted: rgba(255, 255, 255, 0.68);
-  --friction:     #0071e3;
-  --friction-dim: rgba(0, 113, 227, 0.10);
-  --strict:       #2a55a5;
-  --strict-dim:   rgba(42, 85, 165, 0.09);
+  --friction:     #2081e3;
+  --friction-dim: rgba(32, 129, 227, 0.10);
+  --strict:       #2250a6;
+  --strict-dim:   rgba(34, 80, 166, 0.09);
 
   --radius-surface: 24px;
   --radius-inner:   16px;
@@ -177,8 +177,19 @@ h3.display { font-size: clamp(1.5rem, 2.4vw, 1.9rem); line-height: 1.2; }
   top: 0;
   z-index: 40;
   height: var(--nav-h);
+  /* Frosted, not a flat white bar: once the page scrolls, the artwork
+     behind shows through as a soft blur. Opaque paper stays the fallback
+     for a browser without backdrop-filter, where a see-through bar with
+     no blur would put text straight over text. */
   background: var(--paper);
   transition: background 0.2s ease;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .nav:not(.nav--over) {
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+            backdrop-filter: blur(16px) saturate(1.4);
+  }
 }
 /* Only while parked at the very top, and only on a page that has a
    backdrop to show. site.js adds this; the opaque default is deliberately

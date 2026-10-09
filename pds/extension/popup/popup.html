@@ -15,75 +15,69 @@
     <div class="header-row">
       <div class="brand-box">
         <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-        <!-- Shown/hidden by applyState() based on isPremium — a plain
-             gray rounded-rectangle tag, not a colored badge (see
-             .pro-tag's CSS comment for why). -->
-        <span class="pro-tag hidden" id="pro-tag">Pro</span>
       </div>
       <button class="btn-ghost" id="logout-btn">Sign out</button>
     </div>
 
-    <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
-    <!-- Friction/Strict is a per-user setting, not a profile property —
-         any profile can run in either mode. -->
-    <div class="mode-section">
-      <span class="mode-label">Mode</span>
-      <div class="mode-toggle" id="mode-toggle">
-        <button class="mode-option" data-mode="friction" id="mode-friction-btn">
-          Friction
-          <!-- Shown only while a scheduled Strict block is in force — the
-               schedule, not Focus Pro, is what locks this one. -->
-          <svg class="lock-icon hidden" id="friction-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
-            <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
-          </svg>
-        </button>
-        <button class="mode-option" data-mode="strict" id="mode-strict-btn">
-          Strict
-          <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
-            <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
-          </svg>
-        </button>
-      </div>
-      <!-- One quiet line under the toggle, hidden at rest. Two jobs, both
-           set by popup.js: a standing "Scheduled Strict until 11:00 PM"
-           while a scheduled block is in force, and a few-second notice
-           when the server refuses a mode/profile change (those used to
-           fail silently). -->
-      <p class="mode-status hidden" id="mode-status"></p>
-    </div>
-
-    <!-- ─── Profile switcher ────────────────────────────────────────── -->
-    <!-- Switching only — creating/deleting profiles is dashboard-only now
-         (the extension has no blocklist-editing UI of its own either, so
-         there was no reason a new, empty profile could be created from
-         here). -->
-    <div class="profiles-section">
-      <div class="profiles-header">
-        <span class="profiles-label">Profile</span>
+    <!-- The white card inside the gray one: everything the view shows or asks for. -->
+    <div class="panel">
+      <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
+      <!-- Friction/Strict is a per-user setting, not a profile property —
+           any profile can run in either mode. -->
+      <div class="mode-section">
+        <div class="mode-toggle" id="mode-toggle" role="group" aria-label="Mode">
+          <button class="mode-option" data-mode="friction" id="mode-friction-btn">
+            Friction
+            <!-- Shown only while a scheduled Strict block is in force — the
+                 schedule, not Focus Pro, is what locks this one. -->
+            <svg class="lock-icon hidden" id="friction-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+          </button>
+          <button class="mode-option" data-mode="strict" id="mode-strict-btn">
+            Strict
+            <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+          </button>
+        </div>
+        <!-- One quiet line under the toggle, hidden at rest. Two jobs, both
+             set by popup.js: a standing "Scheduled Strict until 11:00 PM"
+             while a scheduled block is in force, and a few-second notice
+             when the server refuses a mode/profile change (those used to
+             fail silently). -->
+        <p class="mode-status hidden" id="mode-status"></p>
       </div>
 
-      <!-- Pills rendered by popup.js -->
-      <div class="profile-pills" id="profile-pills">
-        <span class="profile-pill-skeleton"></span>
+      <!-- ─── Profile switcher ────────────────────────────────────────── -->
+      <!-- Switching only — creating/deleting profiles is dashboard-only now
+           (the extension has no blocklist-editing UI of its own either, so
+           there was no reason a new, empty profile could be created from
+           here). -->
+      <div class="profiles-section">
+        <!-- Pills rendered by popup.js -->
+        <div class="profile-pills" id="profile-pills" role="group" aria-label="Profile">
+          <span class="profile-pill-skeleton"></span>
+        </div>
       </div>
-    </div>
 
-    <!-- ─── Status block — moved to the bottom (was first): Mode and
-         Profile are the only two things you actually act on in this
-         popup, so they're reachable first now; this is glance-only info,
-         plus it lets "Blocklist →" land at the bottom as a clean closing
-         CTA instead of sitting mid-popup.
-         Consolidated from three separate pieces (a status label above, a
-         big standalone count number below it, a boxed pause callout below
-         that) into one line — .stat-line covers all three states ("N
-         sites blocked" / "No sites blocked yet" / "Paused until X"),
-         switching text and a .paused color modifier via applyState() in
-         popup.js. ──────────────────────────── -->
-    <div class="stat-row">
-      <span class="stat-line" id="stat-line">Loading…</span>
-      <a class="stat-manage-link" href="" target="_blank" id="manage-link">Blocklist →</a>
+      <!-- ─── Status block — moved to the bottom (was first): Mode and
+           Profile are the only two things you actually act on in this
+           popup, so they're reachable first now; this is glance-only info,
+           plus it lets "Dashboard" land at the bottom as a clean closing
+           CTA instead of sitting mid-popup.
+           Consolidated from three separate pieces (a status label above, a
+           big standalone count number below it, a boxed pause callout below
+           that) into one line — .stat-line covers all three states ("N
+           sites blocked" / "No sites blocked yet" / "Paused until X"),
+           switching text and a .paused color modifier via applyState() in
+           popup.js. ──────────────────────────── -->
+      <div class="stat-row">
+        <span class="stat-line" id="stat-line">Loading…</span>
+        <a class="stat-manage-link" href="" target="_blank" id="manage-link">Dashboard</a>
+      </div>
     </div>
   </div>
 
@@ -99,21 +93,24 @@
       </div>
     </div>
 
-    <p class="confirm-label">Leaving Strict Mode</p>
+    <!-- The white card inside the gray one: everything the view shows or asks for. -->
+    <div class="panel">
+      <p class="confirm-label">Leaving Strict Mode</p>
 
-    <div class="confirm-ring">
-      <svg class="confirm-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
-        <circle class="confirm-ring__track" cx="110" cy="110" r="100" />
-        <circle class="confirm-ring__fill" id="confirm-ring-fill" cx="110" cy="110" r="100" />
-      </svg>
-      <span class="confirm-countdown" id="confirm-countdown">30</span>
+      <div class="confirm-ring">
+        <svg class="confirm-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
+          <circle class="confirm-ring__track" cx="110" cy="110" r="100" />
+          <circle class="confirm-ring__fill" id="confirm-ring-fill" cx="110" cy="110" r="100" />
+        </svg>
+        <span class="confirm-countdown" id="confirm-countdown">30</span>
+      </div>
+
+      <p class="confirm-hint">
+        Are you sure about this? Remember why you activated Strict Mode.
+      </p>
+
+      <button class="btn-light" id="confirm-cancel-btn">Stay in Strict Mode</button>
     </div>
-
-    <p class="confirm-hint">
-      Are you sure about this? Remember why you activated Strict Mode.
-    </p>
-
-    <button class="btn-light" id="confirm-cancel-btn">Stay in Strict Mode</button>
   </div>
 
   <!-- ─── Unauthenticated view ───────────────────────────────────────── -->
@@ -124,29 +121,32 @@
       </div>
     </div>
 
-    <p class="auth-headline">Sign in to activate<br>your blocklist.</p>
+    <!-- The white card inside the gray one: everything the view shows or asks for. -->
+    <div class="panel">
+      <p class="auth-headline">Sign in to activate<br>your blocklist.</p>
 
-    <div class="form-group">
-      <input class="field" type="email" id="email-input" placeholder="Email" autocomplete="email">
+      <div class="form-group">
+        <input class="field" type="email" id="email-input" placeholder="Email" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+      </div>
+
+      <!-- Same placement/style as dashboard.html's .auth-forgot — right under
+           the password field, right-aligned. Opens the dashboard rather than
+           an in-popup form — see popup.js's own comment. -->
+      <p class="auth-forgot"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
+
+      <p class="auth-error hidden" id="auth-error"></p>
+      <!-- Shown only when sign-in fails specifically because the account
+           exists but hasn't confirmed its email yet — see popup.js's own
+           comment. -->
+      <p class="auth-resend hidden" id="auth-resend"><a href="#" id="login-resend-link">Resend confirmation email</a></p>
+
+      <button class="btn-primary" id="login-btn">Sign in</button>
+
+      <p class="footer-hint">No account? <a href="#" id="signup-link">Create one for free</a></p>
     </div>
-    <div class="form-group">
-      <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
-    </div>
-
-    <!-- Same placement/style as dashboard.html's .auth-forgot — right under
-         the password field, right-aligned. Opens the dashboard rather than
-         an in-popup form — see popup.js's own comment. -->
-    <p class="auth-forgot"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
-
-    <p class="auth-error hidden" id="auth-error"></p>
-    <!-- Shown only when sign-in fails specifically because the account
-         exists but hasn't confirmed its email yet — see popup.js's own
-         comment. -->
-    <p class="auth-resend hidden" id="auth-resend"><a href="#" id="login-resend-link">Resend confirmation email</a></p>
-
-    <button class="btn-primary" id="login-btn">Sign in</button>
-
-    <p class="footer-hint">No account? <a href="#" id="signup-link">Create one for free</a></p>
   </div>
 
   <script type="module" src="popup.js"></script>

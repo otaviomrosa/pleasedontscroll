@@ -17,10 +17,9 @@ obvious improvements until you know why they failed here.
   Strict** — two fully saturated near-opposite primaries, which read
   as signage (police, toy) rather than software wherever both appear at
   once, the schedule grid worst of all. **Note the resolution here: what
-  got dropped was the blue/red pairing, not the blue.** Friction is that
-  exact `#0071e3` again today everywhere except `dashboard.html`, whose
-  `:root` currently says `#388ce0` (an unreconciled drift, see DESIGN.md's
-  token note); it stopped reading as signage the moment
+  got dropped was the blue/red pairing, not the blue.** Friction went back to
+  that exact `#0071e3` for a while and is now the founder's hand-picked
+  `#2081e3`, a touch lighter, with Strict at `#2250a6`; the blue stopped reading as signage the moment
   Strict became a navy rather than a red, since the clash was always
   between the two hues and never in either one alone. The intermediate
   step was deep teal `#00857a` + scarlet `#dc2626`, picked from six pairs
@@ -54,7 +53,7 @@ obvious improvements until you know why they failed here.
   name next to the logo (logo only now); profile *creation* (dashboard-
   only, since blocklist editing is too); "Manage blocklist" as a
   full-width button, then a text link, then finally the small ink pill
-  "Blocklist →" sharing a row with the status line; the status line's
+  "Blocklist →" (now labelled "Dashboard") sharing a row with the status line; the status line's
   gray box and amber paused variant (paused is plain ink text now); the
   five `.divider` hairlines (sections are spaced by a `.container > * + *`
   sibling margin — not a flex `gap`, because `showView()` sets
@@ -116,8 +115,9 @@ obvious improvements until you know why they failed here.
   same and nothing shifts the form.
 - **The landscape band behind the dashboard.** The landing page's closing
   artwork was reproduced behind the signed-in page (image plus a
-  multi-stop white fade). Removed: the dashboard is plain white again,
-  and the footer's frosted pills are now invisible there.
+  multi-stop white fade). Removed for a plain white page, which was then
+  replaced by a different, much quieter artwork (`dashback.webp`) shown
+  full bleed with no fade at all.
 - **A scrolling dashboard with the full landing-page footer.** Briefly
   the dashboard became a scrolling page so the 716px art footer could sit
   under it. Reverted within the session: the dashboard stays one fixed
@@ -132,3 +132,29 @@ obvious improvements until you know why they failed here.
   Replaced by static brand-colored app icons and a one-click toy (pill +
   bubble, "Blocking paused", no durations); the interactive blocklist
   demo lives only in the "Built around your day" preview now.
+- **Imagery behind the middle of the landing page.** A round
+  peach-and-periwinkle glow behind the features section (centred, then
+  full width, then at half opacity), then the dashboard's background
+  turned a quarter turn against the left wall at 60%. Both removed; the
+  middle of the page is plain white.
+- **In the popup: the uppercase "MODE" and "PROFILE" section labels.**
+  Removed; the toggle and the pills explain themselves, and the labels
+  were the last piece of the old labelled-sections look. The gap between
+  groups went from 20px to 28px to do their job. Tried alongside and
+  reverted: a black-and-white mode toggle, a gray-card layout with a
+  white panel, and a narrow, tall version with the Blocklist button on
+  its own row.
+- **In the popup: the dashboard's artwork as a margin round the card.** A
+  small crop of the dashboard background showed as a thin margin (16px,
+  then 10 to 12px) round a rounded, shadowed card. Removed; the popup is
+  the gray card itself, with no image, margin, radius or shadow of its
+  own.
+- **The "Pro" tags.** A flat gray "PRO" label sat permanently in the
+  popup's header and at the foot of the dashboard's sidebar (reading
+  "Free" there for a free account). Removed from both: a paying user
+  already sees what they have (Strict available, extra profiles, no lock
+  icons), and a standing label in a popup opened many times a day told
+  them nothing they could act on. Settings keeps its plain "Manage
+  subscription" row; a row that named the plan beside it ("Plan  Focus
+  Pro") was tried with the removal and undone. The lock icons that mark
+  what an upgrade unlocks for a free account stay.

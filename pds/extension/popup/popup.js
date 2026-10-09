@@ -325,7 +325,6 @@ function applyState(state) {
   isPremium = state.isPremium === true;
   currentBlockingMode = state.blockingMode === 'strict' ? 'strict' : 'friction';
   scheduledStrictUntil = typeof state.scheduledStrictUntil === 'number' ? state.scheduledStrictUntil : null;
-  document.getElementById('pro-tag').classList.toggle('hidden', !isPremium);
   renderModeToggle(currentBlockingMode);
 
   // The pills depend on both flags; redraw them if either just changed.
@@ -344,7 +343,7 @@ function applyState(state) {
     // PM") instead.
     statLine.textContent = isIndefinitePause(state.pauseUntil)
       ? 'Paused indefinitely'
-      : `Paused until ${new Date(state.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      : `Paused until ${new Date(state.pauseUntil).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
     statLine.classList.add('paused');
   } else if (state.blockedCount > 0) {
     statLine.textContent = `${state.blockedCount} ${state.blockedCount === 1 ? 'site' : 'sites'} blocked`;

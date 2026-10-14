@@ -1,9 +1,11 @@
-html, body { width: 352px; }
+html, body { width: 320px; }
 
-.popup { display: flex; flex-direction: column; padding: 16px 18px 18px; min-height: 520px; }
+.popup { display: flex; flex-direction: column; min-height: 500px; }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; height: 32px; margin-bottom: 14px; }
-.topbar .brand { font-size: 14.5px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 16px 12px 0 16px; }
+.topbar .brand { font-size: 14px; gap: 8px; }
+.topbar .mark { width: 22px; height: 22px; border-radius: 6px; }
+.view { padding: 8px 16px 16px; }
 
 .menu-wrap { position: relative; }
 .menu {
@@ -19,7 +21,7 @@ html, body { width: 352px; }
 }
 .menu-item:hover { background: var(--item-hover); }
 .menu-item svg { width: 16px; height: 16px; color: var(--text-faint); flex: none; }
-.menu-item.is-on { background: var(--item-active); color: var(--accent); }
+.menu-item.is-on { background: var(--item-active); color: var(--text); font-weight: 600; }
 .menu-item.is-on svg { color: var(--accent); }
 .menu-item .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-item.is-locked { color: var(--text-faint); }
@@ -27,12 +29,12 @@ html, body { width: 352px; }
 .view { animation: fade-up 220ms var(--ease-fluid) both; }
 
 .view-loading { display: grid; place-items: center; flex: 1; }
-.ring-xl { width: 212px; height: 212px; margin: 4px auto 0; }
+.ring-xl { width: 196px; height: 196px; margin: 8px auto 4px; }
 .view-loading .ring-xl { opacity: 0.6; }
 
-.view-auth { display: flex; flex-direction: column; gap: 18px; padding-top: 18px; }
-.auth-head h1 { margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; }
-.auth-head p { margin: 4px 0 0; color: var(--text-muted); font-size: 13.5px; }
+.view-auth { display: flex; flex-direction: column; gap: 16px; padding-top: 24px; }
+.auth-head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.026em; line-height: 1.2; }
+.auth-head p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
 .auth-form { display: grid; gap: 10px; }
 .auth-form .btn { margin-top: 4px; }
 .form-msg { margin: 0; color: var(--danger-soft); font-size: 13px; }
@@ -41,14 +43,14 @@ html, body { width: 352px; }
 .auth-foot { display: flex; gap: 8px; justify-content: center; align-items: center; color: var(--text-faint); font-size: 13px; }
 .link.muted { color: var(--text-muted); }
 
-.view-app { display: flex; flex-direction: column; gap: 18px; }
+.view-app { display: flex; flex-direction: column; gap: 16px; flex: 1; }
 
-.dial-label { font-size: 13px; font-weight: 500; color: var(--text-faint); margin-bottom: 8px; transition: color 200ms; }
+.dial-label { min-height: 18px; font-size: 12px; font-weight: 500; color: var(--text-faint); transition: color 200ms; }
 .dial.is-running .dial-label { color: var(--accent); }
 .dial.is-running.is-strict .dial-label { color: var(--strict); }
-.dial-time { font-size: 46px; }
-.dial-time.is-long { font-size: 38px; }
-.dial-sub { min-height: 18px; margin-top: 8px; font-size: 12.5px; color: var(--text-faint); }
+.dial-time { padding: 4px 0 6px; font-size: 44px; }
+.dial-time.is-long { font-size: 36px; }
+.dial-sub { min-height: 18px; font-size: 12px; color: var(--text-faint); }
 
 .controls { display: grid; gap: 8px; }
 
@@ -59,21 +61,21 @@ html, body { width: 352px; }
 
 .picker { position: relative; }
 .picker-btn {
-  display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 12px 0 14px;
-  border: 0; border-radius: 14px; background: var(--raised); text-align: left;
-  transition: background-color 140ms;
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 14px 0 16px;
+  border: 0; border-radius: 999px; background: var(--sunken); text-align: left;
+  transition: background-color var(--duration) var(--ease-fluid);
 }
-.picker-btn:hover:not(:disabled) { background: var(--raised-hover); }
+.picker-btn:hover:not(:disabled) { background: var(--raised); }
 .picker-btn:disabled { cursor: default; }
 .picker-label { color: var(--text-faint); font-size: 13px; font-weight: 500; }
-.picker-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; text-align: right; }
+.picker-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; text-align: right; }
 .picker-chevron { width: 16px; height: 16px; color: var(--text-faint); flex: none; transition: transform 200ms var(--ease-fluid); }
 .picker-btn[aria-expanded="true"] .picker-chevron { transform: rotate(180deg); }
 .picker-btn:disabled .picker-chevron { opacity: 0; }
 .picker-menu { left: 0; right: 0; top: calc(100% + 6px); max-height: 196px; overflow-y: auto; scrollbar-width: thin; }
 
 .action { display: grid; gap: 10px; margin-top: auto; }
-.note { margin: 0; min-height: 19px; text-align: center; font-size: 12.5px; color: var(--text-faint); }
+.note { margin: 0; min-height: 18px; text-align: center; font-size: 12px; color: var(--text-faint); }
 .note.is-error { color: var(--danger-soft); }
 
 .dial:not(.is-running) .ring-fill { opacity: 0; }

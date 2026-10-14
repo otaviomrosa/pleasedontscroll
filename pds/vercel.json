@@ -55,6 +55,10 @@
       "destination": "/web/landing.js"
     },
     {
+      "source": "/blocklist-view.js",
+      "destination": "/web/blocklist-view.js"
+    },
+    {
       "source": "/assets/:path*",
       "destination": "/web/assets/:path*"
     },

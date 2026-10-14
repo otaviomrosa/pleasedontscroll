@@ -22,6 +22,7 @@
   <link rel="preload" href="assets/fonts/plus-jakarta-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="site.css">
   <script defer src="/_vercel/insights/script.js"></script>
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -56,14 +57,13 @@
       <section class="hero">
         <div class="container">
           <div class="hero__copy">
-            <span class="hero__badge rise"><b>New</b>Timed focus sessions</span>
             <h1 class="display rise rise-1">Stop scrolling. <span class="muted">Start a session.</span></h1>
             <p class="lead rise rise-2">Pick a profile and a mode, then start the timer. The sites that eat your day stay blocked until it ends.</p>
             <div class="hero__actions rise rise-3">
               <a class="btn btn--primary btn--lg" href="dashboard.html?view=signup">Get started free
                 <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
               </a>
-              <a class="btn btn--ghost btn--lg" href="pricing.html">See pricing</a>
+              <a class="btn btn--secondary btn--lg" href="pricing.html">See pricing</a>
             </div>
           </div>
 
@@ -72,30 +72,40 @@
             <div class="demo__stage">
               <figure class="frame" aria-label="The Please Don't Scroll dashboard">
                 <div class="frame__bar"><span class="frame__lights" aria-hidden="true"><span></span><span></span><span></span></span><span class="frame__url">pleasedontscroll.com/dashboard</span></div>
-                <div class="opt">
-                  <aside class="opt__side">
+                <div class="app is-mock">
+                  <aside class="side">
                     <span class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></span>
-                    <div class="opt__nav">
-                      <span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>Blocklist<em id="d-count">4</em></span>
-                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Schedule</span>
-                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</span>
+                    <nav class="side-nav" aria-label="Dashboard">
+                      <button class="sidebar-nav-item active" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>Blocklist<span class="count" id="d-count">4</span></button>
+                      <button class="sidebar-nav-item" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Schedule</button>
+                      <button class="sidebar-nav-item" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</button>
+                    </nav>
+                    <div class="session-card" id="d-session">
+                      <div class="session-card__top">
+                        <div class="ring session-ring is-idle" id="d-ring"><svg viewBox="0 0 48 48" aria-hidden="true"><circle class="ring-track" cx="24" cy="24" r="20"/><circle class="ring-fill" id="d-fill" cx="24" cy="24" r="20" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/></svg></div>
+                        <div><div class="session-card__label" id="d-label">No session</div><div class="session-card__time" id="d-time">Idle</div></div>
+                      </div>
+                      <p class="session-card__hint" id="d-hint">Start one from the popup. Sites are only blocked while it runs.</p>
                     </div>
-                    <div class="opt__foot"><span class="pill-chip is-idle" id="d-chip"><span class="dot"></span><span id="d-chip-text">No session</span></span></div>
                   </aside>
-                  <div class="opt__pane">
-                    <div class="opt__title"><h3>Blocklist</h3></div>
-                    <p class="opt__desc">Sites on the active profile are blocked while a session runs. Block a whole site or just one section of it.</p>
-                    <div class="opt__tabs" id="d-tabs">
-                      <button class="tab-pill" type="button" data-p="Default">Default</button>
-                      <button class="tab-pill is-on" type="button" data-p="Deep work">Deep work</button>
-                      <button class="tab-pill" type="button" data-p="Evening">Evening</button>
-                    </div>
-                    <form class="add-row" id="d-form" autocomplete="off">
-                      <input class="field" id="d-input" placeholder="youtube.com/shorts" aria-label="Site to block" maxlength="100">
-                      <button class="btn-add" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Block</button>
-                    </form>
-                    <div class="quick" id="d-quick"><span class="quick__label">Quick add</span></div>
-                    <ul class="sites" id="d-sites"></ul>
+                  <div class="pane">
+                    <section class="content-section">
+                      <div class="section-inner">
+                        <div class="pane-head"><p class="pane-title">Blocklist</p><span class="pill-chip is-idle" id="d-chip"><span class="dot"></span><span id="d-chip-text">No session</span></span></div>
+                        <p class="pane-desc">During a session, every page on the profile you picked is blocked. Add a whole site or just one section of it.</p>
+                        <div class="profile-switcher"><div class="profile-tabs" id="d-tabs">
+                          <button class="profile-tab" type="button" data-p="Default"><span>Default</span></button>
+                          <button class="profile-tab active" type="button" data-p="Deep work"><span>Deep work</span></button>
+                          <button class="profile-tab" type="button" data-p="Evening"><span>Evening</span></button>
+                        </div><button class="btn-add-profile" type="button" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New profile</button></div>
+                        <form class="url-input-row" id="d-form" autocomplete="off">
+                          <input class="field" id="d-input" placeholder="youtube.com/shorts" aria-label="Site to block" maxlength="100">
+                          <button class="btn-sm" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Block</button>
+                        </form>
+                        <div class="quick-add-row" id="d-quick"></div>
+                        <div class="blocklist-surface"><ul class="url-list" id="d-sites"></ul></div>
+                      </div>
+                    </section>
                   </div>
                 </div>
               </figure>
@@ -105,28 +115,30 @@
                   <div class="pop" id="pop" aria-label="The extension popup, working">
                     <div class="pop__top">
                       <span class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></span>
-                      <svg class="pop__gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+                      <span class="pop__gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg></span>
                     </div>
-                    <div class="ring dial is-idle" id="p-dial">
-                      <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/><circle class="ring-fill" id="p-fill" cx="100" cy="100" r="92" stroke-width="5" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/></svg>
-                      <div class="ring-center"><span class="ring-label" id="p-label">Ready when you are</span><span class="ring-time" id="p-time">30:00</span><span class="ring-sub" id="p-sub">Breathe to open a site</span></div>
-                    </div>
-                    <div class="pop__controls">
-                      <div class="segmented" id="p-mode">
-                        <button type="button" class="is-on" data-v="friction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Friction</button>
-                        <button type="button" data-v="strict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Strict</button>
+                    <div class="pop__body">
+                      <div class="ring dial is-idle" id="p-dial">
+                        <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="94"/><circle class="ring-fill" id="p-fill" cx="100" cy="100" r="94" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/></svg>
+                        <div class="ring-center"><span class="ring-label" id="p-label"></span><span class="ring-time" id="p-time">30:00</span><span class="ring-sub" id="p-sub"></span></div>
                       </div>
-                      <div class="pop__profile"><span>Profile</span><b id="p-profile">Deep work</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-                      <div class="segmented" id="p-len">
-                        <button type="button" data-v="15">15m</button>
-                        <button type="button" class="is-on" data-v="30">30m</button>
-                        <button type="button" data-v="60">1h</button>
-                        <button type="button" data-v="120">2h</button>
-                        <button type="button" data-v="360">6h</button>
+                      <div class="pop__controls">
+                        <div class="segmented" id="p-mode">
+                          <button type="button" class="is-on" data-v="friction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Friction</button>
+                          <button type="button" data-v="strict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Strict</button>
+                        </div>
+                        <div class="pop__profile"><span>Profile</span><b id="p-profile">Deep work</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                        <div class="segmented" id="p-len">
+                          <button type="button" data-v="15">15m</button>
+                          <button type="button" class="is-on" data-v="30">30m</button>
+                          <button type="button" data-v="60">1h</button>
+                          <button type="button" data-v="120">2h</button>
+                          <button type="button" data-v="360">6h</button>
+                        </div>
                       </div>
+                      <button class="btn btn--primary" id="p-btn" type="button">Start focusing</button>
+                      <p class="pop__note" id="p-note">Try it. Nothing gets blocked here.</p>
                     </div>
-                    <div class="pop__action"><button class="btn btn--primary" id="p-btn" type="button">Start focusing</button></div>
-                    <p class="pop__note" id="p-note">Try it. Nothing gets blocked here.</p>
                   </div>
                 </div>
               </div>
@@ -149,20 +161,23 @@
           <figure class="frame" data-reveal aria-label="The focus screen on a blocked site">
             <div class="frame__bar"><span class="frame__lights" aria-hidden="true"><span></span><span></span><span></span></span><span class="frame__url">youtube.com/shorts</span></div>
             <div class="focus">
-              <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg>
-              <span class="pill-chip" id="f-chip"><span class="dot"></span><span id="f-chip-text">Friction session</span></span>
-              <h3 id="f-title">youtube.com is blocked</h3>
-              <p id="f-lead">It opens again when your session ends.</p>
-              <div class="ring" id="f-ring">
-                <span class="halo" aria-hidden="true"></span>
-                <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/><circle class="ring-fill" id="f-fill" cx="100" cy="100" r="92" stroke-width="4" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="380"/></svg>
-                <div class="ring-center"><span class="ring-time" id="f-time">18:38</span><span class="ring-sub" id="f-sub">left in this session</span></div>
+              <div class="focus__aura" aria-hidden="true"><span></span><span></span></div>
+              <div class="focus__card">
+                <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg>
+                <span class="live-chip" id="f-chip"><span class="dot"></span><span id="f-chip-text">Friction session</span></span>
+                <h3 id="f-title">youtube.com is blocked</h3>
+                <p id="f-lead">It opens again when your session ends.</p>
+                <div class="clock" id="f-clock">
+                  <svg class="spell-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="99"/></svg>
+                  <div class="ring" id="f-ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="94"/><circle class="ring-fill" id="f-fill" cx="100" cy="100" r="94" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="380"/></svg></div>
+                  <div class="clock-face"><p class="clock-time" id="f-time">18:38</p><p class="clock-label" id="f-sub">left in this session</p></div>
+                </div>
+                <div class="focus__actions">
+                  <button class="btn-quiet" type="button" id="f-back">Go back</button>
+                  <button class="btn-quiet is-accent" type="button" id="f-breathe">Breathe to open for 10 minutes</button>
+                </div>
+                <p class="focus__fine" id="f-fine"></p>
               </div>
-              <div class="focus__actions">
-                <button class="btn btn--primary" type="button" id="f-back">Go back</button>
-                <button class="btn btn--ghost" type="button" id="f-breathe">Breathe to open for 10 minutes</button>
-              </div>
-              <p class="focus__fine" id="f-fine"></p>
             </div>
           </figure>
         </div>
@@ -186,7 +201,7 @@
                   <button type="button" class="is-on" data-v="friction">Friction</button>
                   <button type="button" data-v="strict">Strict <span class="pro-tag">Pro</span></button>
                 </div>
-                <ul class="sites" id="m-list"></ul>
+                <ul class="url-list" id="m-list"></ul>
               </div>
             </div>
             <div class="feature">
@@ -264,11 +279,23 @@
       <section class="section" id="install">
         <div class="container">
           <div class="install" data-reveal>
+            <div class="install__dots" aria-hidden="true"></div>
+            <div class="install__rays" aria-hidden="true"></div>
+            <div class="install__glow" aria-hidden="true"></div>
             <h2 class="h2">Ready to focus?</h2>
-            <p class="lead">Free on Chrome. Focus Pro adds Strict Mode, more profiles and the schedule for $4.99 a month.</p>
+            <p class="lead">Please Don't Scroll is free on Chrome. Focus Pro adds Strict Mode, more profiles and the schedule.</p>
             <div class="install__actions">
-              <a class="btn btn--primary btn--lg" href="dashboard.html?view=signup">Get started free</a>
-              <a class="btn btn--ghost btn--lg" href="pricing.html">Compare plans</a>
+              <a class="btn btn--primary btn--lg" href="dashboard.html?view=signup">Get started free
+                <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </a>
+              <a class="btn btn--secondary btn--lg" href="pricing.html">Compare plans</a>
+            </div>
+            <div class="install__more">
+              <p>Questions, a bug, or an idea? Every email gets read.</p>
+              <a class="btn btn--secondary" href="mailto:hello@pleasedontscroll.com">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                Email us
+              </a>
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@
   <main class="popup" id="popup">
     <header class="topbar">
       <div class="brand">
-        <img class="mark" src="../assets/icons/logo.svg" width="24" height="24" alt="">
+        <img class="mark" src="../assets/icons/logo.svg" width="22" height="22" alt="">
         <span>Please Don't Scroll</span>
       </div>
       <div class="menu-wrap" id="menu-wrap" hidden>
@@ -32,7 +32,7 @@
     </header>
 
     <section class="view view-loading" id="view-loading">
-      <div class="ring ring-xl is-idle"><svg viewBox="0 0 200 200"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/></svg></div>
+      <div class="ring ring-xl is-idle"><svg viewBox="0 0 200 200"><circle class="ring-track" cx="100" cy="100" r="94"/></svg></div>
     </section>
 
     <section class="view view-auth" id="view-auth" hidden>
@@ -45,7 +45,7 @@
         <input class="field" id="password-input" type="password" placeholder="Password" autocomplete="current-password" required>
         <p class="form-msg" id="auth-error" hidden></p>
         <button class="link resend" id="login-resend-link" type="button" hidden>Resend confirmation email</button>
-        <button class="btn btn-primary btn-block" id="login-btn" type="submit">Sign in</button>
+        <button class="btn btn-primary btn-lg btn-block" id="login-btn" type="submit">Sign in</button>
       </form>
       <div class="auth-foot">
         <button class="link" id="signup-link" type="button">Create an account</button>
@@ -57,11 +57,11 @@
     <section class="view view-app" id="view-app" hidden>
       <div class="dial ring ring-xl" id="dial">
         <svg viewBox="0 0 200 200" aria-hidden="true">
-          <circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/>
-          <circle class="ring-fill" id="dial-fill" cx="100" cy="100" r="92" stroke-width="5" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/>
+          <circle class="ring-track" cx="100" cy="100" r="94"/>
+          <circle class="ring-fill" id="dial-fill" cx="100" cy="100" r="94" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/>
         </svg>
         <div class="ring-center">
-          <span class="dial-label" id="dial-label">Ready when you are</span>
+          <span class="dial-label" id="dial-label"></span>
           <span class="ring-time dial-time" id="dial-time">30:00</span>
           <span class="dial-sub" id="dial-sub"></span>
         </div>
@@ -93,7 +93,7 @@
       </div>
 
       <div class="action">
-        <button class="btn btn-primary btn-block" id="primary-btn" type="button">Start focusing</button>
+        <button class="btn btn-primary btn-lg btn-block" id="primary-btn" type="button">Start focusing</button>
         <p class="note" id="note" role="status"></p>
       </div>
     </section>

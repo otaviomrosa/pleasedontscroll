@@ -86,8 +86,16 @@ function renderNote() {
     const count = state.blockedCount;
     setNote(count === 1 ? '1 site blocked' : `${count} sites blocked`);
   } else {
-    setNote('Sites on this profile stay blocked until the timer ends.');
+    setNote('Sites stay blocked until the timer ends.');
   }
+}
+
+function syncSegmented(el) {
+  const buttons = [...el.querySelectorAll(':scope > button')];
+  const index = buttons.findIndex((b) => b.classList.contains('is-on'));
+  el.style.setProperty('--segments', String(buttons.length));
+  el.style.setProperty('--active', String(Math.max(index, 0)));
+  el.toggleAttribute('data-none', index < 0);
 }
 
 function renderMode() {
@@ -101,6 +109,7 @@ function renderMode() {
     btn.setAttribute('aria-checked', String(on));
   }
   $('strict-pro').hidden = state.isPremium;
+  syncSegmented(control);
 }
 
 function renderLength() {
@@ -132,6 +141,7 @@ function renderLength() {
     btn.classList.toggle('is-on', on);
     btn.setAttribute('aria-checked', String(on));
   }
+  syncSegmented(control);
 }
 
 function renderProfile() {
@@ -196,15 +206,14 @@ function renderDial() {
   if (running) {
     const remaining = sessionRemainingMs(state.sessionUntil);
     const fraction = Math.min(1, remaining / Math.max(1, sessionTotalMs()));
-    const label = mode === 'strict' ? 'Strict session' : 'Friction session';
-    $('dial-label').textContent = state.scheduled ? `${label} · scheduled` : label;
+    $('dial-label').textContent = state.scheduled ? 'Scheduled session' : mode === 'strict' ? 'Strict session' : 'Keep going!';
     time.textContent = formatCountdown(remaining);
     $('dial-sub').textContent = `until ${formatClockTime(state.sessionUntil)}`;
     fill.style.strokeDashoffset = String(1000 * (1 - fraction));
   } else {
-    $('dial-label').textContent = 'Ready when you are';
+    $('dial-label').textContent = '';
     time.textContent = formatCountdown(prefs.minutes * 60000);
-    $('dial-sub').textContent = mode === 'strict' ? 'No way out until it ends' : 'Breathe to open a site';
+    $('dial-sub').textContent = '';
     fill.style.strokeDashoffset = '1000';
   }
   time.classList.toggle('is-long', time.textContent.length > 5);
@@ -213,7 +222,7 @@ function renderDial() {
 function renderAction() {
   const btn = $('primary-btn');
   const running = isRunning();
-  btn.className = 'btn btn-block';
+  btn.className = 'btn btn-lg btn-block';
   btn.disabled = busy;
   if (!running) {
     btn.classList.add('btn-primary');

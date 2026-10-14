@@ -9,11 +9,7 @@
   <link rel="stylesheet" href="blocked.css">
 </head>
 <body>
-  <div class="aura" aria-hidden="true">
-    <span class="aura-a"></span>
-    <span class="aura-b"></span>
-    <span class="dots"></span>
-  </div>
+  <div class="aura" aria-hidden="true"><span></span><span></span></div>
 
   <main class="screen">
     <img class="mark screen-mark" src="../assets/icons/logo.svg" width="56" height="56" alt="Please Don't Scroll">
@@ -23,21 +19,23 @@
     <h1 class="title" id="title">This site is blocked</h1>
     <p class="lead" id="lead">It opens again when your session ends.</p>
 
-    <div class="ring timer" id="timer">
-      <span class="halo" aria-hidden="true"></span>
-      <svg viewBox="0 0 200 200" aria-hidden="true">
-        <circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/>
-        <circle class="ring-fill" id="timer-fill" cx="100" cy="100" r="92" stroke-width="4" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/>
-      </svg>
-      <div class="ring-center">
-        <span class="ring-time timer-time" id="timer-time">--:--</span>
-        <span class="timer-label" id="timer-label">left in this session</span>
+    <div class="clock" id="timer">
+      <svg class="spell-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="99"/></svg>
+      <div class="ring">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-track" cx="100" cy="100" r="94"/>
+          <circle class="ring-fill" id="timer-fill" cx="100" cy="100" r="94" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/>
+        </svg>
+      </div>
+      <div class="clock-face">
+        <span class="clock-time" id="timer-time">--:--</span>
+        <span class="clock-label" id="timer-label">left in this session</span>
       </div>
     </div>
 
     <div class="actions">
-      <button class="btn btn-primary" id="leave-btn" type="button">Close tab</button>
-      <button class="btn btn-outline" id="breathe-btn" type="button" hidden>Breathe to open for 10 minutes</button>
+      <button class="btn btn-quiet" id="leave-btn" type="button">Close tab</button>
+      <button class="btn btn-quiet is-accent" id="breathe-btn" type="button" hidden>Breathe to open for 10 minutes</button>
     </div>
     <p class="fine" id="fine"></p>
   </main>

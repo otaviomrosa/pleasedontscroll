@@ -2,14 +2,13 @@ html, body { height: 100%; }
 body { overflow: hidden; background: var(--canvas); }
 
 .aura { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
-.aura span { position: absolute; border-radius: 50%; }
-.aura-a { width: 720px; height: 720px; top: -240px; left: -200px; background: radial-gradient(closest-side, rgb(124 58 237 / 0.16), transparent); animation: drift 18s ease-in-out infinite alternate; }
-.aura-b { width: 760px; height: 760px; bottom: -300px; right: -220px; background: radial-gradient(closest-side, rgb(124 58 237 / 0.13), transparent); animation: drift 22s ease-in-out -9s infinite alternate-reverse; }
-.aura .dots { inset: 0; border-radius: 0; background-image: radial-gradient(rgb(18 17 28 / 0.08) 1px, transparent 1.5px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 10%, transparent 70%); }
+.aura span { position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(closest-side, rgb(124 58 237 / 0.14), transparent); filter: blur(40px); }
+.aura span:first-child { top: -160px; left: -160px; animation: drift 18s ease-in-out infinite alternate; }
+.aura span:last-child { right: -160px; bottom: -160px; animation: drift 22s ease-in-out -9s infinite alternate-reverse; }
 
 .screen {
   position: relative; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 48px 20px; text-align: center;
+  padding: 48px 24px; text-align: center;
 }
 .screen > * { animation: rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .screen > *:nth-child(2) { animation-delay: 60ms; }
@@ -19,23 +18,24 @@ body { overflow: hidden; background: var(--canvas); }
 .screen > *:nth-child(6) { animation-delay: 280ms; }
 .screen > *:nth-child(7) { animation-delay: 320ms; }
 
-.screen-mark { width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 14px 30px -14px rgb(91 33 182 / 0.6); }
-#mode-chip { margin-top: 22px; }
+.screen-mark { width: 56px; height: 56px; margin-bottom: 28px; border-radius: 14px; }
+#mode-chip { margin-bottom: 14px; }
 
-.title { margin: 14px 0 0; font-size: clamp(26px, 4vw, 32px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; max-width: 22ch; overflow-wrap: anywhere; }
-.lead { margin: 10px 0 0; max-width: 40ch; color: var(--text-muted); font-size: 15px; }
+.title { margin: 0; max-width: 22ch; font-size: 30px; font-weight: 500; letter-spacing: -0.025em; line-height: 1.2; overflow-wrap: anywhere; text-wrap: balance; }
+.lead { margin: 12px 0 0; max-width: 42ch; color: var(--text-muted); font-size: 15px; line-height: 1.6; text-wrap: balance; }
 
-.timer { width: 220px; height: 220px; margin-top: 34px; }
-.halo { position: absolute; inset: -14px; border-radius: 50%; border: 1px dashed rgb(124 58 237 / 0.22); animation: spin 120s linear infinite; }
-.timer.is-strict .halo { border-color: rgb(76 29 149 / 0.25); }
-.timer-time { font-size: 50px; font-weight: 500; letter-spacing: -0.04em; }
-.timer-time.is-long { font-size: 40px; }
-.timer-label { margin-top: 8px; font-size: 12.5px; color: var(--text-faint); }
-.timer.is-breathing .ring-fill { transition: stroke-dashoffset 1s linear; }
-.timer.is-breathing .timer-label { color: var(--accent); font-weight: 500; }
+.clock { position: relative; display: grid; place-items: center; width: 216px; height: 216px; margin-top: 36px; }
+.clock .ring { position: absolute; inset: 0; }
+.spell-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 1 7; stroke-linecap: round; animation: spell-spin 120s linear infinite; }
+.clock-face { position: relative; display: grid; justify-items: center; }
+.clock-time { font-size: 48px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; }
+.clock-time.is-long { font-size: 40px; }
+.clock-label { margin-top: 8px; color: var(--text-faint); font-size: 13px; }
+.clock.is-strict .ring-fill { stroke: var(--strict); }
+.clock.is-breathing .ring-fill { transition: stroke-dashoffset 1s linear; }
+.clock.is-breathing .clock-label { color: var(--accent); font-weight: 500; }
 
-.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 34px; }
-.actions .btn { height: 42px; }
-.fine { min-height: 20px; margin: 14px 0 0; color: var(--text-faint); font-size: 13px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 36px; }
+.fine { min-height: 20px; margin: 12px 0 0; color: var(--text-faint); font-size: 13px; }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spell-spin { from { transform: scale(1.1) rotate(0deg); } to { transform: scale(1.1) rotate(360deg); } }

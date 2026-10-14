@@ -66,3 +66,16 @@ export function showToast(msg, duration = 3500) {
   clearTimeout(showToast.timer)
   showToast.timer = setTimeout(() => el.classList.remove('visible'), duration)
 }
+
+export function syncSegmented(el) {
+  const buttons = [...el.querySelectorAll(':scope > button')]
+  const index = buttons.findIndex((b) => b.classList.contains('is-on'))
+  el.style.setProperty('--segments', String(buttons.length))
+  el.style.setProperty('--active', String(Math.max(index, 0)))
+  el.toggleAttribute('data-none', index < 0)
+}
+
+document.querySelectorAll('.segmented').forEach((el) => {
+  syncSegmented(el)
+  new MutationObserver(() => syncSegmented(el)).observe(el, { subtree: true, attributes: true, attributeFilter: ['class'] })
+})

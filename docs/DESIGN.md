@@ -28,7 +28,9 @@ Defined in `web/site.css` (website and dashboard) and `extension/ui.css`
 | --- | --- | --- |
 | `--canvas` | `#ffffff` | Page |
 | `--surface` | `#fcfcfe` | Panels (dashboard pane) |
-| `--raised` / `--raised-hover` | `#f6f6fa` / `#efeff5` | Fields, segmented controls, pills |
+| `--raised` / `--raised-hover` | `#f6f6fa` / `#efeff5` | Secondary buttons, chips, the segmented indicator |
+| `--sunken` | `#f8f8fb` | Fields, segmented tracks, the profile picker |
+| `--item-active` | `#efeafe` | Selected nav item, profile tab, menu row |
 | `--border` | `#eeeef4` | Hairlines and list dividers |
 | `--text` / `--text-muted` / `--text-faint` | `#12111c` / `#55536a` / `#8c8aa0` | Three text levels |
 | `--accent` | `#7c3aed` | Primary buttons, live states, Friction |
@@ -42,14 +44,31 @@ the same", not as an alarm.
 ## Type
 
 Plus Jakarta Sans, self-hosted from `assets/fonts` (one variable file, no
-Google Fonts request). Display sizes use weight 500 with tight tracking
-(`-0.045em` hero, `-0.035em` section titles); UI text is 13 to 15px.
+Google Fonts request). Sizes are copied from FocusPocus:
+
+| Element | Size |
+| --- | --- |
+| Body | 14px |
+| Hero | `clamp(38px, 6vw, 64px)`, weight 500, `-0.045em` |
+| Section title | `clamp(28px, 4vw, 42px)`, weight 500 |
+| Lead | 16 to 18px |
+| Pane title (dashboard) | 25px, weight 700, `-0.026em` |
+| Focus screen title | 30px, weight 500 |
+| Popup dial time | 44px, 36px with hours |
+| Focus screen time | 48px, weight 300 |
+| Captions, segmented labels | 12 to 13px, weight 500 |
+
 Countdowns use tabular figures.
 
 ## Shapes and elevation
 
-- Buttons and pills: full radius. Fields: 12px. Cards: 16 to 24px. The
-  install panel: 32px.
+- Buttons: pills with a 1px border, 40px tall (44px for the main action),
+  14px semibold (15px large). Primary is violet; secondary is raised with a
+  border; danger is a pink wash that fills on hover. No solid black buttons.
+- Fields: 40px, 10px radius, sunken. Segmented controls: a sunken track
+  with a sliding indicator, 32px labels.
+- Selected states are light (`--item-active`), never filled dark.
+- Cards: 16 to 24px. The install panel: 32px.
 - Resting elevation is a 1px hairline, not a shadow. `--shadow-float` is
   for things drawn floating over the page (mocks, plan cards, auth card),
   `--shadow-popover` for menus and toasts.
@@ -77,10 +96,20 @@ icons and favicons are renders of it.
 - **Dashboard**: an options-page layout. Sidebar with navigation, the live
   session card and the account row; a raised pane for Blocklist, Schedule
   and Settings. All blocklist, profile and schedule behaviour is unchanged.
-- **Popup** (352px): dial, mode, profile, length, one primary action.
-  Friction sessions end with two clicks; Strict shows when it unlocks.
-- **Focus screen**: the time left in the session, a way back, and in
-  Friction a 30-second breath that opens the site for 10 minutes.
+- **Popup** (320px): a 196px dial, mode, profile, length, one primary
+  action. Friction sessions end with two clicks; Strict shows when it
+  unlocks.
+- **Focus screen**: a 216px clock with a slow dotted ring around it, the
+  time left in the session, a way back, and in Friction a 30-second breath
+  that opens the site for 10 minutes.
+
+## Keeping the landing page honest
+
+The dashboard mock on `index.html` is built from the real dashboard
+markup and `app.css` classes, and its blocklist rows and quick-add chips
+come from `web/blocklist-view.js`, the same module the dashboard uses.
+When the dashboard's markup changes, update the mock in `index.html` in
+the same change.
 
 ## Product change that came with it
 

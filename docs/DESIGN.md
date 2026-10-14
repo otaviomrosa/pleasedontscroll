@@ -58,7 +58,12 @@ Google Fonts request). Sizes are copied from FocusPocus:
 | Focus screen time | 48px, weight 300 |
 | Captions, segmented labels | 12 to 13px, weight 500 |
 
-Countdowns use tabular figures.
+Countdowns use tabular figures. The font file is loaded by a relative URL
+with `font-display: block`, so a page never flashes or falls back to the
+system font, even opened from disk.
+
+Blocklist rows show the site's first letter on a tile, never a favicon, so
+the dashboard makes no requests to third parties.
 
 ## Shapes and elevation
 

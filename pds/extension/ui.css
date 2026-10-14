@@ -57,6 +57,7 @@ html, body {
   font-size: 14px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection { background: var(--accent-dim); color: var(--text); }

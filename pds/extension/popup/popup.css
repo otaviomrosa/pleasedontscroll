@@ -16,7 +16,7 @@ html, body { width: 320px; }
 #menu { top: calc(100% + 6px); right: 0; }
 .menu-item {
   display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 10px;
-  border: 0; border-radius: 9px; background: transparent; color: var(--text); font-size: 13.5px; font-weight: 500;
+  border: 0; border-radius: 9px; background: transparent; color: var(--text); font-size: 13px; font-weight: 500;
   text-decoration: none; text-align: left;
 }
 .menu-item:hover { background: var(--item-hover); }
@@ -56,7 +56,7 @@ html, body { width: 320px; }
 
 .pro-tag {
   display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 6px;
-  background: var(--accent-wash); color: var(--accent); font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em;
+  background: var(--accent-wash); color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
 }
 
 .picker { position: relative; }

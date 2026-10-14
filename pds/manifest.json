@@ -39,6 +39,6 @@
     ]
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://icons.duckduckgo.com; connect-src 'self' https://fqnoxcycqnnflwdgczvi.supabase.co;"
+    "extension_pages": "script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://fqnoxcycqnnflwdgczvi.supabase.co;"
   }
 }

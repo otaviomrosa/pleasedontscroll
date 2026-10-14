@@ -13,7 +13,6 @@ export const QUICK_ADD_SITES = [
   ] },
 ]
 
-const GLOBE_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.6"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/></svg>'
 const X_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>'
 const LOCK_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/></svg>'
 const CHEVRON_ICON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
@@ -25,23 +24,17 @@ export function createUrlItem(url, { locked = false, onRemove, onLocked } = {}) 
   const left = document.createElement('div')
   left.className = 'url-left'
 
-  const favicon = document.createElement('img')
-  favicon.className = 'url-favicon'
-  favicon.src = `https://icons.duckduckgo.com/ip3/${normalizeToHostname(url)}.ico`
-  favicon.alt = ''
-  favicon.addEventListener('error', () => {
-    const fallback = document.createElement('span')
-    fallback.className = 'url-favicon-fallback'
-    fallback.innerHTML = GLOBE_ICON
-    favicon.replaceWith(fallback)
-  }, { once: true })
+  const letter = document.createElement('span')
+  letter.className = 'url-letter'
+  letter.setAttribute('aria-hidden', 'true')
+  letter.textContent = normalizeToHostname(url).replace(/^www\./, '').charAt(0) || '?'
 
   const text = document.createElement('span')
   text.className = 'url-text'
   text.textContent = url
   text.title = url
 
-  left.append(favicon, text)
+  left.append(letter, text)
   li.appendChild(left)
 
   const del = document.createElement('button')

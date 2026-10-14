@@ -3,64 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <title>Blocked · Please Don't Scroll</title>
+  <link rel="icon" type="image/png" href="../assets/icons/icon-32.png">
+  <link rel="stylesheet" href="../ui.css">
   <link rel="stylesheet" href="blocked.css">
-  <link rel="icon" type="image/png" href="../assets/icons/favicon/favicon-96x96.png" sizes="96x96">
-  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon/favicon.svg">
-  <link rel="shortcut icon" href="../assets/icons/favicon/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="../assets/icons/favicon/apple-touch-icon.png">
-  <title>Focus Mode | Please Don't Scroll</title>
 </head>
 <body>
-
-  <div class="scene">
-    <main class="main">
-      <div class="content">
-
-        <img src="../assets/images/logo-no-bg.png" alt="Please Don't Scroll" class="logo">
-
-        <!-- Text + color set by blocked.js based on the ?mode= param -->
-        <p class="mode-pill" id="modePill">Friction Mode</p>
-
-        <h1 class="block-title">This website was blocked.</h1>
-
-        <p class="site-label">
-          You were heading to <span class="site-name" id="siteName">that site</span>
-        </p>
-
-        <!-- ─── Friction Mode content (30s countdown bypass) ─────────────── -->
-        <div id="frictionUi">
-          <div class="circle-assembly" aria-label="Countdown">
-            <svg class="progress-ring" viewBox="0 0 220 220" aria-hidden="true">
-              <circle class="progress-ring__track" cx="110" cy="110" r="100" />
-              <circle class="progress-ring__fill" id="progressRing" cx="110" cy="110" r="100" />
-            </svg>
-            <div class="ring-center">
-              <span class="countdown" id="countdown">30</span>
-              <span class="countdown-label">seconds</span>
-            </div>
-          </div>
-          <p class="instruction">Breathe for 30 seconds to continue anyway.</p>
-        </div>
-
-        <!-- ─── Strict Mode content (no bypass) ───────────────────────────── -->
-        <!-- Text set dynamically by blocked.js depending on whether a
-             ?back= URL is available — "Close this tab" is the fallback
-             for when it isn't (e.g. a tab that loaded straight into a
-             blocked URL with no prior page this session). -->
-        <p class="strict-copy" id="strictUi" hidden></p>
-
-        <!-- Label + behavior set dynamically by blocked.js — "Go back" to
-             the page before this blocked attempt when we know it, "Close
-             tab" otherwise. See background/index.js's lastSafeUrl. -->
-        <button class="btn-leave" id="leaveBtn">Close tab</button>
-
-      </div>
-    </main>
+  <div class="aura" aria-hidden="true">
+    <span class="aura-a"></span>
+    <span class="aura-b"></span>
+    <span class="dots"></span>
   </div>
 
-  <script src="blocked.js"></script>
+  <main class="screen">
+    <img class="mark screen-mark" src="../assets/icons/logo.svg" width="56" height="56" alt="Please Don't Scroll">
+
+    <span class="chip" id="mode-chip"><span class="chip-dot"></span><span id="mode-label">Friction session</span></span>
+
+    <h1 class="title" id="title">This site is blocked</h1>
+    <p class="lead" id="lead">It opens again when your session ends.</p>
+
+    <div class="ring timer" id="timer">
+      <span class="halo" aria-hidden="true"></span>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/>
+        <circle class="ring-fill" id="timer-fill" cx="100" cy="100" r="92" stroke-width="4" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-time timer-time" id="timer-time">--:--</span>
+        <span class="timer-label" id="timer-label">left in this session</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="leave-btn" type="button">Close tab</button>
+      <button class="btn btn-outline" id="breathe-btn" type="button" hidden>Breathe to open for 10 minutes</button>
+    </div>
+    <p class="fine" id="fine"></p>
+  </main>
+
+  <script type="module" src="blocked.js"></script>
 </body>
 </html>

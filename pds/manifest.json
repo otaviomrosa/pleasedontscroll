@@ -1,26 +1,31 @@
 {
   "manifest_version": 3,
   "name": "Please Don't Scroll",
-  "version": "2.0",
-  "description": "Block distracting sites with a mindful breathing pause, or lock them out completely in Strict Mode. Built for serious focus.",
-  "permissions": ["storage", "tabs", "alarms", "idle"],
+  "version": "3.0",
+  "description": "Start a focus session and distracting sites stay blocked until the timer ends. Friction Mode or Strict Mode, your choice.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "alarms",
+    "idle"
+  ],
   "host_permissions": [
     "https://fqnoxcycqnnflwdgczvi.supabase.co/*"
   ],
   "action": {
     "default_popup": "extension/popup/popup.html",
     "default_icon": {
-      "16":  "extension/assets/icons/favicon/favicon-96x96.png",
-      "32":  "extension/assets/icons/favicon/favicon-96x96.png",
-      "48":  "extension/assets/icons/favicon/favicon-96x96.png",
-      "128": "extension/assets/icons/favicon/apple-touch-icon.png"
+      "16": "extension/assets/icons/icon-16.png",
+      "32": "extension/assets/icons/icon-32.png",
+      "48": "extension/assets/icons/icon-48.png",
+      "128": "extension/assets/icons/icon-128.png"
     }
   },
   "icons": {
-    "16":  "extension/assets/icons/favicon/favicon-96x96.png",
-    "32":  "extension/assets/icons/favicon/favicon-96x96.png",
-    "48":  "extension/assets/icons/favicon/favicon-96x96.png",
-    "128": "extension/assets/icons/favicon/apple-touch-icon.png"
+    "16": "extension/assets/icons/icon-16.png",
+    "32": "extension/assets/icons/icon-32.png",
+    "48": "extension/assets/icons/icon-48.png",
+    "128": "extension/assets/icons/icon-128.png"
   },
   "background": {
     "service_worker": "extension/background/index.js",
@@ -34,6 +39,6 @@
     ]
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fqnoxcycqnnflwdgczvi.supabase.co;"
+    "extension_pages": "script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://icons.duckduckgo.com; connect-src 'self' https://fqnoxcycqnnflwdgczvi.supabase.co;"
   }
 }

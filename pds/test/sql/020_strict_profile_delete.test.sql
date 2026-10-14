@@ -9,7 +9,7 @@ INSERT INTO blocked_urls (user_id, profile_id, url)
   SELECT test.uid(1), id, 'reddit.com' FROM profiles WHERE user_id = test.uid(1) AND name = 'Spare';
 INSERT INTO blocked_urls (user_id, profile_id, url)
   SELECT test.uid(1), id, 'instagram.com' FROM profiles WHERE user_id = test.uid(1) AND is_active;
-UPDATE user_settings SET blocking_mode = 'strict' WHERE id = test.uid(1);
+UPDATE user_settings SET blocking_mode = 'strict', session_until = now() + interval '1 hour' WHERE id = test.uid(1);
 SELECT test.act_as('authenticated', test.uid(1));
 
 -- A direct removal is still refused, on the spare profile as on the active one.

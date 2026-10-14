@@ -1,498 +1,79 @@
-/* popup.css — PDS Extension Popup
-   Same language as /web (the overhauled site + dashboard): flat gray
-   surfaces on white, no hairlines or borders anywhere, pill controls,
-   DM Sans for UI and Plus Jakarta Sans for the two display moments (the
-   sign-in headline and the leave-Strict countdown), color reserved for
-   the two modes. Still its own token set — this is a separate document
-   from /web, not a shared stylesheet — but the values are copied from
-   web/dashboard.html's :root on purpose so the two never drift by
-   accident. Every id and class popup.js touches is unchanged. */
+html, body { width: 352px; }
 
-/* ─── Tokens ────────────────────────────────────────────────────────────────── */
-:root {
-  --ink:          #000000;
-  --paper:        #ffffff;
-  --black:        var(--ink);
-  --white:        var(--paper);
-  --text:         var(--ink);
-  --surface:      #f5f5f7;   /* every control's resting ground */
-  --surface-deep: #e8e8ed;   /* hover / "off" state of a surface */
-  --muted:        #6e6e73;
-  --text-muted:   var(--muted);
-  --error:        #d70015;
-  /* The only two colors in the popup. Deep teal for Friction (calm),
-     scarlet for Strict (alarm) — same pair as /web. Friction was Apple
-     system blue until blue-against-red read as signage rather than
-     software wherever both appear at once. Strict was the deeper Apple
-     system red #d70015 until that read as too heavy; scarlet is a step
-     brighter and still clears 4.5:1 against the white label it carries,
-     which the brighter reds below it do not. --error keeps the old deeper
-     red on purpose: it is a separate semantic token, and form errors
-     never appear beside a mode pill. */
-  --friction:     #2081e3;
-  --strict:       #2250a6;
+.popup { display: flex; flex-direction: column; padding: 16px 18px 18px; min-height: 520px; }
 
-  --radius-pill:  999px;
-  --radius-inner: 14px;
-  --radius-field: 12px;
+.topbar { display: flex; align-items: center; justify-content: space-between; height: 32px; margin-bottom: 14px; }
+.topbar .brand { font-size: 14.5px; }
 
-  --font-ui:      'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; z-index: 10; min-width: 172px; padding: 6px; border-radius: 14px;
+  background: var(--canvas); box-shadow: var(--shadow-popover), 0 0 0 1px var(--border);
+  animation: fade-up 180ms var(--ease-fluid) both;
+}
+#menu { top: calc(100% + 6px); right: 0; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 10px;
+  border: 0; border-radius: 9px; background: transparent; color: var(--text); font-size: 13.5px; font-weight: 500;
+  text-decoration: none; text-align: left;
+}
+.menu-item:hover { background: var(--item-hover); }
+.menu-item svg { width: 16px; height: 16px; color: var(--text-faint); flex: none; }
+.menu-item.is-on { background: var(--item-active); color: var(--accent); }
+.menu-item.is-on svg { color: var(--accent); }
+.menu-item .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item.is-locked { color: var(--text-faint); }
+
+.view { animation: fade-up 220ms var(--ease-fluid) both; }
+
+.view-loading { display: grid; place-items: center; flex: 1; }
+.ring-xl { width: 212px; height: 212px; margin: 4px auto 0; }
+.view-loading .ring-xl { opacity: 0.6; }
+
+.view-auth { display: flex; flex-direction: column; gap: 18px; padding-top: 18px; }
+.auth-head h1 { margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; }
+.auth-head p { margin: 4px 0 0; color: var(--text-muted); font-size: 13.5px; }
+.auth-form { display: grid; gap: 10px; }
+.auth-form .btn { margin-top: 4px; }
+.form-msg { margin: 0; color: var(--danger-soft); font-size: 13px; }
+.form-msg.is-neutral { color: var(--text-muted); }
+.resend { justify-self: start; font-size: 13px; }
+.auth-foot { display: flex; gap: 8px; justify-content: center; align-items: center; color: var(--text-faint); font-size: 13px; }
+.link.muted { color: var(--text-muted); }
+
+.view-app { display: flex; flex-direction: column; gap: 18px; }
+
+.dial-label { font-size: 13px; font-weight: 500; color: var(--text-faint); margin-bottom: 8px; transition: color 200ms; }
+.dial.is-running .dial-label { color: var(--accent); }
+.dial.is-running.is-strict .dial-label { color: var(--strict); }
+.dial-time { font-size: 46px; }
+.dial-time.is-long { font-size: 38px; }
+.dial-sub { min-height: 18px; margin-top: 8px; font-size: 12.5px; color: var(--text-faint); }
+
+.controls { display: grid; gap: 8px; }
+
+.pro-tag {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 6px;
+  background: var(--accent-wash); color: var(--accent); font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em;
 }
 
-/* ─── Reset ─────────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-
-/* The popup is a gray ground with one white card on it. The gray shows
-   as a 12px margin all round, and the card (.container) holds everything,
-   header included, with the dashboard card's resting shadow lifting it
-   off the gray. 294px leaves the card just wide enough inside for
-   "Paused until 11:45 PM" beside the Blocklist button; narrow the popup
-   or widen any padding and that line starts to clip. */
-body {
-  width: 244px;
-  margin: 0;
-  padding: 0px;
-  /* White, like the card on it, so the two read as one white popup. The
-     card and its margin are kept on purpose (founder's call): set this
-     back to #f5f5f7 and restore the card's shadow to get the gray-ground
-     version back. */
-  background: var(--white);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  font-size: 14px;
-  line-height: 1.45;
-  user-select: none;
-  -webkit-font-smoothing: antialiased;
+.picker { position: relative; }
+.picker-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 12px 0 14px;
+  border: 0; border-radius: 14px; background: var(--raised); text-align: left;
+  transition: background-color 140ms;
 }
+.picker-btn:hover:not(:disabled) { background: var(--raised-hover); }
+.picker-btn:disabled { cursor: default; }
+.picker-label { color: var(--text-faint); font-size: 13px; font-weight: 500; }
+.picker-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; text-align: right; }
+.picker-chevron { width: 16px; height: 16px; color: var(--text-faint); flex: none; transition: transform 200ms var(--ease-fluid); }
+.picker-btn[aria-expanded="true"] .picker-chevron { transform: rotate(180deg); }
+.picker-btn:disabled .picker-chevron { opacity: 0; }
+.picker-menu { left: 0; right: 0; top: calc(100% + 6px); max-height: 196px; overflow-y: auto; scrollbar-width: thin; }
 
-button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-p { margin: 0; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-.field:focus-visible { outline: none; }
+.action { display: grid; gap: 10px; margin-top: auto; }
+.note { margin: 0; min-height: 19px; text-align: center; font-size: 12.5px; color: var(--text-faint); }
+.note.is-error { color: var(--danger-soft); }
 
-/* ─── Container ─────────────────────────────────────────────────────────────── */
-/* Sections are separated by space alone — the old hairline .divider rows
-   are gone from popup.html. One sibling margin between direct children
-   (not a flex gap: popup.js's showView() sets `display: block` inline on
-   the active view, which would silently defeat a gap), so no section
-   carries its own trailing margin. */
-/* The white card. Controls inside it take the gray --surface from :root,
-   so nothing here redefines it. .panel is only the wrapper for what sits
-   under the header; it paints nothing of its own. */
-.container {
-  padding: 17px;
-  background: var(--paper);
-  border-radius: 18px;
-}
-
-.panel > * + * { margin-top: 20px; }
-
-/* 20px between every group, and 20px to every edge (17px of padding plus
-   body's 3px), so the popup has one rhythm. They were 22 / 24 / 19. */
-.container > * + * { margin-top: 20px; }
-
-/* ─── Header ─────────────────────────────────────────────────────────────────── */
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 28px;
-}
-
-.brand-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* The PNG is white-on-transparent (it's drawn for dark grounds); invert
-   makes it ink on this white popup, same as the site's nav logo. */
-.mini-logo {
-  height: 22px;
-  width: auto;
-  filter: invert(1);
-}
-
-/* ─── Section labels ────────────────────────────────────────────────────────── */
-.confirm-label {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--muted);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-/* ─── Buttons ────────────────────────────────────────────────────────────────── */
-.btn-primary,
-.btn-light {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 44px;
-  border-radius: var(--radius-pill);
-  font-size: 0.92rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: opacity 0.18s ease, background 0.18s ease, transform 0.18s var(--ease-out);
-}
-
-.btn-primary { background: var(--ink); color: var(--paper); }
-.btn-primary:hover  { opacity: 0.86; }
-.btn-primary:active { transform: scale(0.98); }
-.btn-primary:disabled { opacity: 0.5; cursor: default; transform: none; }
-
-.btn-light { background: var(--surface); color: var(--ink); }
-.btn-light:hover  { background: var(--surface-deep); }
-.btn-light:active { transform: scale(0.98); }
-
-.btn-ghost {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--muted);
-  padding: 4px 0;
-  transition: color 0.15s ease;
-}
-
-.btn-ghost:hover { color: var(--ink); }
-
-/* ─── Mode toggle ────────────────────────────────────────────────────────────── */
-.mode-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;   /* was 10: the line under the toggle belongs to it, so it sits close */
-}
-
-/* A gray track with two pill options — the active one takes its mode's
-   color, the other stays text-only on the track. No shadow/glow: the site
-   is flat, and the color alone is the state. */
-.mode-toggle {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface);
-  border-radius: var(--radius-pill);
-}
-
-.mode-option {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 32px;
-  border-radius: var(--radius-pill);
-  font-size: 0.84rem;
-  font-weight: 500;
-  color: var(--muted);
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.mode-option:hover { color: var(--ink); }
-
-.mode-option[data-mode="friction"].active { background: var(--friction); color: var(--paper); }
-.mode-option[data-mode="strict"].active   { background: var(--strict);   color: var(--paper); }
-
-.lock-icon {
-  flex-shrink: 0;
-  position: relative;
-  top: -0.5px;
-}
-
-/* Locked (Strict without Focus Pro, or Friction during a scheduled
-   Strict block): the lock icon says it; the option stays clickable so
-   the click can explain itself (pricing page / the status line). */
-.mode-option.locked { color: var(--muted); }
-
-/* One quiet line under the toggle, hidden at rest. Standing text while a
-   scheduled Strict block is in force; ink-colored `.notice` for a
-   few-second reply to a refused click. */
-.mode-status {
-  font-size: 0.72rem;   /* was 0.78: a caption under the toggle, not a status of its own */
-  color: var(--muted);
-  line-height: 1.4;
-  text-align: center;
-}
-
-.mode-status.notice { color: var(--ink); }
-
-/* ─── Profile switcher ───────────────────────────────────────────────────────── */
-.profiles-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.profile-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-height: 30px;
-}
-
-/* Same pill as the dashboard's .profile-tab, scaled to the popup. The
-   dashboard draws its tabs white on a gray card; the popup is white, so
-   here the pill keeps the gray --surface ground and the rest of the rule
-   carries over: the active pill is ink text at weight 500, every other
-   pill is the same shape at opacity 0.6 (0.85 on hover), with muted text.
-   Locked pills share that look and add the lock glyph. Capped width +
-   ellipsis so one long name can't push the row past the popup's edge
-   (the full name is in the title tooltip popup.js sets). */
-.profile-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 30px;
-  padding: 0 13px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.8rem;
-  /* Never wider than the card's content area, whatever the card's width
-     is: a fixed pixel cap overflowed as soon as the card got narrower. */
-  max-width: 100%;
-  transition: opacity 0.18s ease, color 0.18s ease;
-}
-
-.profile-pill-name {
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profile-pill:not(.active) { opacity: 0.6; }
-.profile-pill:not(.active):hover { opacity: 0.85; color: var(--ink); }
-
-.profile-pill.active {
-  color: var(--ink);
-  font-weight: 500;
-}
-
-/* Locked for Focus Pro (routes to pricing) or for Strict Mode (not
-   clickable at all). Strict-locked pills don't react to hover, since a
-   click does nothing. */
-.profile-pill.mode-locked { cursor: default; }
-.profile-pill.mode-locked:hover { opacity: 0.6; color: var(--muted); }
-
-/* Defensive copy for a state signup guards against (every account gets a
-   default profile) — styled like the status text, not a headline. */
-.profiles-empty {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.profile-pill-skeleton {
-  display: inline-block;
-  width: 72px;
-  height: 30px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  animation: shimmer 1.4s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
-}
-
-/* ─── Stat row ───────────────────────────────────────────────────────────────── */
-/* The status and the button share a line when they fit ("3 sites
-   blocked"). A longer status ("Paused until 8:46 PM", "No sites blocked
-   yet") keeps its full text and the button drops to its own line, on the
-   right, instead of the text being cut to an ellipsis. */
-.stat-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-/* Text-only status: "12 sites blocked" / "Paused until 11:45 PM". The
-   old gray box (and the amber paused variant) is gone — a box next to a
-   pill button read as two competing controls. Paused is the one state
-   worth a change, and it gets ink instead of muted, nothing louder. */
-.stat-line {
-  font-size: 0.82rem;
-  color: var(--muted);
-  /* Never shrinks beside the button (that is what makes the button wrap
-     instead); still capped at the row's width, with an ellipsis, for a
-     string longer than the popup itself. */
-  flex-shrink: 0;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stat-line.paused { color: var(--ink); font-weight: 500; }
-
-/* The row's one action: small ink pill, the same 30px shape as the
-   profile pills so it reads as "the actionable one", not a fourth button
-   style. */
-.stat-manage-link {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
-  margin-left: auto;   /* right-aligned on its own line too, when the status pushes it down */
-}
-
-.stat-manage-link:hover  { opacity: 0.86; }
-.stat-manage-link:active { transform: scale(0.98); }
-
-/* ─── Strict → Friction confirmation (breathing hold) ─────────────────────────── */
-.confirm-label { text-align: center; }
-
-.confirm-ring {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  margin: 4px auto 0;
-}
-
-.confirm-ring-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg); /* start at 12-o'clock */
-}
-
-.confirm-ring__track {
-  fill: none;
-  stroke: var(--surface-deep);
-  stroke-width: 4;
-}
-
-.confirm-ring__fill {
-  fill: none;
-  stroke: var(--strict);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-dasharray: 628.318; /* 2π × r=100, matches the SVG viewBox/r */
-  stroke-dashoffset: 0;      /* JS drains this */
-  transition: stroke-dashoffset 1s linear;
-}
-
-.confirm-countdown {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--ink);
-}
-
-.confirm-hint {
-  font-size: 0.84rem;
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.5;
-  padding: 0 6px;
-}
-
-/* ─── Auth form ──────────────────────────────────────────────────────────────── */
-.auth-headline {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.4rem;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  color: var(--ink);
-  margin: 2px 0 0;
-}
-
-/* The sign-in view is one form, so inside its panel it lays itself out
-   with its own margins instead of the panel's section gap (which would
-   space each input like a section). */
-#view-auth .panel > * + * { margin-top: 0; }
-#view-auth .header-row { margin-bottom: 0; }
-#view-auth .auth-headline { margin-bottom: 16px; }
-
-.form-group { margin: 0 0 8px; }
-
-.field {
-  display: block;
-  width: 100%;
-  height: 44px;
-  padding: 0 16px;
-  font: inherit;
-  color: var(--ink);
-  background: var(--surface);
-  border: 0;
-  border-radius: var(--radius-field);
-  outline: none;
-  transition: box-shadow 0.15s ease;
-}
-
-.field::placeholder { color: var(--muted); }
-/* No focus glow (founder's call): a focused field is marked by its text
-   caret alone. A blue ring used to appear here. */
-
-.auth-forgot {
-  font-size: 0.78rem;
-  text-align: right;
-  margin: 2px 0 12px;
-}
-
-#view-auth .btn-primary { margin-top: 2px; }
-
-.auth-forgot a,
-.auth-resend a,
-.footer-hint a {
-  color: var(--ink);
-  font-weight: 500;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-}
-
-.auth-forgot a:hover,
-.auth-resend a:hover,
-.footer-hint a:hover { opacity: 0.6; }
-
-.auth-error {
-  font-size: 0.78rem;
-  color: var(--error);
-  line-height: 1.4;
-  margin: 0 0 8px;
-}
-
-/* Reused for the resend-email result — .neutral takes it off the error
-   red for the success case. */
-.auth-error.neutral { color: var(--muted); }
-
-.auth-resend {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin: 0 0 8px;
-}
-
-.footer-hint {
-  font-size: 0.78rem;
-  color: var(--muted);
-  text-align: center;
-}
-
-/* Outranks the #view-auth sibling-margin reset above. */
-#view-auth .footer-hint { margin-top: 14px; }
-
-/* ─── Utility ────────────────────────────────────────────────────────────────── */
-.hidden { display: none !important; }
+.dial:not(.is-running) .ring-fill { opacity: 0; }

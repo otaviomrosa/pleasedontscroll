@@ -27,17 +27,17 @@
  * @property {string | null} stripe_customer_id
  * @property {string | null} stripe_subscription_id
  * @property {'friction' | 'strict'} blocking_mode - User-level, not per-profile.
- * @property {string | null} paused_until - ISO timestamp; blocking is
- *   suspended until this time when set and in the future. Friction Mode
- *   only — ignored entirely while blocking_mode is 'strict'. Set from the
- *   dashboard (see docs/ARCHITECTURE.md), read by the extension's poll.
+ * @property {string | null} paused_until - Legacy, unused since 021.
+ * @property {string | null} session_until - ISO timestamp; sites on the
+ *   active profile are blocked only while this is in the future. Written
+ *   by start_session(), end_session() and apply_schedule() (021).
  * @property {string | null} timezone - IANA zone the schedule is evaluated
  *   in. Written once by the first client to see the account
  *   (setTimezoneIfUnset); null means the schedule is dormant.
  * @property {Object | null} schedule_state - Owned by apply_schedule()
  *   (016_schedules.sql); clients may read it but never write it. Shape:
- *   { snapshot?: { profile_id, mode }, applied?: { block_id, version,
- *   date, profile_id, mode }, skipped?: { block_id, date } }.
+ *   { snapshot?: { profile_id, mode, until }, applied?: { block_id, version,
+ *   date, profile_id, mode, until }, skipped?: { block_id, date } }.
  * @property {string} created_at
  */
 

@@ -158,3 +158,21 @@ obvious improvements until you know why they failed here.
   subscription" row; a row that named the plan beside it ("Plan  Focus
   Pro") was tried with the removal and undone. The lock icons that mark
   what an upgrade unlocks for a free account stay.
+
+## Redesign (sessions and the violet system)
+
+- **Always-on blocking.** Replaced by timed sessions: nothing is blocked
+  unless a session runs. Pause went with it, since a pause only made
+  sense while blocking was always on.
+- **The flat black-and-white system, the blue mode pair and the
+  paintings.** Replaced by one violet accent, hairline borders, Plus
+  Jakarta Sans throughout and atmosphere limited to the website and the
+  focus screen. Mixed icon styles and artwork were the main reason the
+  brand read as inconsistent.
+- **Activating a profile by clicking its tab mid-session.** Tabs only
+  change which list you are editing while a session runs, so editing never
+  changes what is enforced. Outside a session, clicking still makes that
+  profile the default.
+- **Leaving Strict through a 30-second hold.** A Strict session runs until
+  its timer ends; there is no exit path.
+

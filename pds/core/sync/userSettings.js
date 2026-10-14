@@ -1,6 +1,6 @@
 // Queries against the `user_settings` table.
 
-import { supabaseFetch, supabaseFetchDetailed } from './restClient.js';
+import { supabaseFetch } from './restClient.js';
 
 /** Whether the given user currently has an active premium subscription. */
 export async function fetchIsPremium(accessToken, userId) {
@@ -12,17 +12,14 @@ export async function fetchIsPremium(accessToken, userId) {
 }
 
 /**
- * is_premium, blocking_mode and paused_until in one read, or null when the
- * request failed. fetchIsPremium() and fetchBlockingMode() answer false and
- * 'friction' on a failure, which is fine for a page that re-renders; the
- * extension needs "couldn't ask" kept apart from "free, in Friction", so a
- * network blip leaves its cached state alone instead of relaxing it.
+ * is_premium, blocking_mode and session_until in one read, or null when the
+ * request failed, so a network blip leaves the extension's cached state alone.
  * Throws if fetch itself throws (offline), same as supabaseFetch().
- * @returns {Promise<{ isPremium: boolean, blockingMode: 'friction'|'strict', pausedUntil: string|null } | null>}
+ * @returns {Promise<{ isPremium: boolean, blockingMode: 'friction'|'strict', sessionUntil: string|null } | null>}
  */
 export async function fetchSettingsSnapshot(accessToken, userId) {
   const rows = await supabaseFetch(
-    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=is_premium,blocking_mode,paused_until`,
+    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=is_premium,blocking_mode,session_until`,
     accessToken,
   );
   const row = rows?.[0];
@@ -30,7 +27,7 @@ export async function fetchSettingsSnapshot(accessToken, userId) {
   return {
     isPremium: row.is_premium === true,
     blockingMode: row.blocking_mode === 'strict' ? 'strict' : 'friction',
-    pausedUntil: row.paused_until ?? null,
+    sessionUntil: row.session_until ?? null,
   };
 }
 
@@ -46,78 +43,6 @@ export async function fetchBlockingMode(accessToken, userId) {
     accessToken,
   );
   return rows?.[0]?.blocking_mode === 'strict' ? 'strict' : 'friction';
-}
-
-/** Sets the user's blocking mode. Returns true on success. */
-export async function setBlockingMode(accessToken, userId, mode) {
-  return (await setBlockingModeDetailed(accessToken, userId, mode)).ok;
-}
-
-/**
- * Same write as setBlockingMode(), resolving to { ok, error }. `error` is
- * the server's rejection text when a trigger refused the change — leaving
- * Strict during a scheduled Strict block raises "Strict Mode is scheduled
- * until 11:00 PM." (016_schedules.sql) and the popup shows that verbatim.
- */
-export async function setBlockingModeDetailed(accessToken, userId, mode) {
-  const { error } = await supabaseFetchDetailed(`/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}`, accessToken, {
-    method: 'PATCH',
-    body: JSON.stringify({ blocking_mode: mode === 'strict' ? 'strict' : 'friction' }),
-  });
-  return { ok: error === null, error };
-}
-
-// Sentinel for "paused indefinitely, until manually resumed" — no schema
-// change needed for this: paused_until stays a plain TIMESTAMPTZ, and a
-// far-future value satisfies every existing `Date.now() < pausedUntil`
-// check (background/index.js's checkAndBlockTab, refreshPauseUI's isActive)
-// without any special-casing there. Only the *display* layer (dashboard,
-// popup) needs to recognize this value to show "indefinitely" instead of a
-// real (meaningless, year-9999) clock time.
-export const INDEFINITE_PAUSE_ISO = '9999-12-31T23:59:59.000Z';
-
-/**
- * Whether a paused_until value (ISO string OR epoch ms — background.js's
- * GET_STATE hands back the latter) represents the indefinite sentinel.
- * Compares the parsed year, not the raw string: Postgres/PostgREST don't
- * necessarily round-trip the exact string that was written (e.g.
- * `+00:00` vs `Z`, different sub-second precision), so a strict
- * `=== INDEFINITE_PAUSE_ISO` check silently failed here — the value came
- * back reformatted, fell through to the "real timestamp" display branch,
- * and rendered as if it were a normal (if absurd, year-9999) time.
- */
-export function isIndefinitePause(pausedUntil) {
-  if (!pausedUntil) return false;
-  return new Date(pausedUntil).getFullYear() >= 9000;
-}
-
-/**
- * The user's current pause-until timestamp (ISO string), or null if not
- * currently paused. Callers must still check it's in the future — this
- * returns whatever's in the column, including an expired one.
- */
-export async function fetchPauseUntil(accessToken, userId) {
-  const rows = await supabaseFetch(
-    `/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}&select=paused_until`,
-    accessToken,
-  );
-  return rows?.[0]?.paused_until ?? null;
-}
-
-/**
- * Sets (or clears, passing null) the user's pause-until timestamp. Returns
- * true on success. Friction Mode only by convention — the caller (dashboard)
- * is responsible for checking blocking_mode before calling this; the
- * extension's own enforcement also re-checks mode independently (see
- * background/index.js's checkAndBlockTab), so this alone is never the only
- * thing standing between Strict Mode and a bypass.
- */
-export async function setPauseUntil(accessToken, userId, pausedUntilIso) {
-  const result = await supabaseFetch(`/rest/v1/user_settings?id=eq.${encodeURIComponent(userId)}`, accessToken, {
-    method: 'PATCH',
-    body: JSON.stringify({ paused_until: pausedUntilIso }),
-  });
-  return result !== null;
 }
 
 /**

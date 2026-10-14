@@ -66,11 +66,11 @@ export async function deleteScheduleBlock(accessToken, id) {
 
 /**
  * Runs the server-side schedule transition for this user (see
- * apply_schedule() in 016_schedules.sql): switches profile/mode into the
+ * apply_schedule() in 021_timed_sessions.sql): starts a session for the
  * block that covers "now", or restores the pre-block state when one just
  * ended. Idempotent, so it's safe to call every minute. Resolves to the
  * RPC's JSON — which always includes the resulting profile_id, mode and
- * paused_until — or null on failure.
+ * session_until — or null on failure.
  */
 export async function applySchedule(accessToken, userId) {
   return await supabaseFetch('/rest/v1/rpc/apply_schedule', accessToken, {

@@ -1,154 +1,103 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="popup.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Please Don't Scroll</title>
+  <link rel="stylesheet" href="../ui.css">
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-
-  <!-- ─── Authenticated view ─────────────────────────────────────────── -->
-  <div class="container" id="view-app" style="display:none;">
-    <div class="header-row">
-      <div class="brand-box">
-        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
+  <main class="popup" id="popup">
+    <header class="topbar">
+      <div class="brand">
+        <img class="mark" src="../assets/icons/logo.svg" width="24" height="24" alt="">
+        <span>Please Don't Scroll</span>
       </div>
-      <button class="btn-ghost" id="logout-btn">Sign out</button>
-    </div>
-
-    <!-- The white card inside the gray one: everything the view shows or asks for. -->
-    <div class="panel">
-      <!-- ─── Mode toggle ──────────────────────────────────────────────── -->
-      <!-- Friction/Strict is a per-user setting, not a profile property —
-           any profile can run in either mode. -->
-      <div class="mode-section">
-        <div class="mode-toggle" id="mode-toggle" role="group" aria-label="Mode">
-          <button class="mode-option" data-mode="friction" id="mode-friction-btn">
-            Friction
-            <!-- Shown only while a scheduled Strict block is in force — the
-                 schedule, not Focus Pro, is what locks this one. -->
-            <svg class="lock-icon hidden" id="friction-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
-              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
-            </svg>
-          </button>
-          <button class="mode-option" data-mode="strict" id="mode-strict-btn">
-            Strict
-            <svg class="lock-icon hidden" id="strict-lock-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2.5"/>
-              <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="2.5"/>
-            </svg>
+      <div class="menu-wrap" id="menu-wrap" hidden>
+        <button class="icon-btn" id="menu-btn" type="button" aria-label="Menu" aria-haspopup="menu" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <a class="menu-item" id="menu-dashboard" role="menuitem" href="#" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            Dashboard
+          </a>
+          <button class="menu-item" id="menu-signout" role="menuitem" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            Sign out
           </button>
         </div>
-        <!-- One quiet line under the toggle, hidden at rest. Two jobs, both
-             set by popup.js: a standing "Scheduled Strict until 11:00 PM"
-             while a scheduled block is in force, and a few-second notice
-             when the server refuses a mode/profile change (those used to
-             fail silently). -->
-        <p class="mode-status hidden" id="mode-status"></p>
       </div>
+    </header>
 
-      <!-- ─── Profile switcher ────────────────────────────────────────── -->
-      <!-- Switching only — creating/deleting profiles is dashboard-only now
-           (the extension has no blocklist-editing UI of its own either, so
-           there was no reason a new, empty profile could be created from
-           here). -->
-      <div class="profiles-section">
-        <!-- Pills rendered by popup.js -->
-        <div class="profile-pills" id="profile-pills" role="group" aria-label="Profile">
-          <span class="profile-pill-skeleton"></span>
-        </div>
+    <section class="view view-loading" id="view-loading">
+      <div class="ring ring-xl is-idle"><svg viewBox="0 0 200 200"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/></svg></div>
+    </section>
+
+    <section class="view view-auth" id="view-auth" hidden>
+      <div class="auth-head">
+        <h1>Sign in</h1>
+        <p>Use the account from pleasedontscroll.com.</p>
       </div>
-
-      <!-- ─── Status block — moved to the bottom (was first): Mode and
-           Profile are the only two things you actually act on in this
-           popup, so they're reachable first now; this is glance-only info,
-           plus it lets "Dashboard" land at the bottom as a clean closing
-           CTA instead of sitting mid-popup.
-           Consolidated from three separate pieces (a status label above, a
-           big standalone count number below it, a boxed pause callout below
-           that) into one line — .stat-line covers all three states ("N
-           sites blocked" / "No sites blocked yet" / "Paused until X"),
-           switching text and a .paused color modifier via applyState() in
-           popup.js. ──────────────────────────── -->
-      <div class="stat-row">
-        <span class="stat-line" id="stat-line">Loading…</span>
-        <a class="stat-manage-link" href="" target="_blank" id="manage-link">Dashboard</a>
+      <form class="auth-form" id="login-form" novalidate>
+        <input class="field" id="email-input" type="email" placeholder="Email" autocomplete="email" required>
+        <input class="field" id="password-input" type="password" placeholder="Password" autocomplete="current-password" required>
+        <p class="form-msg" id="auth-error" hidden></p>
+        <button class="link resend" id="login-resend-link" type="button" hidden>Resend confirmation email</button>
+        <button class="btn btn-primary btn-block" id="login-btn" type="submit">Sign in</button>
+      </form>
+      <div class="auth-foot">
+        <button class="link" id="signup-link" type="button">Create an account</button>
+        <span aria-hidden="true">·</span>
+        <button class="link muted" id="forgot-password-link" type="button">Forgot password?</button>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- ─── Strict → Friction confirmation (breathing hold) ───────────────── -->
-  <!-- Downgrading out of Strict Mode costs the same 30s breathing hold as
-       unlocking a blocked site — otherwise Strict Mode is one click from
-       being undone and doesn't add anything. Switching the other way
-       (Friction → Strict) stays instant. -->
-  <div class="container hidden" id="view-confirm">
-    <div class="header-row">
-      <div class="brand-box">
-        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-      </div>
-    </div>
-
-    <!-- The white card inside the gray one: everything the view shows or asks for. -->
-    <div class="panel">
-      <p class="confirm-label">Leaving Strict Mode</p>
-
-      <div class="confirm-ring">
-        <svg class="confirm-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
-          <circle class="confirm-ring__track" cx="110" cy="110" r="100" />
-          <circle class="confirm-ring__fill" id="confirm-ring-fill" cx="110" cy="110" r="100" />
+    <section class="view view-app" id="view-app" hidden>
+      <div class="dial ring ring-xl" id="dial">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/>
+          <circle class="ring-fill" id="dial-fill" cx="100" cy="100" r="92" stroke-width="5" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/>
         </svg>
-        <span class="confirm-countdown" id="confirm-countdown">30</span>
+        <div class="ring-center">
+          <span class="dial-label" id="dial-label">Ready when you are</span>
+          <span class="ring-time dial-time" id="dial-time">30:00</span>
+          <span class="dial-sub" id="dial-sub"></span>
+        </div>
       </div>
 
-      <p class="confirm-hint">
-        Are you sure about this? Remember why you activated Strict Mode.
-      </p>
+      <div class="controls">
+        <div class="segmented" id="mode-control" role="radiogroup" aria-label="Mode">
+          <button type="button" data-mode="friction" role="radio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+            Friction
+          </button>
+          <button type="button" data-mode="strict" role="radio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            Strict
+            <span class="pro-tag" id="strict-pro" hidden>Pro</span>
+          </button>
+        </div>
 
-      <button class="btn-light" id="confirm-cancel-btn">Stay in Strict Mode</button>
-    </div>
-  </div>
+        <div class="picker" id="profile-picker">
+          <button class="picker-btn" id="profile-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="picker-label">Profile</span>
+            <span class="picker-value" id="profile-value">Default</span>
+            <svg class="picker-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="menu picker-menu" id="profile-menu" role="listbox" hidden></div>
+        </div>
 
-  <!-- ─── Unauthenticated view ───────────────────────────────────────── -->
-  <div class="container" id="view-auth">
-    <div class="header-row">
-      <div class="brand-box">
-        <img src="../assets/images/logo-no-bg.png" alt="PDS Logo" class="mini-logo">
-      </div>
-    </div>
-
-    <!-- The white card inside the gray one: everything the view shows or asks for. -->
-    <div class="panel">
-      <p class="auth-headline">Sign in to activate<br>your blocklist.</p>
-
-      <div class="form-group">
-        <input class="field" type="email" id="email-input" placeholder="Email" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <input class="field" type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+        <div class="segmented" id="length-control" role="radiogroup" aria-label="Length"></div>
       </div>
 
-      <!-- Same placement/style as dashboard.html's .auth-forgot — right under
-           the password field, right-aligned. Opens the dashboard rather than
-           an in-popup form — see popup.js's own comment. -->
-      <p class="auth-forgot"><a href="#" id="forgot-password-link">Forgot your password?</a></p>
-
-      <p class="auth-error hidden" id="auth-error"></p>
-      <!-- Shown only when sign-in fails specifically because the account
-           exists but hasn't confirmed its email yet — see popup.js's own
-           comment. -->
-      <p class="auth-resend hidden" id="auth-resend"><a href="#" id="login-resend-link">Resend confirmation email</a></p>
-
-      <button class="btn-primary" id="login-btn">Sign in</button>
-
-      <p class="footer-hint">No account? <a href="#" id="signup-link">Create one for free</a></p>
-    </div>
-  </div>
-
+      <div class="action">
+        <button class="btn btn-primary btn-block" id="primary-btn" type="button">Start focusing</button>
+        <p class="note" id="note" role="status"></p>
+      </div>
+    </section>
+  </main>
   <script type="module" src="popup.js"></script>
 </body>
 </html>

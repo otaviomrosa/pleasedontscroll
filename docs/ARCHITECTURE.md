@@ -5,6 +5,30 @@ do, and the decisions that are easy to undo by accident. Companion docs:
 [DESIGN.md](DESIGN.md) for the visual system, [DECISIONS.md](DECISIONS.md)
 for approaches that were tried and dropped.
 
+> **Timed sessions (migration 021) supersede parts of this document.**
+> Blocking runs only while `user_settings.session_until` is in the future.
+> - `start_session()` / `end_session()` (security definer RPCs) are the only
+>   client writers of mode and session; `blocking_mode` and `paused_until`
+>   are no longer client-writable. Pause is gone; sections below about the
+>   pause control, `PAUSE_BLOCKING`, `SET_BLOCKING_MODE`, `SWITCH_PROFILE`
+>   and the 30s leave-Strict hold describe the old model.
+> - The Strict lock (blocklist removal, profile switch, ending a session,
+>   extension sign-out) applies only while a Strict session or a scheduled
+>   Strict block is running: `pds_strict_lock_message()`.
+> - `apply_schedule()` turns a covering block into a session ending at the
+>   block's end, snapshots profile, mode and any running session, and
+>   restores them afterwards. Ending a Friction block early skips it for
+>   that day. A Friction block never lowers a running Strict session, and a
+>   Strict block never shortens a longer one.
+> - The worker (`background/index.js`) caches `sessionUntil`, arms a
+>   `pds-session-end` alarm, shows the minutes left on the toolbar badge,
+>   and handles `START_SESSION`, `END_SESSION`, `GET_SESSION`,
+>   `GRANT_SITE_PASS` and `SIGN_OUT`. Fail-closed caching is unchanged.
+> - Session lengths are the presets in `core/sync/sessions.js`
+>   (15, 30, 60, 120, 360 minutes); the server accepts 1 to 720.
+> - Design: see [DESIGN.md](DESIGN.md). Tests: `test/sessions.test.js`,
+>   `test/sql/021_timed_sessions.test.sql`.
+
 **Project root is `pds/`, not the git repo root.** Every path below is
 relative to `pds/`, and commands run from there.
 

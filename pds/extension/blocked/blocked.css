@@ -1,269 +1,41 @@
-/* blocked.css — Friction / Strict intercept screen
-   Same language as /web and popup.css: flat, no borders or shadows,
-   pill controls, DM Sans for UI and Plus Jakarta Sans for the one
-   headline, color only for the mode. Own token set (separate document),
-   values copied from web/dashboard.html's :root on purpose. Every id
-   and class blocked.js touches is unchanged. */
+html, body { height: 100%; }
+body { overflow: hidden; background: var(--canvas); }
 
-/* ─── Tokens ────────────────────────────────────────────────────────────────── */
-:root {
-  --ink:          #000000;
-  --paper:        #ffffff;
-  --black:        var(--ink);
-  --white:        var(--paper);
-  --text:         var(--ink);
-  --surface:      #f5f5f7;
-  --surface-deep: #e8e8ed;
-  --muted:        #6e6e73;
-  --text-muted:   var(--muted);
+.aura { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.aura span { position: absolute; border-radius: 50%; }
+.aura-a { width: 720px; height: 720px; top: -240px; left: -200px; background: radial-gradient(closest-side, rgb(124 58 237 / 0.16), transparent); animation: drift 18s ease-in-out infinite alternate; }
+.aura-b { width: 760px; height: 760px; bottom: -300px; right: -220px; background: radial-gradient(closest-side, rgb(124 58 237 / 0.13), transparent); animation: drift 22s ease-in-out -9s infinite alternate-reverse; }
+.aura .dots { inset: 0; border-radius: 0; background-image: radial-gradient(rgb(18 17 28 / 0.08) 1px, transparent 1.5px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 10%, transparent 70%); }
 
-  --friction:     #2081e3;
-  --strict:       #2250a6;
-
-  --radius-pill:  999px;
-
-  /* Progress ring (Friction Mode countdown) — neutral, not mode-colored:
-     the mode pill above it already carries the color. */
-  --ring-track:   var(--surface-deep);
-  --ring-fill:    var(--ink);
-  --ring-size:    190px;
-  --ring-radius:  100;            /* must match SVG r attribute */
-  --ring-circum:  628.318;        /* 2π × 100  */
-
-  --font-ui:      'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+.screen {
+  position: relative; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px; text-align: center;
 }
+.screen > * { animation: rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.screen > *:nth-child(2) { animation-delay: 60ms; }
+.screen > *:nth-child(3) { animation-delay: 120ms; }
+.screen > *:nth-child(4) { animation-delay: 160ms; }
+.screen > *:nth-child(5) { animation-delay: 220ms; }
+.screen > *:nth-child(6) { animation-delay: 280ms; }
+.screen > *:nth-child(7) { animation-delay: 320ms; }
 
-/* ─── Reset / base ───────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+.screen-mark { width: 56px; height: 56px; border-radius: 14px; box-shadow: 0 14px 30px -14px rgb(91 33 182 / 0.6); }
+#mode-chip { margin-top: 22px; }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
+.title { margin: 14px 0 0; font-size: clamp(26px, 4vw, 32px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; max-width: 22ch; overflow-wrap: anywhere; }
+.lead { margin: 10px 0 0; max-width: 40ch; color: var(--text-muted); font-size: 15px; }
 
-body {
-  font-family: var(--font-ui);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--ink);
-  background: var(--paper);
-  -webkit-font-smoothing: antialiased;
-}
+.timer { width: 220px; height: 220px; margin-top: 34px; }
+.halo { position: absolute; inset: -14px; border-radius: 50%; border: 1px dashed rgb(124 58 237 / 0.22); animation: spin 120s linear infinite; }
+.timer.is-strict .halo { border-color: rgb(76 29 149 / 0.25); }
+.timer-time { font-size: 50px; font-weight: 500; letter-spacing: -0.04em; }
+.timer-time.is-long { font-size: 40px; }
+.timer-label { margin-top: 8px; font-size: 12.5px; color: var(--text-faint); }
+.timer.is-breathing .ring-fill { transition: stroke-dashoffset 1s linear; }
+.timer.is-breathing .timer-label { color: var(--accent); font-weight: 500; }
 
-button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 34px; }
+.actions .btn { height: 42px; }
+.fine { min-height: 20px; margin: 14px 0 0; color: var(--text-faint); font-size: 13px; }
 
-/* ─── Layout ─────────────────────────────────────────────────────────────────── */
-.scene {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.main {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 380px;
-}
-
-/* ─── Logo ───────────────────────────────────────────────────────────────────── */
-/* The PNG is white-on-transparent; invert makes it ink on paper. */
-.logo {
-  height: 26px;
-  width: auto;
-  filter: invert(1);
-  margin-bottom: 2rem;
-}
-
-/* ─── Mode pill ──────────────────────────────────────────────────────────────── */
-/* Solid mode color with white text — the same treatment as the popup's
-   active mode option, so "which mode am I in" looks identical in both
-   places. Base = Friction; blocked.js only ever toggles .strict. */
-.mode-pill {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--paper);
-  background: var(--friction);
-  margin-bottom: 22px;
-}
-
-.mode-pill.strict { background: var(--strict); }
-
-/* ─── Title ──────────────────────────────────────────────────────────────────── */
-.block-title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(1.7rem, 4vw, 2.2rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--ink);
-  margin-bottom: 12px;
-}
-
-/* ─── Site label ─────────────────────────────────────────────────────────────── */
-.site-label {
-  font-size: 0.95rem;
-  color: var(--muted);
-  margin-bottom: 2.25rem;
-}
-
-.site-name {
-  font-weight: 500;
-  color: var(--ink);
-}
-
-/* ─── Circle assembly (Friction Mode countdown ring) ─────────────────────────── */
-.circle-assembly {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--ring-size);
-  height: var(--ring-size);
-  margin: 0 auto 1.5rem;
-}
-
-.progress-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);  /* start at 12-o'clock */
-}
-
-.progress-ring__track {
-  fill: none;
-  stroke: var(--ring-track);
-  stroke-width: 4;
-}
-
-.progress-ring__fill {
-  fill: none;
-  stroke: var(--ring-fill);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-dasharray: var(--ring-circum);
-  stroke-dashoffset: 0;        /* JS sets this to drain */
-  transition: stroke-dashoffset 1s linear;
-}
-
-.ring-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  pointer-events: none;
-  user-select: none;
-}
-
-.countdown {
-  font-family: var(--font-display);
-  font-size: 2.6rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  color: var(--ink);
-}
-
-.countdown-label {
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* ─── Instruction / strict copy ──────────────────────────────────────────────── */
-.instruction,
-.strict-copy {
-  font-size: 0.95rem;
-  color: var(--muted);
-  line-height: 1.5;
-  max-width: 280px;
-  margin: 0 auto 2.25rem;
-}
-
-/* ─── Leave button ───────────────────────────────────────────────────────────── */
-.btn-leave {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  padding: 0 28px;
-  background: var(--ink);
-  color: var(--paper);
-  border-radius: var(--radius-pill);
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: opacity 0.18s ease, transform 0.18s var(--ease-out);
-}
-
-.btn-leave:hover  { opacity: 0.86; }
-.btn-leave:active { transform: scale(0.98); }
-
-/* ─── Completion overlay ─────────────────────────────────────────────────────── */
-/* Fades in when the 30s are up. JS adds .visible to trigger the transition. */
-.completion-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.8s ease;
-}
-
-.completion-overlay.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.completion-message {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 4vw, 2.25rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: var(--ink);
-  text-align: center;
-}
-
-.completion-sub {
-  font-size: 0.95rem;
-  color: var(--muted);
-  text-align: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn-leave, .completion-overlay, .progress-ring__fill { transition: none; }
-}
+@keyframes spin { to { transform: rotate(360deg); } }

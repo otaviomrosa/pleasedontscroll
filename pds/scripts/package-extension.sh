@@ -46,21 +46,10 @@ find "$STAGE_DIR" -name "*.swp" -delete
 # the extension's import graph and every src/href/url() in its HTML and CSS,
 # and the import/reference check below fails the build if any of these ever
 # becomes needed, so this list can't silently rot into a broken upload.
-#   popup-painting.png       2.3MB, ~89% of the whole package, unreferenced
-#   logo-black-bg.svg        unreferenced
-#   web-app-manifest-*.png   PWA icons, and site.webmanifest that points at
-#                            them: an extension is not a PWA
-#   assets/icons/favicon.ico duplicate of favicon/favicon.ico, unreferenced
 #   core/sync/account.js     dashboard-only (delete account)
 #   core/sync/billing.js     dashboard-only (Stripe checkout/portal)
 #   core/types/index.js      JSDoc typedefs only, nothing imports it
 UNUSED=(
-  "extension/assets/images/popup-painting.png"
-  "extension/assets/images/logo-black-bg.svg"
-  "extension/assets/icons/favicon/web-app-manifest-192x192.png"
-  "extension/assets/icons/favicon/web-app-manifest-512x512.png"
-  "extension/assets/icons/favicon/site.webmanifest"
-  "extension/assets/icons/favicon.ico"
   "core/sync/account.js"
   "core/sync/billing.js"
   "core/types/index.js"

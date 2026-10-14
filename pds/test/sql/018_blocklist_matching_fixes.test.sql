@@ -45,7 +45,7 @@ SELECT test.signup(1);
 UPDATE user_settings SET is_premium = true WHERE id = test.uid(1);
 INSERT INTO blocked_urls (user_id, profile_id, url) SELECT test.uid(1), id, 'reddit.com/r/newsokur' FROM profiles;
 INSERT INTO blocked_urls (user_id, profile_id, url) SELECT test.uid(1), id, 'reddit.com/r/news/top' FROM profiles;
-UPDATE user_settings SET blocking_mode = 'strict' WHERE id = test.uid(1);
+UPDATE user_settings SET blocking_mode = 'strict', session_until = now() + interval '1 hour' WHERE id = test.uid(1);
 SELECT test.act_as('authenticated', test.uid(1));
 SELECT test.expect_ok($$ INSERT INTO blocked_urls (user_id, profile_id, url) SELECT test.uid(1), id, 'reddit.com/r/news' FROM profiles $$);
 -- Strict: removing a row a broader one covers is cleanup, anything else is refused.

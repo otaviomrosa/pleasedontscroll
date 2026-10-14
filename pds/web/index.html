@@ -3,598 +3,315 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Please Don’t Scroll</title>
-  <meta name="description" content="Block the sites that eat your day. A 30-second pause before you open them, or a full lock. Profiles for work and evenings. Free to start on Chrome.">
-  <!-- Link previews (iMessage, Slack, X, WhatsApp). The image is served
-       from /assets, which vercel.json already rewrites. Absolute URLs on the
-       apex host, like the rest of the codebase; if the canonical host changes
-       to www (audit L1), change these too. -->
+  <title>Please Don't Scroll: focus sessions that block distracting sites</title>
+  <meta name="description" content="Pick a profile and a mode, start the timer. Distracting sites stay blocked until it ends. Free on Chrome.">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Please Don’t Scroll">
-  <meta property="og:title" content="Please Don’t Scroll">
-  <meta property="og:description" content="Block the sites that eat your day. A 30-second pause before you open them, or a full lock. Profiles for work and evenings. Free to start on Chrome.">
+  <meta property="og:site_name" content="Please Don't Scroll">
+  <meta property="og:title" content="Please Don't Scroll: focus sessions that block distracting sites">
+  <meta property="og:description" content="Pick a profile and a mode, start the timer. Distracting sites stay blocked until it ends. Free on Chrome.">
+  <meta property="og:url" content="https://pleasedontscroll.com/">
   <meta property="og:image" content="https://pleasedontscroll.com/assets/images/share.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Please Don’t Scroll: a blocked instagram.com page asking for a 30-second breath.">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
   <link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+  <link rel="icon" type="image/png" href="assets/icons/favicon/favicon-96x96.png" sizes="96x96">
   <link rel="shortcut icon" href="assets/icons/favicon/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
   <link rel="manifest" href="assets/icons/favicon/site.webmanifest">
+  <link rel="preload" href="assets/fonts/plus-jakarta-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="site.css">
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-
-  <!-- Decorative halftone sky across the very top of the page. Sits in flow
-       above the nav rather than behind it, because .nav is sticky with an
-       opaque background and would otherwise cover the only part of this
-       that is actually visible. -->
-  <div class="prelude" aria-hidden="true"></div>
-
-
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__brand" aria-label="Please Don't Scroll, home">
-        <img src="assets/images/logo-no-bg.png" alt="" class="nav__logo">
-        <span class="nav__name">Please Don’t Scroll</span>
-      </a>
-      <div class="nav__links">
-        <a href="pricing.html" class="nav__link">Pricing</a>
-        <a href="dashboard.html" class="btn btn--ink" id="nav-cta">Sign in</a>
-        <div class="account hidden" id="account-menu">
-          <button class="account__avatar" id="account-avatar-btn" aria-label="Account menu"></button>
+  <div class="page">
+    <div class="backdrop" aria-hidden="true"><div class="dots-top"></div><div class="spell" aria-hidden="true"><svg viewBox="-750 -750 1500 1500" focusable="false"><defs><linearGradient id="spell-c" gradientUnits="userSpaceOnUse" x1="-700" y1="-700" x2="700" y2="700"><stop offset="0" stop-color="#93c5fd"/><stop offset=".35" stop-color="#8b5cf6"/><stop offset=".65" stop-color="#d946ef"/><stop offset="1" stop-color="#fb7185"/></linearGradient></defs><g><ellipse cx="0" cy="0" rx="690" ry="300" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(0.0)"/><ellipse cx="0" cy="0" rx="690" ry="314" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(6.429)"/><ellipse cx="0" cy="0" rx="690" ry="328" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(12.857)"/><ellipse cx="0" cy="0" rx="690" ry="342" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(19.286)"/><ellipse cx="0" cy="0" rx="690" ry="356" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(25.714)"/><ellipse cx="0" cy="0" rx="690" ry="370" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(32.143)"/><ellipse cx="0" cy="0" rx="690" ry="384" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(38.571)"/><ellipse cx="0" cy="0" rx="690" ry="398" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(45.0)"/><ellipse cx="0" cy="0" rx="690" ry="300" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(51.429)"/><ellipse cx="0" cy="0" rx="690" ry="314" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(57.857)"/><ellipse cx="0" cy="0" rx="690" ry="328" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(64.286)"/><ellipse cx="0" cy="0" rx="690" ry="342" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(70.714)"/><ellipse cx="0" cy="0" rx="690" ry="356" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(77.143)"/><ellipse cx="0" cy="0" rx="690" ry="370" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(83.571)"/><ellipse cx="0" cy="0" rx="690" ry="384" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(90.0)"/><ellipse cx="0" cy="0" rx="690" ry="398" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(96.429)"/><ellipse cx="0" cy="0" rx="690" ry="300" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(102.857)"/><ellipse cx="0" cy="0" rx="690" ry="314" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(109.286)"/><ellipse cx="0" cy="0" rx="690" ry="328" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(115.714)"/><ellipse cx="0" cy="0" rx="690" ry="342" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(122.143)"/><ellipse cx="0" cy="0" rx="690" ry="356" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(128.571)"/><ellipse cx="0" cy="0" rx="690" ry="370" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(135.0)"/><ellipse cx="0" cy="0" rx="690" ry="384" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(141.429)"/><ellipse cx="0" cy="0" rx="690" ry="398" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(147.857)"/><ellipse cx="0" cy="0" rx="690" ry="300" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(154.286)"/><ellipse cx="0" cy="0" rx="690" ry="314" fill="none" stroke="url(#spell-c)" stroke-opacity="0.15" stroke-width="1" transform="rotate(160.714)"/><ellipse cx="0" cy="0" rx="690" ry="328" fill="none" stroke="url(#spell-c)" stroke-opacity="0.2" stroke-width="1" transform="rotate(167.143)"/><ellipse cx="0" cy="0" rx="690" ry="342" fill="none" stroke="url(#spell-c)" stroke-opacity="0.1" stroke-width="1" transform="rotate(173.571)"/></g></svg></div><div class="guides"></div><div class="glow glow-l"></div><div class="glow glow-r"></div><div class="dots-foot"></div></div>
+    <header class="header">
+    <div class="header__bar">
+      <a class="brand" href="index.html" aria-label="Please Don't Scroll, home"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></a>
+      <nav class="header__nav" aria-label="Main">
+        <a href="index.html#features">Features</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+      <div class="header__actions">
+        <a class="header__signin" href="dashboard.html" data-signed-out>Sign in</a>
+        <a class="btn btn--primary btn--sm" href="dashboard.html?view=signup" data-signed-out>Get started</a>
+        <a class="btn btn--primary btn--sm" href="dashboard.html" data-signed-in hidden>Dashboard</a>
+        <div class="account" id="account-menu" hidden>
+          <button class="account__avatar" id="account-avatar-btn" type="button" aria-label="Account menu" aria-expanded="false"></button>
           <div class="account__menu" id="account-dropdown">
             <div class="account__email" id="account-email"></div>
-            <a href="dashboard.html" class="account__item">Dashboard</a>
-            <a href="dashboard.html#settings-card" class="account__item">Settings</a>
-            <button class="account__item" id="account-signout-btn">Sign out</button>
+            <a class="account__item" href="dashboard.html">Dashboard</a>
+            <a class="account__item" href="dashboard.html#settings">Settings</a>
+            <button class="account__item" id="account-signout-btn" type="button">Sign out</button>
           </div>
         </div>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main id="main">
-
-    <section class="hero">
-      <div class="container hero__grid">
-        <div class="hero__copy">
-          <span class="eyebrow">Now on Chrome. iOS app coming soon.</span>
-          <h1 class="display">Stop scrolling for good.</h1>
-          <p class="lede">Block the sites that eat your day. Take a <span class="nowrap">30-second</span> breath before opening them, or lock them completely.</p>
-          <div class="hero__actions">
-            <a href="dashboard.html" class="btn btn--ink btn--lg">Get started free</a>
-            <a href="#profiles" class="textlink">See how it works</a>
-          </div>
-        </div>
-        <div class="hero__art">
-          <!-- A mock of the real blocked page, chrome and all, so the hero
-               shows what actually happens rather than symbolising it. Built
-               as markup rather than a drawing: the text stays real text, it
-               reads to a screen reader, and it tracks the mode tokens. -->
-          <div class="browser">
-            <div class="browser__bar">
-              <span class="browser__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span class="browser__url">instagram.com</span>
+    <main id="main">
+      <section class="hero">
+        <div class="container">
+          <div class="hero__copy">
+            <span class="hero__badge rise"><b>New</b>Timed focus sessions</span>
+            <h1 class="display rise rise-1">Stop scrolling. <span class="muted">Start a session.</span></h1>
+            <p class="lead rise rise-2">Pick a profile and a mode, then start the timer. The sites that eat your day stay blocked until it ends.</p>
+            <div class="hero__actions rise rise-3">
+              <a class="btn btn--primary btn--lg" href="dashboard.html?view=signup">Get started free
+                <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </a>
+              <a class="btn btn--ghost btn--lg" href="pricing.html">See pricing</a>
             </div>
-            <div class="browser__page" id="bp">
-              <!-- Each mode is a full layer sharing one grid cell. Friction is
-                   the taller of the two, so it sets the mock's height and the
-                   switch below never jumps; Strict then centers its own,
-                   shorter content in that height rather than leaving a hole
-                   where the timer would be. -->
-              <div class="bp__view" data-view="friction">
-                <span class="bp__pill">Friction Mode</span>
-                <p class="bp__title">This website was blocked.</p>
-                <p class="bp__sub">You were heading to <b>instagram.com</b></p>
-                <!-- Same ring the real page draws: an SVG arc whose
-                     stroke-dashoffset transitions, so it sweeps continuously
-                     instead of stepping once a second. -->
-                <div class="bp__ring">
-                  <svg viewBox="0 0 220 220" aria-hidden="true">
-                    <circle class="bp__ring-track" cx="110" cy="110" r="100"/>
-                    <circle class="bp__ring-arc" id="bp-arc" cx="110" cy="110" r="100"/>
-                  </svg>
-                  <span id="bp-count">30</span>
+          </div>
+
+          <div class="demo rise rise-3">
+            <div class="silk" aria-hidden="true"><svg viewBox="0 0 1500 900" preserveAspectRatio="none" focusable="false"><defs><linearGradient id="silk-c" gradientUnits="userSpaceOnUse" x1="0" x2="1500" y1="0" y2="0"><stop offset="0" stop-color="#93c5fd"/><stop offset=".3" stop-color="#8b5cf6"/><stop offset=".55" stop-color="#c084fc"/><stop offset=".78" stop-color="#f0abfc"/><stop offset="1" stop-color="#fb7185"/></linearGradient><linearGradient id="silk-f" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".18" stop-color="#fff"/><stop offset=".82" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="silk-m"><rect width="1500" height="900" fill="url(#silk-f)"/></mask><filter id="silk-b" filterUnits="userSpaceOnUse" x="-100" y="-100" width="1700" height="1100"><feGaussianBlur stdDeviation="10"/></filter></defs><g mask="url(#silk-m)"><path d="M -60 400.0 C 380 20.0, 1000 540.0, 1560 140.0 L 1560 400 C 1000 760, 380 340, -60 660 Z" fill="url(#silk-c)" filter="url(#silk-b)" opacity=".85"/><path d="M -60 400.0 C 380 20.0, 1000 540.0, 1560 140.0" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 404.4 C 380 25.4, 1000 543.7, 1560 144.4" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 408.8 C 380 30.8, 1000 547.5, 1560 148.8" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 413.2 C 380 36.3, 1000 551.2, 1560 153.2" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 417.6 C 380 41.7, 1000 554.9, 1560 157.6" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 422.0 C 380 47.1, 1000 558.6, 1560 162.0" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 426.4 C 380 52.5, 1000 562.4, 1560 166.4" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 430.8 C 380 58.0, 1000 566.1, 1560 170.8" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 435.3 C 380 63.4, 1000 569.8, 1560 175.3" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 439.7 C 380 68.8, 1000 573.6, 1560 179.7" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 444.1 C 380 74.2, 1000 577.3, 1560 184.1" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 448.5 C 380 79.7, 1000 581.0, 1560 188.5" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 452.9 C 380 85.1, 1000 584.7, 1560 192.9" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 457.3 C 380 90.5, 1000 588.5, 1560 197.3" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 461.7 C 380 95.9, 1000 592.2, 1560 201.7" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 466.1 C 380 101.4, 1000 595.9, 1560 206.1" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 470.5 C 380 106.8, 1000 599.7, 1560 210.5" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 474.9 C 380 112.2, 1000 603.4, 1560 214.9" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 479.3 C 380 117.6, 1000 607.1, 1560 219.3" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 483.7 C 380 123.1, 1000 610.8, 1560 223.7" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 488.1 C 380 128.5, 1000 614.6, 1560 228.1" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 492.5 C 380 133.9, 1000 618.3, 1560 232.5" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 496.9 C 380 139.3, 1000 622.0, 1560 236.9" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 501.4 C 380 144.7, 1000 625.8, 1560 241.4" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 505.8 C 380 150.2, 1000 629.5, 1560 245.8" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 510.2 C 380 155.6, 1000 633.2, 1560 250.2" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 514.6 C 380 161.0, 1000 636.9, 1560 254.6" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 519.0 C 380 166.4, 1000 640.7, 1560 259.0" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 523.4 C 380 171.9, 1000 644.4, 1560 263.4" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 527.8 C 380 177.3, 1000 648.1, 1560 267.8" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 532.2 C 380 182.7, 1000 651.9, 1560 272.2" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 536.6 C 380 188.1, 1000 655.6, 1560 276.6" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 541.0 C 380 193.6, 1000 659.3, 1560 281.0" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 545.4 C 380 199.0, 1000 663.1, 1560 285.4" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 549.8 C 380 204.4, 1000 666.8, 1560 289.8" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 554.2 C 380 209.8, 1000 670.5, 1560 294.2" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 558.6 C 380 215.3, 1000 674.2, 1560 298.6" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 563.1 C 380 220.7, 1000 678.0, 1560 303.1" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 567.5 C 380 226.1, 1000 681.7, 1560 307.5" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 571.9 C 380 231.5, 1000 685.4, 1560 311.9" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 576.3 C 380 236.9, 1000 689.2, 1560 316.3" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 580.7 C 380 242.4, 1000 692.9, 1560 320.7" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 585.1 C 380 247.8, 1000 696.6, 1560 325.1" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 589.5 C 380 253.2, 1000 700.3, 1560 329.5" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 593.9 C 380 258.6, 1000 704.1, 1560 333.9" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 598.3 C 380 264.1, 1000 707.8, 1560 338.3" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 602.7 C 380 269.5, 1000 711.5, 1560 342.7" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 607.1 C 380 274.9, 1000 715.3, 1560 347.1" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 611.5 C 380 280.3, 1000 719.0, 1560 351.5" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 615.9 C 380 285.8, 1000 722.7, 1560 355.9" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 620.3 C 380 291.2, 1000 726.4, 1560 360.3" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 624.7 C 380 296.6, 1000 730.2, 1560 364.7" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 629.2 C 380 302.0, 1000 733.9, 1560 369.2" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 633.6 C 380 307.5, 1000 737.6, 1560 373.6" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 638.0 C 380 312.9, 1000 741.4, 1560 378.0" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 642.4 C 380 318.3, 1000 745.1, 1560 382.4" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/><path d="M -60 646.8 C 380 323.7, 1000 748.8, 1560 386.8" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/><path d="M -60 651.2 C 380 329.2, 1000 752.5, 1560 391.2" fill="none" stroke="#fff" stroke-opacity="0.29" stroke-width="1"/><path d="M -60 655.6 C 380 334.6, 1000 756.3, 1560 395.6" fill="none" stroke="#fff" stroke-opacity="0.36" stroke-width="1"/><path d="M -60 660.0 C 380 340.0, 1000 760.0, 1560 400.0" fill="none" stroke="#fff" stroke-opacity="0.43" stroke-width="1"/></g></svg></div>
+            <div class="demo__stage">
+              <figure class="frame" aria-label="The Please Don't Scroll dashboard">
+                <div class="frame__bar"><span class="frame__lights" aria-hidden="true"><span></span><span></span><span></span></span><span class="frame__url">pleasedontscroll.com/dashboard</span></div>
+                <div class="opt">
+                  <aside class="opt__side">
+                    <span class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></span>
+                    <div class="opt__nav">
+                      <span class="is-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></svg>Blocklist<em id="d-count">4</em></span>
+                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Schedule</span>
+                      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</span>
+                    </div>
+                    <div class="opt__foot"><span class="pill-chip is-idle" id="d-chip"><span class="dot"></span><span id="d-chip-text">No session</span></span></div>
+                  </aside>
+                  <div class="opt__pane">
+                    <div class="opt__title"><h3>Blocklist</h3></div>
+                    <p class="opt__desc">Sites on the active profile are blocked while a session runs. Block a whole site or just one section of it.</p>
+                    <div class="opt__tabs" id="d-tabs">
+                      <button class="tab-pill" type="button" data-p="Default">Default</button>
+                      <button class="tab-pill is-on" type="button" data-p="Deep work">Deep work</button>
+                      <button class="tab-pill" type="button" data-p="Evening">Evening</button>
+                    </div>
+                    <form class="add-row" id="d-form" autocomplete="off">
+                      <input class="field" id="d-input" placeholder="youtube.com/shorts" aria-label="Site to block" maxlength="100">
+                      <button class="btn-add" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Block</button>
+                    </form>
+                    <div class="quick" id="d-quick"><span class="quick__label">Quick add</span></div>
+                    <ul class="sites" id="d-sites"></ul>
+                  </div>
                 </div>
-                <p class="bp__hint">Breathe for 30 seconds to continue anyway.</p>
-                <span class="bp__btn">Go back</span>
-              </div>
-              <div class="bp__view" data-view="strict">
-                <span class="bp__pill bp__pill--strict">Strict Mode</span>
-                <p class="bp__title">This website was blocked.</p>
-                <p class="bp__sub">You were heading to <b>instagram.com</b></p>
-                <p class="bp__strict">Go back and save your time.</p>
-                <span class="bp__btn">Go back</span>
-              </div>
-              <!-- The completion screen, same copy the real one uses. Fades
-                   over the page rather than replacing it, so nothing reflows. -->
-              <div class="bp__done" aria-hidden="true">
-                <p class="bp__done-msg">Well done.<br>Proceed mindfully.</p>
-                <p class="bp__done-sub">instagram.com is open for 10 minutes.</p>
-              </div>
-            </div>
-          </div>
-          <div class="demo-switch" role="group" aria-label="Preview a mode">
-            <button type="button" class="demo-opt" data-mode="friction" aria-pressed="true">Friction</button>
-            <button type="button" class="demo-opt" data-mode="strict" aria-pressed="false">Strict</button>
-          </div>
-        </div>
-      </div>
-    </section>
+              </figure>
 
-
-
-    <section class="section" id="profiles">
-      <div class="container profiles__grid">
-        <div class="profiles__copy" data-reveal>
-          <h2 class="display">Built around your day.</h2>
-          <p class="lede">One profile to start. Focus Pro adds more, each with its own blocklist. Switch in a click.</p>
-        </div>
-        <!-- The dashboard's Blocklist pane, rebuilt at the same sizes: one gray
-             card, white surfaces inside it. Profiles, quick add and removal
-             work (see the script below); the mode pill, the pause bubble,
-             the + profile ring and the input are pictures of the real ones. -->
-        <div class="preview" data-reveal>
-          <div class="preview__row">
-            <div class="preview__tabs" role="group" aria-label="Example profiles">
-              <button class="preview__tab is-on" type="button" data-profile="Deep Work" aria-pressed="true"><span>Deep Work</span></button>
-              <button class="preview__tab" type="button" data-profile="Evening Unwind" aria-pressed="false"><span>Evening Unwind</span></button>
-              <button class="preview__tab" type="button" data-profile="Weekend" aria-pressed="false"><span>Weekend</span></button>
-              <span class="preview__addprofile" aria-hidden="true">
-                <svg class="preview__addprofile-ring" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="16.5" stroke="currentColor" stroke-width="1" stroke-dasharray="3.75 2.73"/></svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-              </span>
-            </div>
-            <div class="preview__status" aria-hidden="true">
-              <span class="mode-pill mode-pill--friction">Friction Mode active</span>
-              <span class="pause-bubble">
-                  <span class="pause-icon" aria-hidden="true">
-                    <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
-                    <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-                  </span>
-              </span>
-            </div>
-          </div>
-          <div class="preview__input">
-            <div class="preview__field">
-              <span class="preview__placeholder" aria-hidden="true">e.g. netflix.com</span>
-              <div class="preview__icons" id="preview-chips"><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="instagram.com" data-site="Instagram" aria-label="Block Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="youtube.com" data-site="YouTube" aria-label="Block YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div><div class="preview__quickitem"><button class="preview__chip" type="button" data-host="facebook.com" data-site="Facebook" aria-label="Block Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></button><div class="site-options-menu"><div class="site-options-menu-inner"></div></div></div></div>
-            </div>
-            <span class="preview__btn" aria-hidden="true">Add</span>
-          </div>
-          <div class="preview__sites">
-            <div id="preview-list" aria-live="polite"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="features">
-      <div class="container">
-        <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Simple to set up. Easy to live with.</h2>
-        <div class="tiles" data-reveal>
-          <div class="tile">
-            <div class="tile__card">
-              <!-- A picture, not a control: the brands in their own colours, the
-                   way they sit on a phone's home screen. -->
-              <div class="tile__stage" aria-hidden="true"><div class="tile__apps"><span class="app-icon app-icon--instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4l0 -8" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg></span><span class="app-icon app-icon--tiktok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.917v4.034a9.948 9.948 0 0 1 -5 -1.951v4.5a6.5 6.5 0 1 1 -8 -6.326v4.326a2.5 2.5 0 1 0 4 2v-11.5h4.083a6.005 6.005 0 0 0 4.917 4.917" /></svg></span><span class="app-icon app-icon--youtube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8" /><path d="M10 9l5 3l-5 3l0 -6" /></svg></span><span class="app-icon app-icon--x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16l-4.267 0" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></span><span class="app-icon app-icon--facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg></span><span class="app-icon app-icon--reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8c2.648 0 5.028 .826 6.675 2.14a2.5 2.5 0 0 1 2.326 4.36c0 3.59 -4.03 6.5 -9 6.5c-4.875 0 -8.845 -2.8 -9 -6.294l-1 -.206a2.5 2.5 0 0 1 2.326 -4.36c1.646 -1.313 4.026 -2.14 6.674 -2.14l.999 0" /><path d="M12 8l1 -5l6 1" /><path d="M18 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M8.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M14.5 13a.5 .5 0 1 0 1 0a.5 .5 0 1 0 -1 0" fill="currentColor" /><path d="M10 17c.667 .333 1.333 .5 2 .5s1.333 -.167 2 -.5" /></svg></span><span class="app-icon app-icon--twitch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5v11a1 1 0 0 0 1 1h2v4l4 -4h5.584c.266 0 .52 -.105 .707 -.293l2.415 -2.414c.187 -.188 .293 -.442 .293 -.708v-8.585a1 1 0 0 0 -1 -1h-14a1 1 0 0 0 -1 1l.001 0" /><path d="M16 8l0 4" /><path d="M12 8l0 4" /></svg></span></div></div>
-            </div>
-            <h3>Block any site</h3>
-            <p>Add the usual suspects with one click, or type any address. Block just a section if you like, such as YouTube Shorts on its own.</p>
-          </div>
-          <div class="tile">
-            <div class="tile__card">
-              <!-- A zoomed-in crop of the dashboard's Blocklist pane, the same
-                   one "Built around your day" shows whole: the profile tabs
-                   and the + ring trailing off to the left, and the pill and
-                   pause bubble in focus. Only the bubble is
-                   live: it toggles the pill between running and "Blocking
-                   paused", with no durations. -->
-              <div class="tile__stage tile__stage--zoom">
-                <div class="zoom">
-                  <div class="zoom__row">
-                    <span class="zoom__dim zoom__tab" aria-hidden="true">Deep Work</span>
-                    <span class="zoom__dim zoom__tab" aria-hidden="true">Evening Unwind</span>
-                    <span class="zoom__dim zoom__add" aria-hidden="true"><svg viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="16.5" stroke="currentColor" stroke-width="1" stroke-dasharray="3.75 2.73"/></svg><svg class="zoom__plus" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>
-                    <span class="zoom__status">
-                      <span class="mode-pill mode-pill--friction" id="tile-mode">Friction Mode active</span>
-                      <button class="pause-bubble" type="button" id="tile-pause" aria-pressed="false" aria-label="Pause blocking">
-                      <span class="pause-icon" aria-hidden="true">
-                        <svg class="pause-icon__pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="3.6" height="15" rx="2"/><rect x="14.3" y="5.5" width="3.6" height="15" rx="2"/></svg>
-                        <svg class="pause-icon__play" viewBox="0 0 24 24"><path d="M7.07 6.8v12.4L17.33 13Z" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-                      </span>
-                  </button>
-                    </span>
+              <div class="demo__popup">
+                <div class="demo__float">
+                  <div class="pop" id="pop" aria-label="The extension popup, working">
+                    <div class="pop__top">
+                      <span class="brand"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></span>
+                      <svg class="pop__gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+                    </div>
+                    <div class="ring dial is-idle" id="p-dial">
+                      <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/><circle class="ring-fill" id="p-fill" cx="100" cy="100" r="92" stroke-width="5" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"/></svg>
+                      <div class="ring-center"><span class="ring-label" id="p-label">Ready when you are</span><span class="ring-time" id="p-time">30:00</span><span class="ring-sub" id="p-sub">Breathe to open a site</span></div>
+                    </div>
+                    <div class="pop__controls">
+                      <div class="segmented" id="p-mode">
+                        <button type="button" class="is-on" data-v="friction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Friction</button>
+                        <button type="button" data-v="strict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Strict</button>
+                      </div>
+                      <div class="pop__profile"><span>Profile</span><b id="p-profile">Deep work</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+                      <div class="segmented" id="p-len">
+                        <button type="button" data-v="15">15m</button>
+                        <button type="button" class="is-on" data-v="30">30m</button>
+                        <button type="button" data-v="60">1h</button>
+                        <button type="button" data-v="120">2h</button>
+                        <button type="button" data-v="360">6h</button>
+                      </div>
+                    </div>
+                    <div class="pop__action"><button class="btn btn--primary" id="p-btn" type="button">Start focusing</button></div>
+                    <p class="pop__note" id="p-note">Try it. Nothing gets blocked here.</p>
                   </div>
                 </div>
               </div>
             </div>
-            <h3>Pause when you need to</h3>
-            <p>Take a break from blocking for half an hour, a few hours, or until you turn it back on. One switch in your dashboard.</p>
-          </div>
-          <div class="tile">
-            <div class="tile__card">
-              <div class="tile__stage" aria-hidden="true"><div class="tile__week"><span class="tile__day"><b>Mon</b><i class="f"></i></span><span class="tile__day"><b>Tue</b><i></i></span><span class="tile__day"><b>Wed</b><i class="f"></i></span><span class="tile__day"><b>Thu</b><i class="s"></i></span><span class="tile__day"><b>Fri</b><i class="f"></i></span><span class="tile__day"><b>Sat</b><i></i></span><span class="tile__day"><b>Sun</b><i class="s"></i></span></div></div>
-            </div>
-            <h3>Scheduled blocking</h3>
-            <p>Paint your week: which profile, which mode, which hours. It switches on its own, so you do not have to remember.</p>
-          </div>
-          <div class="tile">
-            <div class="tile__card">
-              <!-- The hand-drawn lock with the policy link beside it: the one card
-                   whose contents are a real link. -->
-              <div class="tile__stage tile__stage--privacy"><span class="tile__lock" aria-hidden="true"><svg viewBox="0 0 232 229"><path d="M166.5 88.86C170.95 90.62 177.62 89.58 182.44 90.14C190.42 91.06 198.01 94.83 203.74 100.42C215.43 111.83 215.62 127.43 215.71 142.83C215.85 166.02 218.11 189.3 195.48 202.67C183.54 209.73 166.18 207.75 152.83 207.75C130.28 207.75 107.72 207.75 85.17 207.75C72.74 207.75 58.49 209.21 46.42 205.79C16.62 197.35 18.08 168.09 18.29 142.83C18.41 128.43 18.36 113.84 28.3 102.48C34.18 95.76 42.69 91.16 51.56 90.14C56.4 89.58 63.01 90.6 67.5 88.87C68.88 84.9 67.76 78.73 67.76 74.5C67.76 60.49 65.4 44.13 72.2 31.36C81.77 13.36 98 10.25 116.83 10.25C136.76 10.25 153.7 13.51 162.79 33.38C168.48 45.8 166.25 61.49 166.25 74.83C166.25 78.98 165.17 84.96 166.5 88.86ZM146.35 89.17C147.67 84.9 146.67 78.99 146.67 74.5C146.67 63.05 149.51 44.92 141.05 36.12C134.99 29.81 127.01 30.03 118.83 30.03C108.17 30.03 96.65 29.14 90.29 39.45C85.42 47.35 87.34 59.26 87.34 68.17C87.34 74.02 86.03 83.82 87.65 89.17C107.22 89.17 126.78 89.17 146.35 89.17ZM60.21 109.15C56.52 109.32 52.1 109.62 48.73 111.21C34.12 118.14 38 140.39 38.05 153.5C38.08 162.04 36.76 173.35 42.34 180.49C49.79 190.02 64.42 187.87 75.17 187.96C103.83 188.2 132.5 187.98 161.17 187.95C172.67 187.93 187.77 189.46 193.74 177.23C197.25 170.04 195.93 159.59 195.95 151.83C195.99 141.47 198.19 123.48 190.78 115.39C182.43 106.27 165.98 109 154.83 109C123.39 109 91.62 107.7 60.21 109.15ZM100.88 138.8C107.91 137.96 115.42 138.67 122.5 138.67C126.47 138.67 131.24 137.97 135.08 139.12C140.6 140.78 142.79 147.39 140.88 152.41C139.96 154.8 137.43 157.05 135.02 157.84C129.71 159.56 113.27 158.25 106.83 158.25C102.76 158.25 98.69 158.63 95.47 155.7C89.41 150.19 92.89 139.74 100.88 138.8Z" fill="currentColor" fill-rule="evenodd"/></svg></span><a href="privacy.html" class="textlink">Read the privacy policy</a></div>
-            </div>
-            <h3>Private by design</h3>
-            <p>Your browsing never leaves your device. We only ever know the sites you chose to block, and we never sell or share anything.</p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="plans">
-      <div class="container">
-        <h2 class="display" data-reveal style="margin-bottom: clamp(32px, 4vw, 48px)">Start free. Upgrade when you are ready.</h2>
-        <div class="plans" data-reveal>
-
-          <div class="plan">
-            <h3 class="visually-hidden">Free plan</h3>
-            <div class="plan__head">
-              <span class="tag">Free forever</span>
-              <div class="plan__price">$0 <small>/ month</small></div>
-              <p class="plan__desc">Everything you need to get started.</p>
+      <section class="section" id="focus-screen">
+        <div class="container showcase">
+          <div class="showcase__copy" data-reveal>
+            <span class="eyebrow">Focus screen</span>
+            <h2 class="h2">A blocked site waits for the timer</h2>
+            <p class="lead">Open one mid-session and you get the time left instead. In Friction Mode, 30 seconds of breathing opens it for 10 minutes. In Strict Mode, nothing does.</p>
+            <div class="segmented segmented--pill" id="f-mode">
+              <button type="button" class="is-on" data-v="friction">Friction</button>
+              <button type="button" data-v="strict">Strict</button>
             </div>
-            <ul class="plan__list">
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Block unlimited distracting websites</span></li>
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span><span class="nowrap">30-second</span> breathing pause</span></li>
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>1 blocking profile</span></li>
-            </ul>
-            <a href="dashboard.html" class="btn btn--ink">Get started free</a>
           </div>
-
-          <div class="plan plan--pro">
-            <h3 class="visually-hidden">Focus Pro plan</h3>
-            <div class="plan__head">
-              <span class="tag tag--pro-solid">Focus Pro</span>
-              <div class="plan__price">$4.99 <small>/ month</small></div>
-              <p class="plan__desc">Everything in Free, plus the tools for the days you need more than a pause.</p>
+          <figure class="frame" data-reveal aria-label="The focus screen on a blocked site">
+            <div class="frame__bar"><span class="frame__lights" aria-hidden="true"><span></span><span></span><span></span></span><span class="frame__url">youtube.com/shorts</span></div>
+            <div class="focus">
+              <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg>
+              <span class="pill-chip" id="f-chip"><span class="dot"></span><span id="f-chip-text">Friction session</span></span>
+              <h3 id="f-title">youtube.com is blocked</h3>
+              <p id="f-lead">It opens again when your session ends.</p>
+              <div class="ring" id="f-ring">
+                <span class="halo" aria-hidden="true"></span>
+                <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="ring-track" cx="100" cy="100" r="92" stroke-width="3"/><circle class="ring-fill" id="f-fill" cx="100" cy="100" r="92" stroke-width="4" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="380"/></svg>
+                <div class="ring-center"><span class="ring-time" id="f-time">18:38</span><span class="ring-sub" id="f-sub">left in this session</span></div>
+              </div>
+              <div class="focus__actions">
+                <button class="btn btn--primary" type="button" id="f-back">Go back</button>
+                <button class="btn btn--ghost" type="button" id="f-breathe">Breathe to open for 10 minutes</button>
+              </div>
+              <p class="focus__fine" id="f-fine"></p>
             </div>
-            <ul class="plan__list">
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Strict Mode</span></li>
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Unlimited profiles</span></li>
-              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 15.1719L19.1922 5.97974L20.6064 7.39396L10 18L3.63604 11.636L5.05025 10.2218L10 15.1719Z"/></svg><span>Scheduled blocking</span></li>
-            </ul>
-            <a href="pricing.html" class="btn btn--paper" id="pro-cta">Get Focus Pro</a>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section__head" data-reveal>
+            <span class="eyebrow">Features</span>
+            <h2 class="h2">Everything a focus session needs</h2>
           </div>
-
+          <div class="features" data-reveal>
+            <div class="feature feature--wide">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                <h3>Friction or Strict</h3>
+                <p>Friction asks for a 30-second breath before a blocked site opens. Strict has no way through until the timer ends.</p>
+              </div>
+              <div>
+                <div class="segmented segmented--pill" id="m-mode">
+                  <button type="button" class="is-on" data-v="friction">Friction</button>
+                  <button type="button" data-v="strict">Strict <span class="pro-tag">Pro</span></button>
+                </div>
+                <ul class="sites" id="m-list"></ul>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+                <h3>A profile per context <span class="pro-tag">Pro</span></h3>
+                <p>Separate blocklists for work, study and evenings. Pick one when you start.</p>
+              </div>
+              <div class="profile-row" id="pr-row">
+                <button class="tab-pill is-on" type="button">Work</button>
+                <button class="tab-pill" type="button">Study</button>
+                <button class="tab-pill" type="button">Evening</button>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg>
+                <h3>15 minutes to 6 hours</h3>
+                <p>Five lengths, one tap. The badge on the toolbar counts down.</p>
+              </div>
+              <div class="segmented segmented--pill" id="len-demo">
+                <button type="button">15m</button>
+                <button type="button" class="is-on">30m</button>
+                <button type="button">1h</button>
+                <button type="button">2h</button>
+                <button type="button">6h</button>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+                <h3>Sessions that start themselves <span class="pro-tag">Pro</span></h3>
+                <p>Paint blocks on a weekly grid. A scheduled Strict session can't be ended early.</p>
+              </div>
+              <div>
+                <div class="mini-week" aria-hidden="true">
+                  <div class="mini-week__day"><span class="f" style="top:14%;height:30%"></span><span class="s" style="top:72%;height:16%"></span></div>
+                  <div class="mini-week__day"><span class="f" style="top:14%;height:30%"></span><span class="s" style="top:72%;height:16%"></span></div>
+                  <div class="mini-week__day"><span class="f" style="top:14%;height:30%"></span><span class="s" style="top:72%;height:16%"></span></div>
+                  <div class="mini-week__day"><span class="f" style="top:14%;height:30%"></span><span class="s" style="top:72%;height:16%"></span></div>
+                  <div class="mini-week__day"><span class="f" style="top:14%;height:22%"></span></div>
+                  <div class="mini-week__day"></div>
+                  <div class="mini-week__day"><span class="s" style="top:70%;height:20%"></span></div>
+                </div>
+                <div class="mini-week__labels" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+              </div>
+            </div>
+            <div class="feature">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 17h6"/></svg>
+                <h3>Block a section, keep the site</h3>
+                <p>Shorts without YouTube, Reels without Instagram, Marketplace without Facebook.</p>
+              </div>
+              <ul class="tags">
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>youtube.com/shorts</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>instagram.com/reels</li>
+              </ul>
+            </div>
+            <div class="feature feature--full">
+              <div class="feature__text">
+                <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                <h3>One account, every browser</h3>
+                <p>Edit your lists on the dashboard and every signed-in browser follows within a minute. We store your lists and settings, nothing about what you browse.</p>
+              </div>
+              <ul class="tags">
+                <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.4-5.4 1.4 1.4z"/></svg>No ads</li>
+                <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.4-5.4 1.4 1.4z"/></svg>No tracking</li>
+                <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2-4-4 1.4-1.4 2.6 2.6 5.4-5.4 1.4 1.4z"/></svg>No browsing history</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <p style="margin-top: 22px"><a href="pricing.html" class="textlink">Compare plans in detail</a></p>
-      </div>
-    </section>
+      </section>
 
-    <!-- Overlaps the footer so the closing CTA sits on the painting rather
-         than above it, making the bottom of the page one composed screen. -->
-    <section class="section section--tight section--outro">
-      <div class="container">
-        <div class="cta cta--art" data-reveal>
-          <img src="assets/images/logo-no-bg.png" alt="" class="cta__logo">
-          <h2 class="display">Ready to take your time back?</h2>
-          <p class="lede" style="text-align:center">Free to start, and set up in a couple of minutes.</p>
-          <a href="dashboard.html" class="btn btn--ink btn--lg">Get started free</a>
+      <section class="section" id="install">
+        <div class="container">
+          <div class="install" data-reveal>
+            <h2 class="h2">Ready to focus?</h2>
+            <p class="lead">Free on Chrome. Focus Pro adds Strict Mode, more profiles and the schedule for $4.99 a month.</p>
+            <div class="install__actions">
+              <a class="btn btn--primary btn--lg" href="dashboard.html?view=signup">Get started free</a>
+              <a class="btn btn--ghost btn--lg" href="pricing.html">Compare plans</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__about">
+          <a class="brand" href="index.html"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#5b21b6"/><circle cx="32" cy="32" r="16" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="6"/><path d="M32 16a16 16 0 1 1-16 16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="32" r="4.5" fill="#fff"/></svg><span>Please Don't Scroll</span></a>
+          <p>Focus sessions that block the sites that eat your day.</p>
+        </div>
+        <div class="footer__col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="index.html#features">Features</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Account</h4>
+          <ul>
+            <li><a href="dashboard.html">Sign in</a></li>
+            <li><a href="dashboard.html?view=signup">Create an account</a></li>
+            <li><a href="dashboard.html#settings">Settings</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="privacy.html">Privacy</a></li>
+            <li><a href="mailto:hello@pleasedontscroll.com">Contact</a></li>
+          </ul>
         </div>
       </div>
-    </section>
-
-  </main>
-
-  <footer class="footer footer--art">
-    <div class="container footer__inner">
-      <div class="footer__links">
-        <a href="pricing.html">Pricing</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="https://instagram.com/pleasedontscroll" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://tiktok.com/@pleasedontscroll.com" target="_blank" rel="noopener">TikTok</a>
-      </div>
-      <div class="footer__copy">&copy; 2026 Please Don’t Scroll. All rights reserved.</div>
+      <p class="footer__base">© 2026 Please Don't Scroll</p>
     </div>
   </footer>
+  </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script type="module" src="site.js"></script>
-  <script type="module">
-    // ─── Hero demo ──────────────────────────────────────────────────────
-    // Plays the real Friction flow on a loop: count down, complete, reset.
-    // Idle whenever it is off screen or the tab is hidden, and it does not
-    // run at all for someone who asked for reduced motion.
-    ;(() => {
-      const page  = document.getElementById('bp')
-      const arc   = document.getElementById('bp-arc')
-      const count = document.getElementById('bp-count')
-      if (!page || !arc || !count) return
-
-      // Real time, no speed-up: the point of the mechanic is that 30s is 30s.
-      // REST is how long a fresh 30 sits on screen before the first tick,
-      // counted from the moment the completion screen starts to leave.
-      const START = 30, TICK = 1000, HOLD = 3200, REST = 1800
-      const CIRC = 2 * Math.PI * 100          // r=100, matching the viewBox
-      const still = window.matchMedia('(prefers-reduced-motion: reduce)')
-      let n = START, timer = null, phase = 'count', visible = false, mode = 'friction'
-
-      // `jump` skips the 1s sweep, for the reset where the arc would
-      // otherwise animate all the way back around the wrong way.
-      function paint(jump) {
-        count.textContent = n
-        if (jump) arc.style.transition = 'none'
-        arc.style.strokeDashoffset = CIRC * (1 - n / START)
-        if (jump) { void arc.getBoundingClientRect(); arc.style.transition = '' }
-      }
-
-      function step() {
-        if (phase === 'count') {
-          n -= 1; paint()
-          if (n <= 0) { phase = 'done'; page.classList.add('is-done'); timer = setTimeout(step, HOLD); return }
-          timer = setTimeout(step, TICK)
-        } else {
-          // Refill while the countdown is still faded out, so it fades back
-          // in already reading 30 on a full ring. Resetting after it had
-          // reappeared showed a 0 and an empty ring that then snapped to 30.
-          n = START; paint(true)
-          phase = 'count'; page.classList.remove('is-done'); timer = setTimeout(step, REST)
-        }
-      }
-
-      function run() {
-        if (timer || still.matches || !visible || document.hidden || mode !== 'friction') return
-        timer = setTimeout(step, TICK)
-      }
-      function halt() { clearTimeout(timer); timer = null }
-      function reset() { halt(); phase = 'count'; n = START; paint(true); page.classList.remove('is-done') }
-
-      function setMode(next) {
-        mode = next
-        page.classList.toggle('is-strict', next === 'strict')
-        document.querySelectorAll('.demo-opt').forEach((b) =>
-          b.setAttribute('aria-pressed', String(b.dataset.mode === next)))
-        reset()                       // Strict has no countdown to run
-        run()
-      }
-      document.querySelectorAll('.demo-opt').forEach((b) =>
-        b.addEventListener('click', () => setMode(b.dataset.mode)))
-
-      paint(true)
-      new IntersectionObserver((es) => {
-        visible = es[0].isIntersecting
-        visible ? run() : halt()
-      }, { threshold: 0.25 }).observe(page)
-      document.addEventListener('visibilitychange', () => (document.hidden ? halt() : run()))
-      still.addEventListener('change', () => { still.matches ? reset() : run() })
-    })()
-
-    import { showToast } from './site.js'
-    import { webStorageAdapter } from '../core/auth/storage.js'
-    import * as Auth from '../core/auth/session.js'
-    import { createCheckoutSession, createPortalSession } from '../core/sync/billing.js'
-    import { fetchIsPremium } from '../core/sync/userSettings.js'
-    import { parseBlocklistEntry, entryCovers } from '../core/blocklist/hostname.js'
-
-    // ─── Focus Pro CTA ──────────────────────────────────────────────────
-    // Straight to Stripe Checkout rather than a detour through the pricing
-    // page, and to the billing portal for someone already subscribed. Same
-    // wiring as pricing.html; create-checkout-session re-checks premium
-    // server-side too, so this is a convenience, not the gate. The anchor
-    // keeps href="pricing.html" as the no-JS fallback, hence preventDefault.
-    const FOCUS_PRO_PRICE_ID = 'price_1TzRXUIT8NkEPl0llMOlI4re'
-    const DASHBOARD = 'dashboard.html'
-    let isPremiumUser = false
-
-    async function runBilling(e, { manage }) {
-      e.preventDefault()
-      const btn = e.currentTarget
-      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
-      if (!accessToken) {
-        window.location.href = manage ? DASHBOARD : DASHBOARD + '?redirect=upgrade'
-        return
-      }
-      const originalText = btn.textContent
-      btn.textContent = manage ? 'Opening billing portal…' : 'Preparing checkout…'
-      btn.setAttribute('aria-disabled', 'true')
-      const { url, error } = manage
-        ? await createPortalSession(accessToken)
-        : await createCheckoutSession(accessToken, FOCUS_PRO_PRICE_ID)
-      if (error || !url) {
-        console.error('[PDS] Billing error:', error)
-        showToast(error || 'Something went wrong. Please try again.')
-        btn.textContent = originalText
-        btn.removeAttribute('aria-disabled')
-        return
-      }
-      window.location.href = url
-    }
-
-    const proCta = document.getElementById('pro-cta')
-    proCta.addEventListener('click', (e) => runBilling(e, { manage: isPremiumUser }))
-
-    ;(async () => {
-      const accessToken = await Auth.getValidAccessToken(webStorageAdapter)
-      if (!accessToken) return
-      const session = await Auth.getStoredSession(webStorageAdapter)
-      isPremiumUser = await fetchIsPremium(accessToken, session.user.id)
-      if (isPremiumUser) proCta.textContent = 'Manage subscription'
-    })()
-
-    // ─── "Built around your day" preview ────────────────────────────────
-    // A working mini-version of the dashboard's Blocklist card: switch
-    // profiles, quick-add a site, remove one. State is plain module-scope
-    // memory, so a reload resets it; nothing is persisted or sent anywhere.
-    //
-    // The add rules come from /core, the same functions dashboard.html uses,
-    // so this can never drift from how the product actually behaves. In
-    // particular entryCovers() is what makes blocking youtube.com retire an
-    // existing youtube.com/shorts row, instead of leaving both listed.
-    const PREVIEW_PROFILES = {
-      'Deep Work':      ['instagram.com', 'tiktok.com', 'youtube.com/shorts'],
-      'Evening Unwind': ['x.com', 'reddit.com'],
-      'Weekend':        [],
-    }
-    let activeProfile = 'Deep Work'
-    const GLOBE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" stroke-width="1.6"/><line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.6"/></svg>'
-    const pills = document.querySelectorAll('.preview__tab[data-profile]')
-    const list  = document.getElementById('preview-list')
-    const chips = document.querySelectorAll('#preview-chips .preview__chip')
-
-    function renderPreview(name) {
-      activeProfile = name
-      pills.forEach((p) => {
-        const on = p.dataset.profile === name
-        p.classList.toggle('is-on', on)
-        p.setAttribute('aria-pressed', String(on))
-      })
-
-      const sites   = PREVIEW_PROFILES[name]
-      const entries = sites.map(parseBlocklistEntry)
-      // Same favicon service, globe fallback and row shape as the
-      // dashboard's renderUrlList().
-      const X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
-      list.innerHTML = sites.length
-        ? sites.map((site) => `<div class="preview__site"><span class="preview__site-left"><img class="preview__favicon" src="https://icons.duckduckgo.com/ip3/${site.split('/')[0]}.ico" alt=""><span class="preview__site-name">${site}</span></span><button class="preview__site-x" type="button" data-url="${site}" aria-label="Remove ${site}">${X}</button></div>`).join('')
-        : '<div class="preview__empty">No sites blocked in this profile yet.</div>'
-      list.querySelectorAll('.preview__favicon').forEach((img) => img.addEventListener('error', () => {
-        const globe = document.createElement('span')
-        globe.className = 'preview__favicon-fallback'
-        globe.innerHTML = GLOBE
-        img.replaceWith(globe)
-      }, { once: true }))
-
-      // Chip state is derived from the list on every render, never tracked
-      // alongside it, so a chip can never disagree with what is blocked.
-      chips.forEach((chip) => {
-        const mine  = parseBlocklistEntry(chip.dataset.host)
-        const added = entries.some((e) => entryCovers(e, mine))
-        chip.classList.toggle('added', added)
-        chip.setAttribute('aria-pressed', String(added))
-        const sectioned = !added && !!SECTIONS[chip.dataset.site]
-        chip.setAttribute('aria-label',
-          added ? `${chip.dataset.site} is blocked`
-                : sectioned ? `${chip.dataset.site} options` : `Block ${chip.dataset.site}`)
-        chip.setAttribute('aria-haspopup', String(sectioned))
-        // A fully blocked site reads as done: no menu, nothing left to offer.
-        const menu = chip.parentElement.querySelector('.site-options-menu')
-        if (menu) {
-          menu.hidden = !sectioned
-          if (sectioned) renderChipMenu(chip, entries)
-        }
-      })
-    }
-
-    function addPreviewSite(url) {
-      const sites     = PREVIEW_PROFILES[activeProfile]
-      const candidate = parseBlocklistEntry(url)
-      // Same two-step the dashboard's handleAddUrl() does: refuse anything an
-      // existing entry already covers, then retire whatever this one covers.
-      if (sites.map(parseBlocklistEntry).some((e) => entryCovers(e, candidate))) {
-        showToast('That site is already covered by an existing entry in your blocklist.')
-        return
-      }
-      PREVIEW_PROFILES[activeProfile] = sites
-        .filter((s) => !entryCovers(candidate, parseBlocklistEntry(s)))
-        .concat(url)
-      renderPreview(activeProfile)
-    }
-
-    pills.forEach((p) => p.addEventListener('click', () => renderPreview(p.dataset.profile)))
-
-    // Sectioned chips open the real options menu instead of adding straight
-    // away, so "block one section on its own" is discoverable here and not
-    // only in the app. Paths match dashboard.html's own QUICK_ADD_SITES.
-    const SECTIONS = {
-      Instagram: [{ label: 'Reels', path: '/reels' }],
-      YouTube:   [{ label: 'Shorts', path: '/shorts' }],
-      Facebook:  [{ label: 'Reels', path: '/reels' }, { label: 'Marketplace', path: '/marketplace' }],
-    }
-
-    function closeAllSiteMenus() {
-      document.querySelectorAll('#preview-chips .site-options-menu.open')
-        .forEach((m) => m.classList.remove('open'))
-      document.querySelectorAll('#preview-chips .preview__chip.menu-open')
-        .forEach((c) => c.classList.remove('menu-open'))
-    }
-
-    // Rebuilt from the current list on every render, same as the chips, so a
-    // row can never claim something the blocklist disagrees with.
-    function renderChipMenu(chip, entries) {
-      const menu = chip.parentElement.querySelector('.site-options-menu-inner')
-      if (!menu) return
-      const site = chip.dataset.site
-      const rows = [{ label: site, url: chip.dataset.host }].concat(
-        SECTIONS[site].map((sec) => ({ label: sec.label, url: chip.dataset.host + sec.path })))
-      menu.innerHTML = rows.map(({ label, url }) => {
-        const added = entries.some((e) => entryCovers(e, parseBlocklistEntry(url)))
-        return added
-          ? `<span class="site-options-menu-item added">${label} blocked</span>`
-          : `<button class="site-options-menu-item" type="button" data-url="${url}">Block ${label}</button>`
-      }).join('')
-    }
-
-    chips.forEach((chip) => {
-      const menu = chip.parentElement.querySelector('.site-options-menu')
-      chip.addEventListener('click', (e) => {
-        if (chip.classList.contains('added')) return
-        // No sections, or the whole domain already covered: add it directly.
-        if (!menu || menu.hidden) { addPreviewSite(chip.dataset.host); return }
-        e.stopPropagation()
-        const open = menu.classList.contains('open')
-        closeAllSiteMenus()
-        if (!open) { menu.classList.add('open'); chip.classList.add('menu-open') }
-      })
-      if (!menu) return
-      menu.addEventListener('click', (e) => {
-        e.stopPropagation()
-        const row = e.target.closest('.site-options-menu-item[data-url]')
-        if (!row) return
-        closeAllSiteMenus()
-        addPreviewSite(row.dataset.url)
-      })
-    })
-    document.addEventListener('click', closeAllSiteMenus)
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.preview__site-x')
-      if (!btn) return
-      PREVIEW_PROFILES[activeProfile] =
-        PREVIEW_PROFILES[activeProfile].filter((s) => s !== btn.dataset.url)
-      renderPreview(activeProfile)
-    })
-    renderPreview('Deep Work')
-
-    // ─── Feature tile: pause ────────────────────────────────────────────
-    // A toy, not the dashboard's pause: the bubble flips the pill between
-    // the running mode and "Blocking paused", with no durations. Same
-    // .paused convention as the dashboard's .pause-bubble: no class means
-    // blocking is on.
-    ;(() => {
-      const bubble = document.getElementById('tile-pause')
-      const pill   = document.getElementById('tile-mode')
-      if (!bubble || !pill) return
-      const RUNNING = pill.textContent
-      const runningClass = [...pill.classList].find((c) => c.startsWith('mode-pill--'))
-      bubble.addEventListener('click', () => {
-        const paused = !bubble.classList.contains('paused')
-        bubble.classList.toggle('paused', paused)
-        bubble.setAttribute('aria-pressed', String(paused))
-        bubble.setAttribute('aria-label', paused ? 'Resume blocking' : 'Pause blocking')
-        pill.textContent = paused ? 'Blocking paused' : RUNNING
-        pill.classList.toggle(runningClass, !paused)
-        pill.classList.toggle('mode-pill--paused', paused)
-      })
-    })()
-  </script>
+  <script type="module" src="landing.js"></script>
 </body>
 </html>
